@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
+import { hashListingId } from "@/lib/mapApiListing";
 import type { DashboardCar, DashboardListingStatus } from "@/types/cars";
 
 type ApiListing = {
@@ -36,7 +37,10 @@ function mapListing(listing: ApiListing): DashboardCar {
     : "Untitled listing";
 
   return {
-    id: Number(listing.id) || 0,
+    // Real listing ids are ULID strings (e.g. "01m22w7b..."), not numbers — Number(id)
+    // returns NaN for every one of them, which previously collapsed every row to id: 0
+    // and made DashboardListingsTable's per-row edit/delete match every listing at once.
+    id: hashListingId(listing.id),
     image: "/assets/images/dashboard/avt-profile.jpg",
     title: title || "Untitled listing",
     price: Number(listing.price) || 0,

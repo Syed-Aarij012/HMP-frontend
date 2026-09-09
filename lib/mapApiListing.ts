@@ -90,8 +90,11 @@ function capitalize(value?: string): string | undefined {
 
 // The rest of this template keys cars by a numeric id (mock data, detail-page lookups).
 // Real listings use ULIDs — this derives a stable numeric id from that string so the
-// existing Car[] consumers (list keys, etc.) keep working without a type change.
-function hashListingId(id: string): number {
+// existing Car[] consumers (list keys, etc.) keep working without a type change. Exported
+// so every mapper of an API listing (this file's own, and useMyListings') derives the same
+// id the same way — Number(ulid) silently collapses to NaN/0 for every row, which is the
+// bug this replaced (see useMyListings.ts).
+export function hashListingId(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0;
