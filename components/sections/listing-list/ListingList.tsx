@@ -8,14 +8,35 @@ import Pagination from "@/components/common/Pagination";
 import { setCurrentPage } from "@/components/reducer/listingFilterActions";
 import { useListingFilterState } from "@/components/listings/useListingFilterState";
 import SaleAgentListingCard from "@/components/sections/sale-agents-detail/SaleAgentListingCard";
-import { listingListCars } from "@/data/cars";
+import { useHomepageListings } from "@/hooks/useHomepageListings";
 
 export default function ListingList() {
+  const { cars, loading, error } = useHomepageListings(100);
   const { state, dispatch, visibleListings, totalPages } =
     useListingFilterState({
-      listings: listingListCars,
+      listings: cars,
       itemPerPage: 50,
     });
+
+  if (loading) {
+    return (
+      <section className="tf-section listing-detail pd-t0-mb">
+        <div className="container">
+          <p>Loading live listings...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="tf-section listing-detail pd-t0-mb">
+        <div className="container">
+          <div className="alert alert-danger">{error}</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="tf-section listing-detail pd-t0-mb">

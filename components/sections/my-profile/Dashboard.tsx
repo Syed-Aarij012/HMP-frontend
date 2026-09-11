@@ -1,7 +1,12 @@
+"use client";
+
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import ProfileImageUpload from "@/components/sections/my-profile/ProfileImageUpload";
+import { useAuth } from "@/contexts/AuthContext";
 
 function Dashboard() {
+  const { user } = useAuth();
+
   return (
     <>
       <div id="themesflat-content">
@@ -67,7 +72,7 @@ function Dashboard() {
                               className="form-control"
                               name="listing_title"
                               placeholder="Your name"
-                              defaultValue=""
+                              defaultValue={user?.name ?? ""}
                             />
                           </div>
                           <div className="form-group">
@@ -121,7 +126,7 @@ function Dashboard() {
                               className="form-control"
                               placeholder="Email address"
                               name="listing_title"
-                              defaultValue=""
+                              defaultValue={user?.email ?? ""}
                             />
                           </div>
                           <div className="form-group">

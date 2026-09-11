@@ -1,8 +1,12 @@
+"use client";
+
 import DashboardListingsTable from "@/components/common/DashboardListingsTable";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
-import { myListingCars } from "@/data/cars";
+import { useMyListings } from "@/hooks/useMyListings";
 
 function Dashboard() {
+  const { listings, loading, error } = useMyListings();
+
   return (
     <>
       <div id="themesflat-content">
@@ -18,10 +22,14 @@ function Dashboard() {
                       <div className="row">
                         <div className="tfcl-dashboard-middle-left col-md-12">
                           <div className="tfcl-dashboard-listing">
-                            <DashboardListingsTable
-                              initialListings={myListingCars}
-                              showFilters
-                            />
+                            {loading && <p>Loading your listings...</p>}
+                            {error && <div className="alert alert-danger">{error}</div>}
+                            {!loading && !error && (
+                              <DashboardListingsTable
+                                initialListings={listings}
+                                showFilters
+                              />
+                            )}
                           </div>
                         </div>
                       </div>

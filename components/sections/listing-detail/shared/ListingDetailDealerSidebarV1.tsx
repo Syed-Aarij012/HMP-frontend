@@ -18,7 +18,7 @@ export default function ListingDetailDealerSidebarV1({
     <ListingDetailDealerSidebarShell>
         <div className="widget-listing widget">
           <div className="heading-widget">
-            <div className="money text-color-3 font">$73,000</div>
+            <div className="money text-color-3 font">${car.price.toLocaleString()}</div>
             <div className="price-wrap">
               <p className="fs-14 lh-16 text-color-2">
                 Monthly installment payment:{" "}

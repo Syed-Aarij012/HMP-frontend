@@ -3,17 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { home03RecommendedCars, popularListingTabs, getCarDetailHref } from "@/data/cars";
+import { popularListingTabs, getCarDetailHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";
+import { useHomepageListings } from "@/hooks/useHomepageListings";
 
 function RecommendedCars() {
   const [activeTab, setActiveTab] = useState(popularListingTabs[0]);
+  const { cars, loading, error } = useHomepageListings();
 
   const filteredCars = useMemo(() => {
-    return home03RecommendedCars.filter((car) =>
-      car.listingType?.includes(activeTab),
-    );
-  }, [activeTab]);
+    return cars.filter((car) => car.listingType?.includes(activeTab));
+  }, [cars, activeTab]);
 
   return (
     <>
@@ -40,6 +40,11 @@ function RecommendedCars() {
             </div>
             <div className="content-tab">
               <div className="content-inner tab-content">
+                {loading && <p>Loading live listings...</p>}
+                {error && <div className="alert alert-danger">{error}</div>}
+                {!loading && !error && filteredCars.length === 0 && (
+                  <p>No live listings in this category right now.</p>
+                )}
                 <div className="list-car-grid-4 gap-30">
                   {filteredCars.map((car) => (
                     <div className="box-car-list style-3 hv-one" key={car.id}>

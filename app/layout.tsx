@@ -3,6 +3,7 @@ import BootstrapClient from "@/components/common/BootstrapClient";
 import FlatAccordionClient from "@/components/common/FlatAccordionClient";
 import ScrollTop from "@/components/common/ScrollTop";
 import { StickyHeaderOffsetProvider } from "@/contexts/StickyHeaderOffsetContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import WowClient from "@/components/common/WowClient";
 import { HeaderSearchProvider } from "@/components/headers/HeaderSearch";
 import { ListingActionsProvider } from "@/components/common/ListingActionsContext";
@@ -41,19 +42,21 @@ export default function RootLayout({
       className={`${figtree.variable} ${inter.variable} ${outfit.variable}`}
     >
       <body>
-        <HeaderSearchProvider>
-          <ListingActionsProvider>
-            <StickyHeaderOffsetProvider>
-            <MobileMenuPathListener />
-            <BootstrapClient />
-            <WowClient />
-            <FlatAccordionClient />
-            <AllModals />
-            {children}
-            <ScrollTop />
-            </StickyHeaderOffsetProvider>
-          </ListingActionsProvider>
-        </HeaderSearchProvider>
+        <AuthProvider>
+          <HeaderSearchProvider>
+            <ListingActionsProvider>
+              <StickyHeaderOffsetProvider>
+              <MobileMenuPathListener />
+              <BootstrapClient />
+              <WowClient />
+              <FlatAccordionClient />
+              <AllModals />
+              {children}
+              <ScrollTop />
+              </StickyHeaderOffsetProvider>
+            </ListingActionsProvider>
+          </HeaderSearchProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -26,15 +26,15 @@ function ListingDetail({ title, car }: ListingDetailSectionProps) {
                         fill="black"
                       />
                     </svg>
-                    <span>1032 Km</span>
+                    <span>{car.mileage.toLocaleString()} Km</span>
                   </div>
                   <div className="icons flex-three">
-                    <i className="icon-carus-usercheck" />
-                    <span>First owner</span>
+                    <i className="icon-carus-icon12" />
+                    <span>{car.transmission}</span>
                   </div>
                   <div className="icons flex-three">
                     <i className="icon-carus-icon9" />
-                    <span>Petrol</span>
+                    <span>{car.fuel}</span>
                   </div>
                 </div>
               </div>
