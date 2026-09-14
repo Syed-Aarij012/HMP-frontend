@@ -3,6 +3,8 @@ import type { ListingDetailSectionProps } from "@/lib/listing-detail-page";
 import ListingDetailV5Gallery from "@/components/sections/listing-detail-v5/ListingDetailV5Gallery";
 import ListingDetailScrollspy from "@/components/sections/listing-detail/shared/ListingDetailScrollspy";
 import ListingDetailDealerSidebar from "@/components/sections/listing-detail/shared/ListingDetailDealerSidebar";
+import { LISTING_DETAIL_V5_GALLERY } from "@/data/listingDetailV5Gallery";
+import { resolveListingDetailGalleryImages } from "@/lib/listingDetailGalleryImages";
 
 function ListingDetail({ title, car }: ListingDetailSectionProps) {
   return (
@@ -87,18 +89,25 @@ function ListingDetail({ title, car }: ListingDetailSectionProps) {
                   <p className="fs-14 lh-16">New car price: $100.000</p>
                 </div>
               </div>
-              <ListingDetailV5Gallery />
+              <ListingDetailV5Gallery
+                images={resolveListingDetailGalleryImages(
+                  car,
+                  LISTING_DETAIL_V5_GALLERY,
+                  2160,
+                  1050,
+                )}
+              />
             </div>
             <div className="col-lg-8">
               <div className="listing-detail-wrap">
                 <div className="row">
                   <div className="col-lg-12">
-                    <ListingDetailScrollspy />
+                    <ListingDetailScrollspy car={car} />
                   </div>
                 </div>
               </div>
             </div>
-            <ListingDetailDealerSidebar detailHref="/listing-detail-v5" />
+            <ListingDetailDealerSidebar detailHref="/listing-detail-v5" car={car} />
           </div>
         </div>
       </section>

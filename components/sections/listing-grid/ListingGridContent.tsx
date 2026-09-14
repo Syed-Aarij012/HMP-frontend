@@ -7,28 +7,44 @@ import Pagination from "@/components/common/Pagination";
 import { setCurrentPage } from "@/components/reducer/listingFilterActions";
 import { useListingFilterState } from "@/components/listings/useListingFilterState";
 import SaleAgentListingCard from "@/components/sections/sale-agents-detail/SaleAgentListingCard";
-import { listingGridCars } from "@/data/cars";
+import { useHomepageListings } from "@/hooks/useHomepageListings";
 import {
   buildListingPriceOptions,
   getListingPriceBounds,
 } from "@/lib/buildListingPriceOptions";
 
 export default function ListingGridContent() {
-  const priceBounds = useMemo(
-    () => getListingPriceBounds(listingGridCars),
-    [],
-  );
-  const priceOptions = useMemo(
-    () => buildListingPriceOptions(listingGridCars),
-    [],
-  );
+  const { cars, loading, error } = useHomepageListings(60);
+
+  const priceBounds = useMemo(() => getListingPriceBounds(cars), [cars]);
+  const priceOptions = useMemo(() => buildListingPriceOptions(cars), [cars]);
 
   const { state, dispatch, visibleListings, totalPages } =
     useListingFilterState({
-      listings: listingGridCars,
+      listings: cars,
       itemPerPage: 10,
       priceMax: priceBounds.max,
     });
+
+  if (loading) {
+    return (
+      <section className="tf-section listing-detail">
+        <div className="container">
+          <p>Loading live listings...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="tf-section listing-detail">
+        <div className="container">
+          <div className="alert alert-danger">{error}</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>

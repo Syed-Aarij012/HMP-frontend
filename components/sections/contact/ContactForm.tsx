@@ -41,6 +41,7 @@ export default function ContactForm() {
               className="form-control"
               name="user_email"
               placeholder="e.g johndoe@gmail.com"
+              suppressHydrationWarning
               required
             />
           </div>

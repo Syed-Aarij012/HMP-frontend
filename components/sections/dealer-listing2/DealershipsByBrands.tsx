@@ -6,6 +6,13 @@ import { searchByBrands } from "@/data/brands";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
+// Judgment call: real dealers (GET /dealers) have no single brand — mapApiDealerToDealer
+// reports "Multi-Brand" for every one of them, since the backend doesn't model a dealer
+// having one brand the way this "browse by brand" tile grid assumes. Rather than force a
+// real-data concept onto a UI it doesn't fit, this stays the existing mock brand-tile
+// feature unchanged, with a plain CTA added below pointing at the real dealer directory
+// (/dealer-listing, wired to useDealers() in DealerListingContent.tsx) for anyone who
+// actually wants to browse real dealers rather than by brand.
 function DealershipsByBrands() {
   return (
     <section className="tf-section2 flat-property">
@@ -30,6 +37,10 @@ function DealershipsByBrands() {
             </div>
           </div>
         </div>
+        <p className="mb-20">
+          Looking for a specific dealership instead?{" "}
+          <Link href="/dealer-listing">Browse all dealers</Link>
+        </p>
         <Swiper
           modules={[Navigation, Pagination]}
           className="swiper tf-swiper"

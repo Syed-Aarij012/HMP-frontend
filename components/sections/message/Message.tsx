@@ -9,13 +9,19 @@ import {
 } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useMobileDealerSidebar } from "@/hooks/useMobileDealerSidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useConversations } from "@/hooks/useConversations";
+import { useConversation } from "@/hooks/useConversation";
 import {
-  formatConversationDate,
-  formatMessageTimestamp,
-  initialMessageConversations,
-  type ChatMessage,
-  type MessageConversation,
-} from "@/data/messages";
+  conversationTitle,
+  otherPartyName,
+  type ApiConversation,
+  type ApiMessage,
+} from "@/lib/mapApiConversation";
+
+// The backend has no per-user avatar images yet, so every conversation/message uses this
+// generic placeholder (same pattern documented in lib/mapApiListing.ts for listing photos).
+const PLACEHOLDER_AVATAR = "/assets/images/dashboard/avt-profile.jpg";
 
 function truncatePreview(text: string, maxLength = 45) {
   const normalized = text.replace(/\s+/g, " ").trim();
@@ -35,6 +41,36 @@ function renderMessageText(text: string) {
       {index < lines.length - 1 ? <br /> : null}
     </span>
   ));
+}
+
+function formatListDate(iso: string | null) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatMessageTimestamp(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const time = date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const day = date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  return `${time} - ${day}`;
 }
 
 function SearchIcon() {
@@ -101,10 +137,10 @@ function ChatMessageBubble({
   message,
   avatar,
 }: {
-  message: ChatMessage;
+  message: ApiMessage;
   avatar: string;
 }) {
-  if (message.sender === "client") {
+  if (!message.is_mine) {
     return (
       <div className="client-chat mb-3">
         <div className="client-inner">
@@ -112,8 +148,10 @@ function ChatMessageBubble({
             <Image src={avatar} alt="avatar" width={60} height={60} />
           </div>
           <div className="content">
-            <p>{renderMessageText(message.text)}</p>
-            <div className="date-pushlish">{message.timestamp}</div>
+            <p>{renderMessageText(message.body)}</p>
+            <div className="date-pushlish">
+              {formatMessageTimestamp(message.created_at)}
+            </div>
           </div>
         </div>
       </div>
@@ -123,22 +161,26 @@ function ChatMessageBubble({
   return (
     <div className="current-user-chat mb-3">
       <div className="chat-text">
-        <p>{renderMessageText(message.text)}</p>
-        <div className="date-pushlish mb-3">{message.timestamp}</div>
+        <p>{renderMessageText(message.body)}</p>
+        <div className="date-pushlish mb-3">
+          {formatMessageTimestamp(message.created_at)}
+        </div>
         {message.attachments?.length ? (
           <>
             <div className="attrach">
-              {message.attachments.map((attachment) => (
+              {message.attachments.map((attachment, index) => (
                 <Image
-                  key={attachment.src}
-                  src={attachment.src}
-                  alt={attachment.alt}
-                  width={attachment.width}
-                  height={attachment.height}
+                  key={`${attachment}-${index}`}
+                  src={attachment}
+                  alt="attachment"
+                  width={60}
+                  height={60}
                 />
               ))}
             </div>
-            <div className="date-pushlish mb-3">{message.timestamp}</div>
+            <div className="date-pushlish mb-3">
+              {formatMessageTimestamp(message.created_at)}
+            </div>
           </>
         ) : null}
       </div>
@@ -148,20 +190,32 @@ function ChatMessageBubble({
 
 function Message() {
   const { isOpen, open, close } = useMobileDealerSidebar();
-  const [conversations, setConversations] = useState<MessageConversation[]>(
-    initialMessageConversations,
-  );
-  const [activeConversationId, setActiveConversationId] = useState(2);
+  const { user } = useAuth();
+  const viewerId = user?.id;
+
+  const {
+    conversations,
+    loading: conversationsLoading,
+    error: conversationsError,
+  } = useConversations();
+  const [activeConversationId, setActiveConversationId] = useState<
+    number | null
+  >(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [draftMessage, setDraftMessage] = useState("");
 
-  const activeConversation = useMemo(
-    () =>
-      conversations.find(
-        (conversation) => conversation.id === activeConversationId,
-      ) ?? conversations[0],
-    [conversations, activeConversationId],
-  );
+  // Default to the most recent conversation once the list has loaded, mirroring the
+  // previous mock's "start on a conversation" behaviour — derived rather than synced
+  // via an effect, since nothing has picked one yet only until the list arrives.
+  const effectiveConversationId =
+    activeConversationId ?? conversations[0]?.id ?? null;
+
+  const {
+    conversation: activeConversation,
+    loading: activeConversationLoading,
+    sending,
+    sendMessage,
+  } = useConversation(effectiveConversationId);
 
   const filteredConversations = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -170,57 +224,31 @@ function Message() {
     }
 
     return conversations.filter((conversation) => {
-      const haystack =
-        `${conversation.name} ${conversation.preview}`.toLowerCase();
-      return haystack.includes(query);
+      const title = conversationTitle(conversation, viewerId).toLowerCase();
+      const other = otherPartyName(conversation, viewerId).toLowerCase();
+      const preview = conversation.messages[0]?.body.toLowerCase() ?? "";
+      return `${title} ${other} ${preview}`.includes(query);
     });
-  }, [conversations, searchQuery]);
+  }, [conversations, searchQuery, viewerId]);
 
   const handleSelectConversation = (conversationId: number) => {
     setActiveConversationId(conversationId);
     close();
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     const text = draftMessage.trim();
-    if (!text || !activeConversation) {
+    if (!text || !activeConversationId || sending) {
       return;
     }
 
-    const timestamp = formatMessageTimestamp();
-    const listDate = formatConversationDate();
-    const preview = truncatePreview(text);
-
-    setConversations((current) =>
-      current.map((conversation) => {
-        if (conversation.id !== activeConversation.id) {
-          return conversation;
-        }
-
-        const nextMessageId =
-          conversation.messages.reduce(
-            (maxId, message) => Math.max(maxId, message.id),
-            0,
-          ) + 1;
-
-        return {
-          ...conversation,
-          listDate,
-          preview,
-          messages: [
-            ...conversation.messages,
-            {
-              id: nextMessageId,
-              sender: "user",
-              text,
-              timestamp,
-            },
-          ],
-        };
-      }),
-    );
-
     setDraftMessage("");
+    try {
+      await sendMessage(text);
+    } catch {
+      // Send failed — restore the draft so the user doesn't lose what they typed.
+      setDraftMessage(text);
+    }
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -298,44 +326,61 @@ function Message() {
                             </div>
                           </div>
                         </div>
-                        <ul className="list-user-chat">
-                          {filteredConversations.map((conversation) => (
-                            <li
-                              key={conversation.id}
-                              className={
-                                conversation.id === activeConversationId
-                                  ? "active"
-                                  : undefined
-                              }
-                            >
-                              <button
-                                type="button"
-                                className="user-item"
-                                onClick={() =>
-                                  handleSelectConversation(conversation.id)
-                                }
-                              >
-                                <div className="avatar">
-                                  <Image
-                                    src={conversation.avatar}
-                                    alt={conversation.name}
-                                    width={60}
-                                    height={60}
-                                  />
-                                </div>
-                                <div className="content">
-                                  <div className="inner">
-                                    <div className="name">{conversation.name}</div>
-                                    <span className="date">
-                                      {conversation.listDate}
-                                    </span>
-                                  </div>
-                                  <p>{conversation.preview}</p>
-                                </div>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
+                        {conversationsLoading ? (
+                          <p className="px-3">Loading conversations...</p>
+                        ) : conversationsError ? (
+                          <p className="px-3">{conversationsError}</p>
+                        ) : filteredConversations.length === 0 ? (
+                          <p className="px-3">
+                            {conversations.length === 0
+                              ? "No messages yet."
+                              : "No conversations match your search."}
+                          </p>
+                        ) : (
+                          <ul className="list-user-chat">
+                            {filteredConversations.map((conversation: ApiConversation) => {
+                              const preview = conversation.messages[0]?.body ?? "";
+                              return (
+                                <li
+                                  key={conversation.id}
+                                  className={
+                                    conversation.id === activeConversationId
+                                      ? "active"
+                                      : undefined
+                                  }
+                                >
+                                  <button
+                                    type="button"
+                                    className="user-item"
+                                    onClick={() =>
+                                      handleSelectConversation(conversation.id)
+                                    }
+                                  >
+                                    <div className="avatar">
+                                      <Image
+                                        src={PLACEHOLDER_AVATAR}
+                                        alt={conversationTitle(conversation, viewerId)}
+                                        width={60}
+                                        height={60}
+                                      />
+                                    </div>
+                                    <div className="content">
+                                      <div className="inner">
+                                        <div className="name">
+                                          {conversationTitle(conversation, viewerId)}
+                                        </div>
+                                        <span className="date">
+                                          {formatListDate(conversation.last_message_at)}
+                                        </span>
+                                      </div>
+                                      <p>{truncatePreview(preview)}</p>
+                                    </div>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </div>
                       {activeConversation ? (
                         <div className="content-right">
@@ -343,8 +388,8 @@ function Message() {
                             <div className="user-infor">
                               <div className="avatar">
                                 <Image
-                                  src={activeConversation.avatar}
-                                  alt={activeConversation.name}
+                                  src={PLACEHOLDER_AVATAR}
+                                  alt={conversationTitle(activeConversation, viewerId)}
                                   width={60}
                                   height={60}
                                 />
@@ -352,25 +397,27 @@ function Message() {
                               <div className="content">
                                 <div className="inner">
                                   <div className="name">
-                                    {activeConversation.name}
+                                    {conversationTitle(activeConversation, viewerId)}
                                   </div>
                                   <span className="nofi">
-                                    {activeConversation.online
-                                      ? "Online"
-                                      : "Offline"}
+                                    {otherPartyName(activeConversation, viewerId)}
                                   </span>
                                 </div>
                               </div>
                             </div>
                           </div>
                           <div className="content-inner-chat">
-                            {activeConversation.messages.map((message) => (
-                              <ChatMessageBubble
-                                key={message.id}
-                                message={message}
-                                avatar={activeConversation.avatar}
-                              />
-                            ))}
+                            {activeConversationLoading ? (
+                              <p>Loading conversation...</p>
+                            ) : (
+                              activeConversation.messages.map((message) => (
+                                <ChatMessageBubble
+                                  key={message.id}
+                                  message={message}
+                                  avatar={PLACEHOLDER_AVATAR}
+                                />
+                              ))
+                            )}
                             <form
                               className="controller-chat"
                               onSubmit={handleSubmit}
@@ -382,12 +429,15 @@ function Message() {
                                   name="message"
                                   placeholder="Aa"
                                   value={draftMessage}
+                                  disabled={sending}
                                   onChange={(event) =>
                                     setDraftMessage(event.target.value)
                                   }
                                   onKeyDown={handleInputKeyDown}
                                 />
-                                <button type="submit">Send</button>
+                                <button type="submit" disabled={sending}>
+                                  {sending ? "Sending..." : "Send"}
+                                </button>
                               </div>
                               <div className="controll">
                                 <button type="button" className="file">
@@ -398,6 +448,16 @@ function Message() {
                                 </button>
                               </div>
                             </form>
+                          </div>
+                        </div>
+                      ) : !conversationsLoading ? (
+                        <div className="content-right">
+                          <div className="content-inner-chat d-flex align-items-center justify-content-center">
+                            <p className="mb-0">
+                              {conversations.length === 0
+                                ? "No messages yet. Contact a seller from a listing to start a conversation."
+                                : "Select a conversation to view messages."}
+                            </p>
                           </div>
                         </div>
                       ) : null}

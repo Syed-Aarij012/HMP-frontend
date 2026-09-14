@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import LeaveReplyForm from "@/components/common/LeaveReplyForm";
@@ -5,7 +7,8 @@ import LatePriceListWidget from "@/components/common/LatePriceListWidget";
 import MobileDealerSidebarShell from "@/components/common/MobileDealerSidebarShell";
 import DealerSaleAgentSlider from "@/components/sections/dealer-detail/DealerSaleAgentSlider";
 import DealerInventorySlider from "@/components/sections/dealer-detail/DealerInventorySlider";
-import { dealerInventoryCars } from "@/data/cars";
+import { useFilteredListings } from "@/hooks/useFilteredListings";
+import { useAgents } from "@/hooks/useAgents";
 import type { Dealer } from "@/types/dealers";
 
 type DealerDetailProps = {
@@ -13,6 +16,12 @@ type DealerDetailProps = {
 };
 
 function DealerDetail({ dealer }: DealerDetailProps) {
+  const { cars: inventoryCars } = useFilteredListings({ organizationId: dealer.organizationId });
+  const { agents: allAgents } = useAgents();
+  const dealerAgents = dealer.organizationId
+    ? allAgents.filter((agent) => agent.organizationId === dealer.organizationId)
+    : [];
+
   return (
     <>
       <section className="tf-section3 listing-detail overflow-hidden">
@@ -44,28 +53,32 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                     height={701}
                   />
                 </div>
-                <div className="tf-sale-agent-list over">
-                  <div className="heading-section flex align-center justify-space flex-wrap gap-20">
-                    <h2 className="title">Sale agent list</h2>
-                    <Link href={`/sale-agents`} className="tf-btn-arrow">
-                      See all
-                      <i className="icon-carus-arrowcircleright" />
-                    </Link>
+                {dealerAgents.length > 0 && (
+                  <div className="tf-sale-agent-list over">
+                    <div className="heading-section flex align-center justify-space flex-wrap gap-20">
+                      <h2 className="title">Sale agent list</h2>
+                      <Link href={`/sale-agents`} className="tf-btn-arrow">
+                        See all
+                        <i className="icon-carus-arrowcircleright" />
+                      </Link>
+                    </div>
+                    <DealerSaleAgentSlider agents={dealerAgents} />
                   </div>
-                  <DealerSaleAgentSlider />
-                </div>
-                <div className="tf-list-car-agent">
-                  <div className="heading-section flex align-center justify-space flex-wrap gap-20">
-                    <h2 className="heading-tittle">
-                      Dealership inventory ({dealerInventoryCars.length})
-                    </h2>
-                    <Link href={`/listing-grid`} className="tf-btn-arrow">
-                      See all
-                      <i className="icon-carus-arrowcircleright" />
-                    </Link>
+                )}
+                {inventoryCars.length > 0 && (
+                  <div className="tf-list-car-agent">
+                    <div className="heading-section flex align-center justify-space flex-wrap gap-20">
+                      <h2 className="heading-tittle">
+                        Dealership inventory ({inventoryCars.length})
+                      </h2>
+                      <Link href={`/listing-grid`} className="tf-btn-arrow">
+                        See all
+                        <i className="icon-carus-arrowcircleright" />
+                      </Link>
+                    </div>
+                    <DealerInventorySlider cars={inventoryCars} />
                   </div>
-                  <DealerInventorySlider />
-                </div>
+                )}
                 <h2 className="mb-8">{dealer.name} servicing</h2>
                 <p className="mb-3 fs-14">
                   Check out what {dealer.name} serves their customers
@@ -107,182 +120,17 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                         <div className="wrap-review  pd-0">
                           <div className="titles">
                             <h4>
-                              {dealer.reviewCount.toLocaleString()} Rating and
-                              Reviews
+                              {dealer.reviewCount > 0
+                                ? `${dealer.reviewCount.toLocaleString()} Rating and Reviews`
+                                : "No reviews yet"}
                             </h4>
                           </div>
-                          <div className="comment-list">
-                            <ol className="mb-30">
-                              <li>
-                                <div className="comment-list-wrap flex">
-                                  <div className="images flex-none">
-                                    <Image
-                                      src="/assets/images/blog/avt1.webp"
-                                      alt="images"
-                                      width={90}
-                                      height={90}
-                                    />
-                                  </div>
-                                  <div className="content">
-                                    <div className="flex-two">
-                                      <h5 className="fs-18 fw-5">
-                                        Marvin McKinney
-                                      </h5>
-                                      <p className="fs-12 fw-4 lh-16">
-                                        August 13, 2023
-                                      </p>
-                                    </div>
-                                    <div className="icon-star flex-three">
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                    </div>
-                                  </div>
-                                </div>
-                                <p className="texts text-color-2">
-                                  Lorem ipsum dolor sit amet, consectetur
-                                  adipiscing elit. Morbi lacinia sit amet elit
-                                  sed molestie. Sed neque enim, iaculis id
-                                  viverra in, scelerisque vitae nulla.&nbsp;
-                                </p>
-                                <div className="flex-three gap-16 flex-wrap mb-16">
-                                  <Image
-                                    width={141}
-                                    height={79}
-                                    src="/assets/images/blog/cmt1.webp"
-                                    alt="images"
-                                  />
-                                  <Image
-                                    width={141}
-                                    height={79}
-                                    src="/assets/images/blog/cmt2.webp"
-                                    alt="images"
-                                  />
-                                  <Image
-                                    width={141}
-                                    height={79}
-                                    src="/assets/images/blog/cmt3.webp"
-                                    alt="images"
-                                  />
-                                </div>
-                                <div className="flex-three">
-                                  <p className="fs-14 fw-4">
-                                    Is this review helpful?
-                                  </p>
-                                  <div className="helpful">
-                                    <a href="#" className="fs-12 fw-4 font-2">
-                                      Yes
-                                    </a>
-                                    <a href="#" className="fs-12 fw-4 font-2">
-                                      No
-                                    </a>
-                                  </div>
-                                </div>
-                              </li>
-                              <li>
-                                <div className="comment-list-wrap flex">
-                                  <div className="images flex-none">
-                                    <Image
-                                      src="/assets/images/blog/avt2.webp"
-                                      alt="images"
-                                      width={90}
-                                      height={90}
-                                    />
-                                  </div>
-                                  <div className="content">
-                                    <div className="flex-two">
-                                      <h5 className="fs-18 fw-5">
-                                        Jenny Wilson
-                                      </h5>
-                                      <p className="fs-12 fw-4 lh-16">
-                                        August 13, 2023
-                                      </p>
-                                    </div>
-                                    <div className="icon-star flex-three">
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                    </div>
-                                  </div>
-                                </div>
-                                <p className="texts text-color-2">
-                                  Lorem ipsum dolor sit amet, consectetur
-                                  adipiscing elit. Morbi lacinia sit amet elit
-                                  sed molestie. Sed neque enim, iaculis id
-                                  viverra in, scelerisque vitae nulla.&nbsp;
-                                </p>
-                                <div className="flex-three">
-                                  <p className="fs-14 fw-4">
-                                    Is this review helpful?
-                                  </p>
-                                  <div className="helpful">
-                                    <a href="#" className="fs-12 fw-4 font-2">
-                                      Yes
-                                    </a>
-                                    <a href="#" className="fs-12 fw-4 font-2">
-                                      No
-                                    </a>
-                                  </div>
-                                </div>
-                              </li>
-                              <li>
-                                <div className="comment-list-wrap flex">
-                                  <div className="images flex-none">
-                                    <Image
-                                      src="/assets/images/blog/avt3.webp"
-                                      alt="images"
-                                      width={90}
-                                      height={90}
-                                    />
-                                  </div>
-                                  <div className="content">
-                                    <div className="flex-two">
-                                      <h5 className="fs-18 fw-5">
-                                        Eleanor Pena
-                                      </h5>
-                                      <p className="fs-12 fw-4 lh-16">
-                                        August 13, 2023
-                                      </p>
-                                    </div>
-                                    <div className="icon-star flex-three">
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                      <i className="icon-carus-star" />
-                                    </div>
-                                  </div>
-                                </div>
-                                <p className="texts text-color-2">
-                                  Lorem ipsum dolor sit amet, consectetur
-                                  adipiscing elit. Morbi lacinia sit amet elit
-                                  sed molestie. Sed neque enim, iaculis id
-                                  viverra in, scelerisque vitae nulla.&nbsp;
-                                </p>
-                                <div className="flex-three">
-                                  <p className="fs-14 fw-4">
-                                    Is this review helpful?
-                                  </p>
-                                  <div className="helpful">
-                                    <a href="#" className="fs-12 fw-4 font-2">
-                                      Yes
-                                    </a>
-                                    <a href="#" className="fs-12 fw-4 font-2">
-                                      No
-                                    </a>
-                                  </div>
-                                </div>
-                              </li>
-                            </ol>
-                            <a className="link-btn flex-three" href="#">
-                              <span>View more reviews</span>
-                              <i className="icon-carus-chev-up" />
-                            </a>
-                          </div>
+                          {dealer.reviewCount === 0 && (
+                            <p className="text-color-2">
+                              This dealer has not been reviewed yet. Reviews left on their
+                              individual listings will appear here.
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

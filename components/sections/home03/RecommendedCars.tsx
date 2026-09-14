@@ -8,8 +8,18 @@ import ListingCardActions from "@/components/common/ListingCardActions";
 import { useHomepageListings } from "@/hooks/useHomepageListings";
 
 function RecommendedCars() {
-  const [activeTab, setActiveTab] = useState(popularListingTabs[0]);
+  const [selectedTab, setSelectedTab] = useState<string | null>(null);
   const { cars, loading, error } = useHomepageListings();
+
+  // Real listings are tagged "New car" only below a near-zero mileage threshold (see
+  // mapApiListingToCar) — almost every real listing is realistically "Used car", so
+  // defaulting to popularListingTabs[0] ("New car") would show an empty tab against real
+  // data. Default to whichever tab actually has something once the cars have loaded,
+  // rather than a fixed tab that may be empty.
+  const activeTab =
+    selectedTab ??
+    popularListingTabs.find((tab) => cars.some((car) => car.listingType?.includes(tab))) ??
+    popularListingTabs[0];
 
   const filteredCars = useMemo(() => {
     return cars.filter((car) => car.listingType?.includes(activeTab));
@@ -29,7 +39,7 @@ function RecommendedCars() {
                   <li
                     key={tab}
                     className={`item-title${activeTab === tab ? " active" : ""}`}
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => setSelectedTab(tab)}
                     role="tab"
                     aria-selected={activeTab === tab}
                   >

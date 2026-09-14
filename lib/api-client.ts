@@ -12,6 +12,23 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * A Laravel validation failure's top-level `message` is a generic "The given data was
+ * invalid." — never which field, or why. This pulls the specific per-field messages out of
+ * the `errors` object when present, so a caller shows "That email is already registered."
+ * instead of a dead end the user can't act on.
+ */
+export function describeApiError(err: unknown, fallback: string): string {
+  if (!(err instanceof ApiError)) return fallback;
+
+  const body = err.body as { errors?: Record<string, string[]> } | null;
+  if (body?.errors) {
+    return Object.values(body.errors).flat().join(" ");
+  }
+
+  return err.message || fallback;
+}
+
 export function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
   try {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getDealerHref } from "@/lib/mapApiDealer";
 import type { Dealer } from "@/types/dealers";
 
 type DealerListingCardProps = {
@@ -28,7 +29,7 @@ export default function DealerListingCard({ dealer }: DealerListingCardProps) {
         </div>
         <div className="content">
           <h4>
-            <Link href={`/dealer-detail/${dealer.id}`}>{dealer.name}</Link>
+            <Link href={getDealerHref(dealer)}>{dealer.name}</Link>
           </h4>
           <div className="rating">
             {dealer.reviewCount.toLocaleString()} Reviews
@@ -53,7 +54,7 @@ export default function DealerListingCard({ dealer }: DealerListingCardProps) {
         {dealer.address}
       </div>
       <div className="dealder-button">
-        <Link href={`/dealer-detail/${dealer.id}`}>Dealer detail</Link>
+        <Link href={getDealerHref(dealer)}>Dealer detail</Link>
       </div>
     </div>
   );

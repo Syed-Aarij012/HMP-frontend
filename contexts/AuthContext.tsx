@@ -22,11 +22,40 @@ type LoginResult =
   | { status: "ok" }
   | { status: "two_factor_required"; challengeToken: string };
 
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  phone?: string;
+  password: string;
+  password_confirmation: string;
+  user_type: "private_buyer" | "private_seller" | "trade_buyer";
+};
+
+export type RegisterDealerPayload = {
+  organization_name: string;
+  name: string;
+  email: string;
+  phone?: string;
+  password: string;
+  password_confirmation: string;
+};
+
 type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   completeTwoFactorChallenge: (challengeToken: string, code: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  registerDealer: (payload: RegisterDealerPayload) => Promise<void>;
+  updateProfile: (name: string, phone?: string) => Promise<void>;
+  changePassword: (currentPassword: string, password: string, passwordConfirmation: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (
+    token: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 };
@@ -59,7 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refreshUser();
+    queueMicrotask(() => {
+      refreshUser();
+    });
   }, [refreshUser]);
 
   const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
@@ -88,6 +119,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user ?? null);
   }, []);
 
+  const register = useCallback(async (payload: RegisterPayload) => {
+    const data = await apiFetch<{ user: AuthUser; token: string }>("/register", {
+      method: "POST",
+      auth: false,
+      body: payload,
+    });
+    setStoredToken(data.token);
+    setUser(data.user);
+  }, []);
+
+  const registerDealer = useCallback(async (payload: RegisterDealerPayload) => {
+    const data = await apiFetch<{ user: AuthUser; token: string }>("/register/dealer", {
+      method: "POST",
+      auth: false,
+      body: payload,
+    });
+    setStoredToken(data.token);
+    setUser(data.user);
+  }, []);
+
+  const updateProfile = useCallback(async (name: string, phone?: string) => {
+    const data = await apiFetch<AuthUser>("/user", {
+      method: "PATCH",
+      body: { name, phone: phone || null },
+    });
+    setUser(data);
+  }, []);
+
+  const changePassword = useCallback(
+    async (currentPassword: string, password: string, passwordConfirmation: string) => {
+      await apiFetch("/user/password", {
+        method: "PUT",
+        body: {
+          current_password: currentPassword,
+          password,
+          password_confirmation: passwordConfirmation,
+        },
+      });
+    },
+    []
+  );
+
+  const requestPasswordReset = useCallback(async (email: string) => {
+    await apiFetch("/forgot-password", { method: "POST", auth: false, body: { email } });
+  }, []);
+
+  const resetPassword = useCallback(
+    async (token: string, email: string, password: string, passwordConfirmation: string) => {
+      await apiFetch("/reset-password", {
+        method: "POST",
+        auth: false,
+        body: { token, email, password, password_confirmation: passwordConfirmation },
+      });
+    },
+    []
+  );
+
   const logout = useCallback(() => {
     setStoredToken(null);
     setUser(null);
@@ -97,7 +185,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, completeTwoFactorChallenge, logout, refreshUser }}
+      value={{
+        user,
+        loading,
+        login,
+        completeTwoFactorChallenge,
+        register,
+        registerDealer,
+        updateProfile,
+        changePassword,
+        requestPasswordReset,
+        resetPassword,
+        logout,
+        refreshUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

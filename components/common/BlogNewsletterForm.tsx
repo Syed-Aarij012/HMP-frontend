@@ -16,6 +16,7 @@ export default function BlogNewsletterForm() {
             className="input-field"
             placeholder="Enter your email"
             defaultValue=""
+            suppressHydrationWarning
             name="s"
             title="Enter your email"
             required

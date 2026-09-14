@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import LeaveReplyForm from "@/components/common/LeaveReplyForm";
+import { useListingReviews } from "@/hooks/useListingReviews";
 import {
   LISTING_REVIEWS,
   LISTING_REVIEWS_OVERALL_RATING,
@@ -10,6 +11,7 @@ import {
   type ListingReview,
   type ListingReviewTabId,
 } from "@/data/listingReviews";
+import type { Car } from "@/types/cars";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -70,18 +72,35 @@ function ReviewCard({ review }: { review: ListingReview }) {
   );
 }
 
-export default function ListingDetailReviewsSection() {
+type ListingDetailReviewsSectionProps = {
+  car: Car;
+};
+
+export default function ListingDetailReviewsSection({
+  car,
+}: ListingDetailReviewsSectionProps) {
   const [activeTab, setActiveTab] = useState<ListingReviewTabId>("all");
+  const isRealListing = Boolean(car.publicId);
+  const {
+    reviews: realReviews,
+    averageRating,
+    loading,
+    error,
+  } = useListingReviews(car.publicId);
+
+  // Mock/demo listings (no publicId) keep showing the existing sample reviews so the
+  // demo browsing experience doesn't regress; real listings show their own real reviews
+  // (which may be an empty list) fetched by useListingReviews above.
+  const reviews = isRealListing ? realReviews : LISTING_REVIEWS;
+  const overallRating = isRealListing ? averageRating : LISTING_REVIEWS_OVERALL_RATING;
 
   const filteredReviews = useMemo(() => {
     if (activeTab === "all") {
-      return LISTING_REVIEWS;
+      return reviews;
     }
 
-    return LISTING_REVIEWS.filter((review) =>
-      review.categories.includes(activeTab),
-    );
-  }, [activeTab]);
+    return reviews.filter((review) => review.categories.includes(activeTab));
+  }, [activeTab, reviews]);
 
   const reviewCountLabel = `${filteredReviews.length} Rating and Reviews`;
 
@@ -94,15 +113,18 @@ export default function ListingDetailReviewsSection() {
         <div className="icon-star">
           <i className="icon-carus-star" />
         </div>
-        <div className="numbers">{LISTING_REVIEWS_OVERALL_RATING}</div>
+        <div className="numbers">{overallRating ?? "–"}</div>
         <div className="content">
           <p className="text-color-2">Overall Rating</p>
           <p className="text-color-2">
             Base on{" "}
-            <span className="fw-6">{LISTING_REVIEWS.length} Reviews</span>
+            <span className="fw-6">{reviews.length} Reviews</span>
           </p>
         </div>
       </div>
+      {isRealListing && error && (
+        <p className="text-color-2 mb-30">{error}</p>
+      )}
       <div className="flat-tabs mb-60">
         <div className="box-tab style5  center">
           <ul className="menu-tab tab-title flex  ">
@@ -133,7 +155,9 @@ export default function ListingDetailReviewsSection() {
                 <h4>{reviewCountLabel}</h4>
               </div>
               <div className="comment-list">
-                {filteredReviews.length > 0 ? (
+                {isRealListing && loading ? (
+                  <p className="text-color-2 mb-30">Loading reviews…</p>
+                ) : filteredReviews.length > 0 ? (
                   <ol className="mb-30">
                     {filteredReviews.map((review) => (
                       <ReviewCard key={review.id} review={review} />

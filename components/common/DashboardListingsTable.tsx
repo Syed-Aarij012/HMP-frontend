@@ -2,13 +2,16 @@
 
 import { useMemo, useRef, useState } from "react";
 import DashboardListingTableBody from "@/components/common/DashboardListingTableBody";
+import type { ListingEditableFields } from "@/components/common/DashboardListingTableRow";
 import NiceSelect from "@/components/common/NiceSelect";
 import Pagination from "@/components/common/Pagination";
 import {
   DASHBOARD_SORT_OPTIONS,
   DASHBOARD_STATUS_OPTIONS,
 } from "@/data/niceSelectOptions";
-import type { DashboardCar, DashboardListingStatus } from "@/types/cars";
+import { apiFetch, describeApiError } from "@/lib/api-client";
+import { mapStatus } from "@/hooks/useMyListings";
+import type { DashboardCar } from "@/types/cars";
 
 const DEFAULT_DASHBOARD_LISTINGS_PAGE_SIZE = 7;
 
@@ -154,16 +157,36 @@ export default function DashboardListingsTable({
     return sortedListings.slice(start, start + pageSize);
   }, [sortedListings, effectivePage, pageSize]);
 
-  const handleDelete = (id: number) => {
-    setListings((current) => current.filter((listing) => listing.id !== id));
+  const handleDelete = async (id: number) => {
+    const listing = listings.find((item) => item.id === id);
+    if (!listing?.publicId) return;
+
+    try {
+      await apiFetch(`/listings/${listing.publicId}`, { method: "DELETE" });
+      setListings((current) => current.filter((item) => item.id !== id));
+    } catch (err) {
+      window.alert(describeApiError(err, "Could not withdraw this listing."));
+    }
   };
 
-  const handleMarkSold = (id: number) => {
+  const handleSave = async (id: number, updates: ListingEditableFields) => {
+    const listing = listings.find((item) => item.id === id);
+    if (!listing?.publicId) return;
+
+    const response = await apiFetch<{
+      data: { price: string | number; description: string | null; status: string };
+    }>(`/listings/${listing.publicId}`, { method: "PATCH", body: updates });
+
     setListings((current) =>
-      current.map((listing) =>
-        listing.id === id
-          ? { ...listing, dashboardStatus: "sold" as DashboardListingStatus }
-          : listing,
+      current.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              price: Number(response.data.price) || 0,
+              description: response.data.description ?? undefined,
+              dashboardStatus: mapStatus(response.data.status),
+            }
+          : item,
       ),
     );
   };
@@ -271,7 +294,7 @@ export default function DashboardListingsTable({
             <DashboardListingTableBody
               listings={paginatedListings}
               onDelete={handleDelete}
-              onMarkSold={handleMarkSold}
+              onSave={handleSave}
             />
           </table>
         </div>

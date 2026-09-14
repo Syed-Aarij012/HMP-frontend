@@ -5,15 +5,32 @@ import ListingMapPanel from "@/components/common/ListingMapPanel";
 import ListingMapSidebar from "@/components/common/ListingMapSidebar";
 import ListingFilterOffcanvas from "@/components/listings/ListingFilterOffcanvas";
 import { useListingFilterState } from "@/components/listings/useListingFilterState";
-import { listingMapCars } from "@/data/cars";
+import { useMapListings } from "@/hooks/useMapListings";
 
 const MAP_FILTER_OFFCANVAS_ID = "offcanvas-listing-list-map-filter";
 
 export default function ListingListMap() {
+  const { cars, loading, error } = useMapListings(60);
   const { state, dispatch } = useListingFilterState({
-    listings: listingMapCars,
-    itemPerPage: listingMapCars.length,
+    listings: cars,
+    itemPerPage: cars.length || 1,
   });
+
+  if (loading) {
+    return (
+      <div className="container">
+        <p>Loading live listings...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container">
+        <div className="alert alert-danger">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -1,11 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { home05Agents } from "@/data/agents";
+import type { Agent } from "@/types/agents";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-export default function DealerSaleAgentSlider() {
+type DealerSaleAgentSliderProps = {
+  agents: Agent[];
+};
+
+export default function DealerSaleAgentSlider({ agents }: DealerSaleAgentSliderProps) {
+  if (agents.length === 0) {
+    return null;
+  }
+
   return (
     <Swiper
       modules={[Navigation, Pagination]}
@@ -32,7 +40,7 @@ export default function DealerSaleAgentSlider() {
         1200: { slidesPerView: 4, spaceBetween: 30, slidesPerGroup: 1 },
       }}
     >
-      {home05Agents.map((agent) => (
+      {agents.map((agent) => (
         <SwiperSlide key={agent.id}>
           <div className="agent-item box-shadow-us">
             <div className="image">
@@ -47,14 +55,7 @@ export default function DealerSaleAgentSlider() {
             </div>
             <div className="content center">
               <div className="fs-18 fw-6 title text-color-2">{agent.name}</div>
-              <p className="sub-title fs-12 fw-4">CEO Themesflat</p>
-              <div className="icon-star text-color-star fs-12 center">
-                <i className="icon-carus-star" />
-                <i className="icon-carus-star" />
-                <i className="icon-carus-star" />
-                <i className="icon-carus-star" />
-                <i className="icon-carus-star" />
-              </div>
+              <p className="sub-title fs-12 fw-4">{agent.role}</p>
             </div>
             <div className="icon-box flex">
               <a href={`tel:${agent.phone}`}>

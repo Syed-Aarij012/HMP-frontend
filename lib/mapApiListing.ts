@@ -18,6 +18,7 @@ export type ApiListing = {
     seats?: number;
     year?: number;
     current_mileage?: number;
+    photos?: { id: number; type: string; url: string; is_360: boolean; sequence: number }[];
   } | null;
 };
 
@@ -53,17 +54,27 @@ export function mapApiListingToCar(listing: ApiListing): Car {
     ? BODY_TYPE_LABELS[vehicle.body_type] ?? vehicle.body_type
     : undefined;
 
+  // QA-passed photos, in upload order — falls back to a single placeholder when a listing
+  // has none yet (e.g. right after self-service creation, before any media is attached).
+  const images = (vehicle?.photos ?? [])
+    .filter((photo) => photo.type !== "video")
+    .sort((a, b) => a.sequence - b.sequence)
+    .map((photo) => photo.url);
+  const galleryImages = images.length > 0 ? images : ["/assets/images/car-list/car1.webp"];
+
   return {
     id: hashListingId(listing.id),
     href: `/listing-detail-v1/${listing.id}`,
-    image: "/assets/images/car-list/car1.webp",
+    image: galleryImages[0],
+    images: galleryImages,
+    publicId: listing.id,
     title: title || "Untitled listing",
     price: Number(listing.price) || 0,
     mileage,
     transmission: capitalize(vehicle?.transmission) ?? "-",
     fuel: capitalize(vehicle?.fuel_type) ?? "-",
     tag: vehicle?.year ? String(vehicle.year) : "-",
-    photoCount: 0,
+    photoCount: galleryImages.length,
     description: listing.description ?? undefined,
     bodyType: bodyTypeLabel ? [bodyTypeLabel] : undefined,
     listingType: [mileage < NEW_CAR_MILEAGE_THRESHOLD ? "New car" : "Used car"],

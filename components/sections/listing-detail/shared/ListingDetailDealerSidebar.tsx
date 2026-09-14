@@ -1,15 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import LatePriceListWidget from "@/components/common/LatePriceListWidget";
 import ListingDetailDealerSidebarShell from "@/components/common/listing-detail/ListingDetailDealerSidebarShell";
+import { useContactDealer } from "@/components/common/ContactDealerContext";
+import type { Car } from "@/types/cars";
 
 type ListingDetailDealerSidebarProps = {
   detailHref?: string;
+  car: Car;
 };
 
 export default function ListingDetailDealerSidebar({
   detailHref = "/listing-detail-v4",
+  car,
 }: ListingDetailDealerSidebarProps) {
+  const { setContactDealerTarget } = useContactDealer();
   return (
     <ListingDetailDealerSidebarShell>
         <div className="widget-dealer-contact widget">
@@ -42,6 +49,7 @@ export default function ListingDetailDealerSidebar({
               data-bs-target="#ModalTogglemess"
               data-bs-toggle="modal"
               className="button-form-3"
+              onClick={() => setContactDealerTarget(car)}
             >
               Send mesage
             </a>

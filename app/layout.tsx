@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import WowClient from "@/components/common/WowClient";
 import { HeaderSearchProvider } from "@/components/headers/HeaderSearch";
 import { ListingActionsProvider } from "@/components/common/ListingActionsContext";
+import { ContactDealerProvider } from "@/components/common/ContactDealerContext";
 import { MobileMenuPathListener } from "@/components/headers/MobileMenu";
 import AllModals from "@/components/modals/AllModals";
 import "./globals.scss";
@@ -45,6 +46,7 @@ export default function RootLayout({
         <AuthProvider>
           <HeaderSearchProvider>
             <ListingActionsProvider>
+              <ContactDealerProvider>
               <StickyHeaderOffsetProvider>
               <MobileMenuPathListener />
               <BootstrapClient />
@@ -54,6 +56,7 @@ export default function RootLayout({
               {children}
               <ScrollTop />
               </StickyHeaderOffsetProvider>
+              </ContactDealerProvider>
             </ListingActionsProvider>
           </HeaderSearchProvider>
         </AuthProvider>

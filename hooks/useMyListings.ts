@@ -17,6 +17,7 @@ type ApiListing = {
     year?: number;
     fuel_type?: string;
     transmission?: string;
+    photos?: { url: string; type: string; sequence: number }[];
   } | null;
 };
 
@@ -24,7 +25,7 @@ type ApiListingsResponse = {
   data: ApiListing[];
 };
 
-function mapStatus(status: string): DashboardListingStatus {
+export function mapStatus(status: string): DashboardListingStatus {
   if (status === "sold") return "sold";
   if (status === "live") return "approved";
   return "pending";
@@ -35,13 +36,18 @@ function mapListing(listing: ApiListing): DashboardCar {
   const title = vehicle
     ? [vehicle.make, vehicle.model, vehicle.derivative].filter(Boolean).join(" ")
     : "Untitled listing";
+  const firstPhoto = (vehicle?.photos ?? [])
+    .filter((photo) => photo.type !== "video")
+    .sort((a, b) => a.sequence - b.sequence)[0]?.url;
+  const image = firstPhoto ?? "/assets/images/dashboard/avt-profile.jpg";
 
   return {
     // Real listing ids are ULID strings (e.g. "01m22w7b..."), not numbers — Number(id)
     // returns NaN for every one of them, which previously collapsed every row to id: 0
     // and made DashboardListingsTable's per-row edit/delete match every listing at once.
     id: hashListingId(listing.id),
-    image: "/assets/images/dashboard/avt-profile.jpg",
+    image,
+    publicId: listing.id,
     title: title || "Untitled listing",
     price: Number(listing.price) || 0,
     mileage: 0,
@@ -49,7 +55,7 @@ function mapListing(listing: ApiListing): DashboardCar {
     fuel: vehicle?.fuel_type ?? "-",
     tag: vehicle?.year ? String(vehicle.year) : "-",
     photoCount: 0,
-    dashboardImage: "/assets/images/dashboard/avt-profile.jpg",
+    dashboardImage: image,
     dashboardStatus: mapStatus(listing.status),
     postingDate: listing.published_at ?? new Date().toISOString(),
   };

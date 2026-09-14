@@ -10,16 +10,21 @@ import ListingDetailGallerySlideContent from "@/components/common/listing-detail
 import ListingDetailPhotoSwipeSource from "@/components/common/listing-detail/ListingDetailPhotoSwipeSource";
 import { LISTING_DETAIL_CAROUSEL_BREAKPOINTS } from "@/data/listingDetailGalleryShared";
 import { LISTING_DETAIL_V5_GALLERY } from "@/data/listingDetailV5Gallery";
+import type { ListingDetailGalleryImage } from "@/data/listingDetailV1Gallery";
 import { useListingDetailPhotoSwipe } from "@/hooks/useListingDetailPhotoSwipe";
 
 import "swiper/css/thumbs";
 
-function ListingDetailV5Gallery() {
+type ListingDetailV5GalleryProps = {
+  images?: ListingDetailGalleryImage[];
+};
+
+function ListingDetailV5Gallery({
+  images = LISTING_DETAIL_V5_GALLERY,
+}: ListingDetailV5GalleryProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperInstance | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const { photoswipeSourceRef, openGallery } = useListingDetailPhotoSwipe(
-    LISTING_DETAIL_V5_GALLERY,
-  );
+  const { photoswipeSourceRef, openGallery } = useListingDetailPhotoSwipe(images);
 
   return (
     <div className="listing-gallery style-5">
@@ -35,7 +40,7 @@ function ListingDetailV5Gallery() {
         }}
         onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
       >
-        {LISTING_DETAIL_V5_GALLERY.map((image, index) => (
+        {images.map((image, index) => (
           <SwiperSlide key={`main-${image.thumb}-${index}`}>
             <ListingDetailGallerySlideContent
               image={image}
@@ -60,17 +65,14 @@ function ListingDetailV5Gallery() {
         spaceBetween={8}
         breakpoints={LISTING_DETAIL_CAROUSEL_BREAKPOINTS}
       >
-        {LISTING_DETAIL_V5_GALLERY.map((image, index) => (
+        {images.map((image, index) => (
           <SwiperSlide key={`thumb-${image.thumb}-${index}`}>
             <Image src={image.thumb} alt={image.alt} width={251} height={191} />
           </SwiperSlide>
         ))}
       </Swiper>
 
-      <ListingDetailPhotoSwipeSource
-        images={LISTING_DETAIL_V5_GALLERY}
-        sourceRef={photoswipeSourceRef}
-      />
+      <ListingDetailPhotoSwipeSource images={images} sourceRef={photoswipeSourceRef} />
     </div>
   );
 }

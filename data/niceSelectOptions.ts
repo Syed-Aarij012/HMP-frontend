@@ -297,6 +297,37 @@ export const ADD_LISTING_YEAR_OPTIONS: NiceSelectOption[] = [
   }),
 ];
 
+// Add Listing posts straight to the real HMP-backend API, whose vehicle/listing enums are
+// narrower than the generic filter-sidebar option lists above (BODY_TYPE_OPTIONS etc. — kept
+// as-is since those describe a broader filterable catalog, not what one self-service seller
+// can submit). These three exactly match StoreVehicleRequest's Rule::in() sets.
+export const ADD_LISTING_BODY_TYPE_OPTIONS: NiceSelectOption[] = [
+  { label: "Select", value: "" },
+  { label: "Hatchback", value: "hatchback" },
+  { label: "Saloon", value: "saloon" },
+  { label: "Estate", value: "estate" },
+  { label: "SUV", value: "suv" },
+];
+
+export const ADD_LISTING_FUEL_TYPE_OPTIONS: NiceSelectOption[] = [
+  { label: "Select", value: "" },
+  { label: "Petrol", value: "petrol" },
+  { label: "Diesel", value: "diesel" },
+  { label: "Hybrid", value: "hybrid" },
+  { label: "Electric", value: "electric" },
+];
+
+export const ADD_LISTING_TRANSMISSION_OPTIONS: NiceSelectOption[] = [
+  { label: "Select", value: "" },
+  { label: "Manual", value: "manual" },
+  { label: "Automatic", value: "automatic" },
+];
+
+export const ADD_LISTING_PRICE_TYPE_OPTIONS: NiceSelectOption[] = [
+  { label: "Fixed price", value: "fixed" },
+  { label: "Offers invited", value: "offers_invited" },
+];
+
 export const MILEAGE_OPTIONS: NiceSelectOption[] = [
   { label: "Select", value: "" },
   { label: "0 - 10,000", value: "0-10000" },

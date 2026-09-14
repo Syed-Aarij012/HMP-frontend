@@ -8,13 +8,16 @@ import ListingDetailLoanCalculatorSection from "./ListingDetailLoanCalculatorSec
 import ListingDetailLocationSection from "./ListingDetailLocationSection";
 import ListingDetailSimilarCarsSection from "./ListingDetailSimilarCarsSection";
 import ListingDetailReviewsSection from "./ListingDetailReviewsSection";
+import type { Car } from "@/types/cars";
 
 type ListingDetailScrollspySectionsProps = {
   showOverview?: boolean;
+  car: Car;
 };
 
 export default function ListingDetailScrollspySections({
   showOverview = true,
+  car,
 }: ListingDetailScrollspySectionsProps) {
   return (
     <>
@@ -35,7 +38,7 @@ export default function ListingDetailScrollspySections({
       </ScrollspySection>
       <ListingDetailLocationSection />
       <ScrollspySection id="scrollspyHeading5">
-        <ListingDetailReviewsSection />
+        <ListingDetailReviewsSection car={car} />
       </ScrollspySection>
     </>
   );

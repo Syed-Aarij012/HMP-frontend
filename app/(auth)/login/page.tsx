@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { describeApiError } from "@/lib/api-client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,8 +28,8 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
-    } catch {
-      setError("The provided credentials are incorrect.");
+    } catch (err) {
+      setError(describeApiError(err, "The provided credentials are incorrect."));
     } finally {
       setSubmitting(false);
     }
@@ -41,8 +42,8 @@ export default function LoginPage() {
     try {
       await completeTwoFactorChallenge(challengeToken!, code);
       router.push("/dashboard");
-    } catch {
-      setError("Invalid or expired code.");
+    } catch (err) {
+      setError(describeApiError(err, "Invalid or expired code."));
     } finally {
       setSubmitting(false);
     }
@@ -64,6 +65,9 @@ export default function LoginPage() {
               className="form-control"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              // Some email/temp-mail browser extensions inject attributes into every email
+              // input before hydration — a real, expected, harmless mismatch.
+              suppressHydrationWarning
               required
             />
           </div>

@@ -2,6 +2,8 @@ import ListingDetailGallery from "@/components/common/ListingDetailGallery";
 import ListingDetailScrollspy from "@/components/sections/listing-detail/shared/ListingDetailScrollspy";
 import ListingDetailDealerSidebarV1 from "@/components/sections/listing-detail/shared/ListingDetailDealerSidebarV1";
 import type { ListingDetailSectionProps } from "@/lib/listing-detail-page";
+import { LISTING_DETAIL_V1_GALLERY } from "@/data/listingDetailV1Gallery";
+import { resolveListingDetailGalleryImages } from "@/lib/listingDetailGalleryImages";
 
 function ListingDetail({ title, car }: ListingDetailSectionProps) {
   return (
@@ -39,10 +41,17 @@ function ListingDetail({ title, car }: ListingDetailSectionProps) {
                 </div>
               </div>
               <div className="listing-detail-wrap">
-                <ListingDetailGallery />
+                <ListingDetailGallery
+                  images={resolveListingDetailGalleryImages(
+                    car,
+                    LISTING_DETAIL_V1_GALLERY,
+                    1104,
+                    701,
+                  )}
+                />
                 <div className="row">
                   <div className="col-lg-12">
-                    <ListingDetailScrollspy />
+                    <ListingDetailScrollspy car={car} />
                   </div>
                 </div>
               </div>
