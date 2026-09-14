@@ -2,17 +2,29 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { popularListingTabs, popularListings, getCarDetailHref } from "@/data/cars";
+import { popularListingTabs, getCarDetailHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
+import { useHomepageListings } from "@/hooks/useHomepageListings";
 
 function PopularListings() {
-  const [activeTab, setActiveTab] = useState(popularListingTabs[0]);
+  const [selectedTab, setSelectedTab] = useState<string | null>(null);
+  const { cars, loading, error } = useHomepageListings();
+
+  // Real listings are tagged "New car" only below a near-zero mileage threshold (see
+  // mapApiListingToCar) — almost every real listing is realistically "Used car", so
+  // defaulting to popularListingTabs[0] ("New car") would show an empty tab against real
+  // data. Default to whichever tab actually has something once the cars have loaded,
+  // rather than a fixed tab that may be empty.
+  const activeTab =
+    selectedTab ??
+    popularListingTabs.find((tab) => cars.some((car) => car.listingType?.includes(tab))) ??
+    popularListingTabs[0];
 
   const filteredCars = useMemo(() => {
-    return popularListings.filter((car) => car.listingType?.includes(activeTab));
-  }, [activeTab]);
+    return cars.filter((car) => car.listingType?.includes(activeTab));
+  }, [cars, activeTab]);
 
   return (
     <>
@@ -35,7 +47,7 @@ function PopularListings() {
                   <li
                     key={tab}
                     className={`item-title${activeTab === tab ? " active" : ""}`}
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => setSelectedTab(tab)}
                     role="tab"
                     aria-selected={activeTab === tab}
                   >
@@ -46,6 +58,12 @@ function PopularListings() {
             </div>
             <div className="content-tab">
               <div className="content-inner tab-content">
+                {loading && <p>Loading live listings...</p>}
+                {error && <div className="alert alert-danger">{error}</div>}
+                {!loading && !error && filteredCars.length === 0 && (
+                  <p>No live listings in this category right now.</p>
+                )}
+                {!loading && !error && filteredCars.length > 0 && (
                 <Swiper
                   key={activeTab}
                   className="swiper-container tf-swiper"
@@ -172,6 +190,7 @@ function PopularListings() {
                   ))}
                   <span className="d-flex d-xl-none sw-dot-default sw-pagination-categories justify-content-center" />
                 </Swiper>
+                )}
               </div>
             </div>
           </div>

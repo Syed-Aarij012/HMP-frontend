@@ -1,16 +1,18 @@
-import DashboardListingTableRow from "@/components/common/DashboardListingTableRow";
+import DashboardListingTableRow, {
+  type ListingEditableFields,
+} from "@/components/common/DashboardListingTableRow";
 import type { DashboardCar } from "@/types/cars";
 
 type DashboardListingTableBodyProps = {
   listings: DashboardCar[];
   onDelete?: (id: number) => void;
-  onMarkSold?: (id: number) => void;
+  onSave?: (id: number, updates: ListingEditableFields) => Promise<void>;
 };
 
 export default function DashboardListingTableBody({
   listings,
   onDelete,
-  onMarkSold,
+  onSave,
 }: DashboardListingTableBodyProps) {
   return (
     <tbody className="tfcl-table-content">
@@ -19,7 +21,7 @@ export default function DashboardListingTableBody({
           key={listing.id}
           listing={listing}
           onDelete={onDelete}
-          onMarkSold={onMarkSold}
+          onSave={onSave}
         />
       ))}
     </tbody>

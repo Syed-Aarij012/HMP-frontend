@@ -8,13 +8,18 @@ import ListingDetailGallerySlideContent from "@/components/common/listing-detail
 import ListingDetailPhotoSwipeSource from "@/components/common/listing-detail/ListingDetailPhotoSwipeSource";
 import { LISTING_DETAIL_CAROUSEL_BREAKPOINTS } from "@/data/listingDetailGalleryShared";
 import { LISTING_DETAIL_V4_GALLERY } from "@/data/listingDetailV4Gallery";
+import type { ListingDetailGalleryImage } from "@/data/listingDetailV1Gallery";
 import { useListingDetailPhotoSwipe } from "@/hooks/useListingDetailPhotoSwipe";
 
-function ListingDetailV4Gallery() {
+type ListingDetailV4GalleryProps = {
+  images?: ListingDetailGalleryImage[];
+};
+
+function ListingDetailV4Gallery({
+  images = LISTING_DETAIL_V4_GALLERY,
+}: ListingDetailV4GalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const { photoswipeSourceRef, openGallery } = useListingDetailPhotoSwipe(
-    LISTING_DETAIL_V4_GALLERY,
-  );
+  const { photoswipeSourceRef, openGallery } = useListingDetailPhotoSwipe(images);
 
   return (
     <div className="listing-gallery style-4">
@@ -34,7 +39,7 @@ function ListingDetailV4Gallery() {
         breakpoints={LISTING_DETAIL_CAROUSEL_BREAKPOINTS}
         onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
       >
-        {LISTING_DETAIL_V4_GALLERY.map((image, index) => (
+        {images.map((image, index) => (
           <SwiperSlide key={image.src}>
             <ListingDetailGallerySlideContent
               image={image}
@@ -47,10 +52,7 @@ function ListingDetailV4Gallery() {
         <span className="d-flex d-md-none sw-dot-default swiper-pagi-details4 justify-content-center" />
       </Swiper>
 
-      <ListingDetailPhotoSwipeSource
-        images={LISTING_DETAIL_V4_GALLERY}
-        sourceRef={photoswipeSourceRef}
-      />
+      <ListingDetailPhotoSwipeSource images={images} sourceRef={photoswipeSourceRef} />
     </div>
   );
 }

@@ -5,8 +5,20 @@ import Image from "next/image";
 import { searchByBrands } from "@/data/brands";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
+import { useHomepageListings } from "@/hooks/useHomepageListings";
 
 function SearchCar() {
+  const { makeCounts, loading } = useHomepageListings();
+
+  const brands = searchByBrands.map((brand) => ({
+    ...brand,
+    // Real inventory count from the live make facet where we have data for this brand;
+    // falls back to the template's placeholder count while that's still loading.
+    listingCount: loading
+      ? brand.listingCount
+      : makeCounts[brand.title.toLowerCase()] ?? 0,
+  }));
+
   return (
     <>
       <section className="tf-section">
@@ -51,9 +63,12 @@ function SearchCar() {
               },
             }}
           >
-            {searchByBrands.map((brand) => (
+            {brands.map((brand) => (
               <SwiperSlide className="swiper-slide" key={brand.id}>
-                <Link href={`/listing-list`} className="partner-item style-2">
+                <Link
+                  href={`/listing-list?make=${encodeURIComponent(brand.title)}`}
+                  className="partner-item style-2"
+                >
                   <div className="image">
                     <Image
                       className="lazyload"

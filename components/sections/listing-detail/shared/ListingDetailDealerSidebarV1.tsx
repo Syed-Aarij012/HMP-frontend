@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import LatePriceListWidget from "@/components/common/LatePriceListWidget";
 import ListingDetailFavoriteCompareActions from "@/components/common/listing-detail/ListingDetailFavoriteCompareActions";
 import ListingDetailDealerSidebarShell from "@/components/common/listing-detail/ListingDetailDealerSidebarShell";
+import { useContactDealer } from "@/components/common/ContactDealerContext";
 import type { Car } from "@/types/cars";
 
 type ListingDetailDealerSidebarV1Props = {
@@ -14,11 +17,12 @@ export default function ListingDetailDealerSidebarV1({
   detailHref = "/listing-detail-v1",
   car,
 }: ListingDetailDealerSidebarV1Props) {
+  const { setContactDealerTarget } = useContactDealer();
   return (
     <ListingDetailDealerSidebarShell>
         <div className="widget-listing widget">
           <div className="heading-widget">
-            <div className="money text-color-3 font">$73,000</div>
+            <div className="money text-color-3 font">${car.price.toLocaleString()}</div>
             <div className="price-wrap">
               <p className="fs-14 lh-16 text-color-2">
                 Monthly installment payment:{" "}
@@ -93,6 +97,7 @@ export default function ListingDetailDealerSidebarV1({
               data-bs-target="#ModalTogglemess"
               data-bs-toggle="modal"
               className="button-form-3"
+              onClick={() => setContactDealerTarget(car)}
             >
               Send mesage
             </a>

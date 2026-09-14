@@ -11,14 +11,6 @@ import {
 
 const MAX_PHOTOS = 10;
 
-const DEFAULT_PHOTOS = [
-  "/assets/images/dashboard/thumb-media1.jpg",
-  "/assets/images/dashboard/thumb-media4.jpg",
-  "/assets/images/dashboard/thumb-media3.jpg",
-  "/assets/images/dashboard/thumb-media2.jpg",
-  "/assets/images/dashboard/thumb-media5.jpg",
-];
-
 type ListingPhoto = {
   id: string;
   src: string;
@@ -45,16 +37,9 @@ function DeleteIcon() {
   );
 }
 
-function createDefaultPhotos(): ListingPhoto[] {
-  return DEFAULT_PHOTOS.map((src, index) => ({
-    id: `default-photo-${index}`,
-    src,
-  }));
-}
-
 export default function UploadPhotoSection() {
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const [photos, setPhotos] = useState<ListingPhoto[]>(createDefaultPhotos);
+  const [photos, setPhotos] = useState<ListingPhoto[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
   const addPhotos = (files: FileList | File[]) => {

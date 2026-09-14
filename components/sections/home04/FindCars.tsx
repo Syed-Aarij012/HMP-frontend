@@ -5,8 +5,29 @@ import Image from "next/image";
 import { carModelCategories } from "@/data/categories";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
+import { useHomepageListings } from "@/hooks/useHomepageListings";
+
+// The backend's body_type values (hatchback/saloon/estate/suv) use UK terms; the template's
+// category titles use US ones for some of them — this is the only translation needed to
+// match the two up. Categories with no backend equivalent (Crossover, Coupe, Pickup Truck,
+// Minivan, Convertible) genuinely have no live count yet — they show 0, not a fabricated one.
+const BODY_TYPE_ALIASES: Record<string, string> = {
+  sedan: "saloon",
+  "station wagon": "estate",
+};
 
 function FindCars() {
+  const { bodyTypeCounts, loading } = useHomepageListings();
+
+  const categories = carModelCategories.map((category) => {
+    const key = category.title.toLowerCase();
+    const backendKey = BODY_TYPE_ALIASES[key] ?? key;
+    return {
+      ...category,
+      listingCount: loading ? category.listingCount : bodyTypeCounts[backendKey] ?? 0,
+    };
+  });
+
   return (
     <>
       <section className="tf-section bg-3">
@@ -55,7 +76,7 @@ function FindCars() {
               },
             }}
           >
-            {carModelCategories.map((category) => (
+            {categories.map((category) => (
               <SwiperSlide className="swiper-slide" key={category.id}>
                 <Link href={`/listing-list`} className="partner-item style-4">
                   <div className="image">

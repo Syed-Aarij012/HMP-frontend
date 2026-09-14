@@ -1,19 +1,36 @@
 "use client";
 
-import { listingMapCars } from "@/data/cars";
 import { ListingMapProvider } from "@/components/common/ListingMapContext";
 import ListingMapPanel from "@/components/common/ListingMapPanel";
 import ListingMapSidebar from "@/components/common/ListingMapSidebar";
 import ListingFilterOffcanvas from "@/components/listings/ListingFilterOffcanvas";
 import { useListingFilterState } from "@/components/listings/useListingFilterState";
+import { useMapListings } from "@/hooks/useMapListings";
 
 const MAP_FILTER_OFFCANVAS_ID = "offcanvas-listing-map-filter";
 
 export default function ListingGridMap() {
+  const { cars, loading, error } = useMapListings(60);
   const { state, dispatch } = useListingFilterState({
-    listings: listingMapCars,
-    itemPerPage: listingMapCars.length,
+    listings: cars,
+    itemPerPage: cars.length || 1,
   });
+
+  if (loading) {
+    return (
+      <div className="container">
+        <p>Loading live listings...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container">
+        <div className="alert alert-danger">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <>

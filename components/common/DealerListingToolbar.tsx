@@ -1,10 +1,5 @@
-import NiceSelect from "@/components/common/NiceSelect";
-import {
-  DEALER_BRAND_OPTIONS,
-  DEALER_LOCATION_OPTIONS,
-  DEALER_SHOW_OPTIONS,
-  DEALER_SORT_OPTIONS,
-} from "@/data/niceSelectOptions";
+import NiceSelect, { type NiceSelectOption } from "@/components/common/NiceSelect";
+import { DEALER_SHOW_OPTIONS, DEALER_SORT_OPTIONS } from "@/data/niceSelectOptions";
 import type { DealerSortOption } from "@/types/dealers";
 
 type DealerListingToolbarProps = {
@@ -12,6 +7,11 @@ type DealerListingToolbarProps = {
   brand: string;
   perPage: number;
   sortBy: DealerSortOption;
+  // Passed in by the caller (real-dealer values, not the mock-derived constants this
+  // component used to import directly) so the options always match what's actually
+  // filterable — see DealerListingContent.tsx.
+  locationOptions: NiceSelectOption[];
+  brandOptions: NiceSelectOption[];
   onLocationChange: (value: string) => void;
   onBrandChange: (value: string) => void;
   onPerPageChange: (value: number) => void;
@@ -23,6 +23,8 @@ export default function DealerListingToolbar({
   brand,
   perPage,
   sortBy,
+  locationOptions,
+  brandOptions,
   onLocationChange,
   onBrandChange,
   onPerPageChange,
@@ -31,12 +33,12 @@ export default function DealerListingToolbar({
   return (
     <div className="group-sort-filter flex-wrap">
       <NiceSelect
-        options={DEALER_LOCATION_OPTIONS}
+        options={locationOptions}
         value={location}
         onChange={(value) => onLocationChange(String(value))}
       />
       <NiceSelect
-        options={DEALER_BRAND_OPTIONS}
+        options={brandOptions}
         value={brand}
         onChange={(value) => onBrandChange(String(value))}
       />

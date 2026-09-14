@@ -2,6 +2,8 @@ import ListingDetailGallery from "@/components/common/ListingDetailGallery";
 import ListingDetailScrollspy from "@/components/sections/listing-detail/shared/ListingDetailScrollspy";
 import ListingDetailDealerSidebarV1 from "@/components/sections/listing-detail/shared/ListingDetailDealerSidebarV1";
 import type { ListingDetailSectionProps } from "@/lib/listing-detail-page";
+import { LISTING_DETAIL_V1_GALLERY } from "@/data/listingDetailV1Gallery";
+import { resolveListingDetailGalleryImages } from "@/lib/listingDetailGalleryImages";
 
 function ListingDetail({ title, car }: ListingDetailSectionProps) {
   return (
@@ -26,23 +28,30 @@ function ListingDetail({ title, car }: ListingDetailSectionProps) {
                         fill="black"
                       />
                     </svg>
-                    <span>1032 Km</span>
+                    <span>{car.mileage.toLocaleString()} Km</span>
                   </div>
                   <div className="icons flex-three">
-                    <i className="icon-carus-usercheck" />
-                    <span>First owner</span>
+                    <i className="icon-carus-icon12" />
+                    <span>{car.transmission}</span>
                   </div>
                   <div className="icons flex-three">
                     <i className="icon-carus-icon9" />
-                    <span>Petrol</span>
+                    <span>{car.fuel}</span>
                   </div>
                 </div>
               </div>
               <div className="listing-detail-wrap">
-                <ListingDetailGallery />
+                <ListingDetailGallery
+                  images={resolveListingDetailGalleryImages(
+                    car,
+                    LISTING_DETAIL_V1_GALLERY,
+                    1104,
+                    701,
+                  )}
+                />
                 <div className="row">
                   <div className="col-lg-12">
-                    <ListingDetailScrollspy />
+                    <ListingDetailScrollspy car={car} />
                   </div>
                 </div>
               </div>

@@ -2,11 +2,6 @@
 
 import { useRef, useState, type ChangeEvent, type MouseEvent } from "react";
 
-const DEFAULT_ATTACHMENTS = [
-  { id: "default-attachment-0", name: "Vehicle-report.pdf" },
-  { id: "default-attachment-1", name: "Inspection.pdf" },
-];
-
 type ListingAttachment = {
   id: string;
   name: string;
@@ -80,8 +75,7 @@ function PdfFileIcon() {
 
 export default function AttachmentsSection() {
   const attachmentInputRef = useRef<HTMLInputElement>(null);
-  const [attachments, setAttachments] =
-    useState<ListingAttachment[]>(DEFAULT_ATTACHMENTS);
+  const [attachments, setAttachments] = useState<ListingAttachment[]>([]);
 
   const addAttachments = (files: FileList | File[]) => {
     const fileArray = Array.from(files);

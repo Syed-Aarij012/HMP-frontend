@@ -35,6 +35,11 @@ export type Car = {
   filterYear?: number;
   filterFeatures?: string[];
   mapPosition?: [number, number];
+  // Real listings only: the full real photo set (QA-passed vehicle media) and the
+  // backend's own ULID, needed by anything that must call the API about this exact
+  // listing again (favoriting, reviews) rather than just displaying it.
+  images?: string[];
+  publicId?: string;
 };
 
 export type DashboardCar = Car & {

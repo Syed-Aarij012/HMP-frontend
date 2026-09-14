@@ -3,15 +3,45 @@ import type { ListingDetailSectionProps } from "@/lib/listing-detail-page";
 import ListingDetailV6Gallery from "@/components/sections/listing-detail-v6/ListingDetailV6Gallery";
 import ListingDetailScrollspy from "@/components/sections/listing-detail/shared/ListingDetailScrollspy";
 import ListingDetailDealerSidebar from "@/components/sections/listing-detail/shared/ListingDetailDealerSidebar";
+import {
+  LISTING_DETAIL_V6_GALLERY,
+  LISTING_DETAIL_V6_SIDE_IMAGE,
+} from "@/data/listingDetailV6Gallery";
+import { toListingDetailGalleryImages } from "@/lib/listingDetailGalleryImages";
+
+// v6's layout is a main carousel plus one separate "side" showcase image (not part of
+// the carousel/lightbox sequence). For a real listing, the last real photo becomes the
+// side image and the rest go in the carousel; a single-photo listing reuses it for both.
+function resolveV6Gallery(car: ListingDetailSectionProps["car"]) {
+  const hasRealImages = Boolean(car.publicId) && car.images && car.images.length > 0;
+
+  if (!hasRealImages) {
+    return {
+      images: LISTING_DETAIL_V6_GALLERY,
+      sideImage: LISTING_DETAIL_V6_SIDE_IMAGE,
+    };
+  }
+
+  const realImages = car.images as string[];
+  const mainSrcs = realImages.length > 1 ? realImages.slice(0, -1) : realImages;
+  const sideSrc = realImages[realImages.length - 1];
+
+  return {
+    images: toListingDetailGalleryImages(mainSrcs, car.title, 1488, 723),
+    sideImage: { src: sideSrc, alt: car.title, width: 660, height: 723 },
+  };
+}
 
 function ListingDetail({ title, car }: ListingDetailSectionProps) {
+  const { images: v6GalleryImages, sideImage: v6SideImage } = resolveV6Gallery(car);
+
   return (
     <>
       <section className="tf-section3 listing-detail style-2 style-3">
         <div className="container">
           <div className="row">
             <div className="col-lg-12">
-              <ListingDetailV6Gallery />
+              <ListingDetailV6Gallery images={v6GalleryImages} sideImage={v6SideImage} />
               <div className="headings-wrap flex-one gap-20 flex-wrap">
                 <div className="headings-widget">
                   <h2 className="title">{title}</h2>
@@ -93,12 +123,12 @@ function ListingDetail({ title, car }: ListingDetailSectionProps) {
               <div className="listing-detail-wrap">
                 <div className="row">
                   <div className="col-lg-12">
-                    <ListingDetailScrollspy />
+                    <ListingDetailScrollspy car={car} />
                   </div>
                 </div>
               </div>
             </div>
-            <ListingDetailDealerSidebar detailHref="/listing-detail-v6" />
+            <ListingDetailDealerSidebar detailHref="/listing-detail-v6" car={car} />
           </div>
         </div>
       </section>

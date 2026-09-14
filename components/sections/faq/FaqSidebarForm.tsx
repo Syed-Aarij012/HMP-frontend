@@ -36,6 +36,7 @@ export default function FaqSidebarForm() {
           className="form-control"
           name="listing_title"
           placeholder="e.g johndoe@gmail.com"
+          suppressHydrationWarning
           defaultValue=""
         />
       </div>
