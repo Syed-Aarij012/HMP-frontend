@@ -11,9 +11,13 @@ import {  MobileMenuBackdrop,
 import Nav from "./Nav";
 import MobileNav from "./MobileNav";
 import { HeaderSearchTrigger } from "./HeaderSearch";
+import { useAuth } from "@/contexts/AuthContext";
+
+const DEFAULT_AVATAR = "/assets/images/dashboard/agent1.jpg";
 
 export default function Header3() {
   const { navRef, isFixed, isSmall, spacerHeight, headerClassName } = useStickyHeader();
+  const { user, logout } = useAuth();
 
   return (
     <header className="header main-header style1">
@@ -115,22 +119,37 @@ export default function Header3() {
         <MobileMenuBackdrop />
         <nav className="menu-box">
           <div className="header-account-menu flex align-center">
-            <a href="#" className="box-avatar dropdown-toggle">
-              <div className="avatar round">
-                <Image
-                  src="/assets/images/dashboard/agent1.jpg"
-                  alt="avt"
-                  height={48}
-                  width={48}
-                />
+            {user ? (
+              <Link href="/dashboard" className="box-avatar dropdown-toggle">
+                <div className="avatar round">
+                  <Image
+                    src={typeof user.avatar_url === "string" ? user.avatar_url : DEFAULT_AVATAR}
+                    alt="avt"
+                    height={48}
+                    width={48}
+                    unoptimized={typeof user.avatar_url === "string"}
+                  />
+                </div>
+                <div className="content">
+                  <p className="fs-12 fw-4">Your account</p>
+                  <p className="name">{user.name}</p>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex align-center gap-30">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#popup_bid">
+                  Login
+                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#popup_bid2">
+                  Register
+                </a>
               </div>
-              <div className="content">
-                <p className="fs-12 fw-4">Your account</p>
-                <p className="name">
-                  HMP <i className="fal fa-angle-down" />
-                </p>
-              </div>
-            </a>
+            )}
+            {user && (
+              <Link href="/" className="fs-12" onClick={() => logout()}>
+                Logout
+              </Link>
+            )}
           </div>
           <div className="bottom-canvas">
             <div className="menu-outer">

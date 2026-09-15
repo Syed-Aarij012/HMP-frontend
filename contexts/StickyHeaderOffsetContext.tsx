@@ -65,7 +65,6 @@ export function StickyHeaderOffsetSync({
 
     const observer = new ResizeObserver(measure);
     observer.observe(nav);
-
     return () => {
       observer.disconnect();
       setOffset(0);

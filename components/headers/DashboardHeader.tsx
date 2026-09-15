@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -9,8 +11,15 @@ import {
 import Nav from "./Nav";
 import MobileNav from "./MobileNav";
 import { HeaderSearchTrigger } from "./HeaderSearch";
+import { useAuth } from "@/contexts/AuthContext";
+
+const DEFAULT_AVATAR = "/assets/images/dashboard/agent1.jpg";
 
 export default function DashboardHeader() {
+  const { user, logout } = useAuth();
+  const avatarSrc = typeof user?.avatar_url === "string" ? user.avatar_url : DEFAULT_AVATAR;
+  const isRealAvatar = typeof user?.avatar_url === "string";
+
   return (
     <header className="main-header">
       {/* Header Lower */}
@@ -55,14 +64,15 @@ export default function DashboardHeader() {
                   >
                     <div className="avatar avt-40 round">
                       <Image
-                        src="/assets/images/dashboard/agent1.jpg"
+                        src={avatarSrc}
                         alt="avt"
                         width={80}
                         height={80}
+                        unoptimized={isRealAvatar}
                       />
                     </div>
                     <p className="name">
-                      HMP <i className="fal fa-angle-down" />
+                      {user?.name ?? "Account"} <i className="fal fa-angle-down" />
                     </p>
                   </a>
                   <div className="dropdown-menu dashboard-menu">
@@ -94,7 +104,7 @@ export default function DashboardHeader() {
                       <i className="icon-carus-profile" />
                       Profile
                     </Link>
-                    <Link className="dropdown-item" href={`/`}>
+                    <Link className="dropdown-item" href="/" onClick={() => logout()}>
                       <i className="icon-carus-signout" />
                       Logout
                     </Link>
@@ -121,16 +131,17 @@ export default function DashboardHeader() {
             <a href="#" className="box-avatar dropdown-toggle">
               <div className="avatar round">
                 <Image
-                  src="/assets/images/dashboard/agent1.jpg"
+                  src={avatarSrc}
                   alt="avt"
                   height={48}
                   width={48}
+                  unoptimized={isRealAvatar}
                 />
               </div>
               <div className="content">
                 <p className="fs-12 fw-4">Your account</p>
                 <p className="name">
-                  HMP <i className="fal fa-angle-down" />
+                  {user?.name ?? "Account"} <i className="fal fa-angle-down" />
                 </p>
               </div>
             </a>
