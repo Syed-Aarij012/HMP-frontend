@@ -14,13 +14,14 @@ export type ListingEditableFields = {
   price: number;
   price_type: string;
   description: string;
-  status: "live" | "under_offer" | "withdrawn";
+  status: "live" | "under_offer" | "withdrawn" | "sold";
 };
 
 type DashboardListingTableRowProps = {
   listing: DashboardCar;
   onDelete?: (id: number) => void;
   onSave?: (id: number, updates: ListingEditableFields) => Promise<void>;
+  onMarkSold?: (id: number) => Promise<void>;
 };
 
 const DEFAULT_LISTING_DESCRIPTION =
@@ -30,16 +31,23 @@ const LISTING_STATUS_OPTIONS = [
   { label: "Live", value: "live" },
   { label: "Under offer", value: "under_offer" },
   { label: "Withdrawn", value: "withdrawn" },
+  { label: "Sold", value: "sold" },
 ];
 
 export default function DashboardListingTableRow({
   listing,
   onDelete,
   onSave,
+  onMarkSold,
 }: DashboardListingTableRowProps) {
   const detailHref = getCarHref(listing);
   const statusMeta = DASHBOARD_LISTING_STATUS_META[listing.dashboardStatus];
   const canEdit = Boolean(listing.publicId && onSave);
+  const canMarkSold = Boolean(
+    listing.publicId && onMarkSold && listing.dashboardStatus !== "sold"
+  );
+  const [markingSold, setMarkingSold] = useState(false);
+  const [markSoldError, setMarkSoldError] = useState<string | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [price, setPrice] = useState(String(listing.price));
@@ -54,6 +62,20 @@ export default function DashboardListingTableRow({
     setDescription(listing.description ?? "");
     setError(null);
     setIsEditing(true);
+  };
+
+  const handleMarkSold = async () => {
+    if (!onMarkSold) return;
+
+    setMarkingSold(true);
+    setMarkSoldError(null);
+    try {
+      await onMarkSold(listing.id);
+    } catch (err) {
+      setMarkSoldError(describeApiError(err, "Could not mark this listing as sold."));
+    } finally {
+      setMarkingSold(false);
+    }
   };
 
   const handleSave = async () => {
@@ -205,6 +227,26 @@ export default function DashboardListingTableRow({
             </button>
           </div>
         )}
+        {canMarkSold && (
+          <div className="inner-controller">
+            <span className="icon">
+              <Image
+                src="/assets/images/dashboard/hide.svg"
+                alt="icon"
+                width={20}
+                height={20}
+              />
+            </span>
+            <button
+              type="button"
+              className="btn-action tfcl-dashboard-action-edit"
+              onClick={handleMarkSold}
+              disabled={markingSold}
+            >
+              {markingSold ? "Marking..." : "Sold"}
+            </button>
+          </div>
+        )}
         <div className="inner-controller">
           <span className="icon">
             <Image
@@ -222,6 +264,9 @@ export default function DashboardListingTableRow({
             Delete
           </button>
         </div>
+        {markSoldError && (
+          <div className="text-danger fs-12 w-100 mt-1">{markSoldError}</div>
+        )}
       </td>
     </tr>
   );

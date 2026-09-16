@@ -5,7 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useDashboardSidebar } from "@/components/dashboard/DashboardSidebarContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { isNavLinkActive } from "@/lib/navigation";
+
+const DEFAULT_AVATAR = "/assets/images/dashboard/avatar.png";
 
 type DashboardMenuItem = {
   id: string;
@@ -79,6 +82,7 @@ const dashboardMenuItems: DashboardMenuItem[] = [
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const { isOpen, close } = useDashboardSidebar();
+  const { user } = useAuth();
 
   useEffect(() => {
     close();
@@ -107,16 +111,17 @@ export default function DashboardSidebar() {
             <Image
               loading="lazy"
               id="tfre_avatar_thumbnail"
-              src="/assets/images/dashboard/avatar.png"
-              alt="admin"
-              title="admin"
+              src={typeof user?.avatar_url === "string" ? user.avatar_url : DEFAULT_AVATAR}
+              alt={user?.name ?? "Account"}
+              title={user?.name ?? "Account"}
               width={52}
               height={52}
+              unoptimized={typeof user?.avatar_url === "string"}
             />
           </div>
           <div className="content">
-            <div className="name">Account</div>
-            <div className="author-email">hmp@gmail...</div>
+            <div className="name">{user?.name ?? "Account"}</div>
+            <div className="author-email">{user?.email ?? ""}</div>
           </div>
         </div>
       </div>

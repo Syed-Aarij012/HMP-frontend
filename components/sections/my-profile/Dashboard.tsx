@@ -3,11 +3,12 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import ProfileImageUpload from "@/components/sections/my-profile/ProfileImageUpload";
 import { useAuth } from "@/contexts/AuthContext";
 import { describeApiError } from "@/lib/api-client";
 
 function Dashboard() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, uploadAvatar, removeAvatar } = useAuth();
 
   const [name, setName] = useState(user?.name ?? "");
   const [phone, setPhone] = useState(
@@ -44,6 +45,16 @@ function Dashboard() {
                   <div className="tfcl-dashboard">
                     <h1 className="admin-title mb-3">Edit profile</h1>
                     <div className="tfcl-add-listing profile-inner">
+                      <div className="profile-group mb-3">
+                        <h3 className="form-title">Avatar</h3>
+                        <ProfileImageUpload
+                          currentImageSrc={
+                            typeof user?.avatar_url === "string" ? user.avatar_url : null
+                          }
+                          onUpload={uploadAvatar}
+                          onRemove={removeAvatar}
+                        />
+                      </div>
                       <div className="profile-group mb-3">
                         <h3 className="form-title">Information</h3>
                         <form onSubmit={handleSubmit}>

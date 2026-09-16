@@ -169,6 +169,24 @@ export default function DashboardListingsTable({
     }
   };
 
+  const handleMarkSold = async (id: number) => {
+    const listing = listings.find((item) => item.id === id);
+    if (!listing?.publicId) return;
+
+    const response = await apiFetch<{ data: { status: string } }>(
+      `/listings/${listing.publicId}`,
+      { method: "PATCH", body: { status: "sold" } }
+    );
+
+    setListings((current) =>
+      current.map((item) =>
+        item.id === id
+          ? { ...item, dashboardStatus: mapStatus(response.data.status) }
+          : item,
+      ),
+    );
+  };
+
   const handleSave = async (id: number, updates: ListingEditableFields) => {
     const listing = listings.find((item) => item.id === id);
     if (!listing?.publicId) return;
@@ -295,6 +313,7 @@ export default function DashboardListingsTable({
               listings={paginatedListings}
               onDelete={handleDelete}
               onSave={handleSave}
+              onMarkSold={handleMarkSold}
             />
           </table>
         </div>

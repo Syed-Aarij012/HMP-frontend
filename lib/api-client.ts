@@ -65,12 +65,16 @@ type RequestOptions = Omit<RequestInit, "body"> & {
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, auth = true, headers, ...rest } = options;
 
+  const isFormData = body instanceof FormData;
+
   const finalHeaders: Record<string, string> = {
     Accept: "application/json",
     ...(headers as Record<string, string> | undefined),
   };
 
-  if (body !== undefined) {
+  // A FormData body (file upload) must NOT get a manual Content-Type — the browser sets
+  // one itself with the correct multipart boundary, which we can't reproduce by hand.
+  if (body !== undefined && !isFormData) {
     finalHeaders["Content-Type"] = "application/json";
   }
 
@@ -84,7 +88,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
     headers: finalHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
   });
 
   const contentType = response.headers.get("content-type") ?? "";

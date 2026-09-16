@@ -48,6 +48,8 @@ type AuthContextValue = {
   register: (payload: RegisterPayload) => Promise<void>;
   registerDealer: (payload: RegisterDealerPayload) => Promise<void>;
   updateProfile: (name: string, phone?: string) => Promise<void>;
+  uploadAvatar: (file: File) => Promise<void>;
+  removeAvatar: () => Promise<void>;
   changePassword: (currentPassword: string, password: string, passwordConfirmation: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (
@@ -147,6 +149,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data);
   }, []);
 
+  const uploadAvatar = useCallback(async (file: File) => {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    const data = await apiFetch<AuthUser>("/user/avatar", {
+      method: "POST",
+      body: formData,
+    });
+    setUser(data);
+  }, []);
+
+  const removeAvatar = useCallback(async () => {
+    const data = await apiFetch<AuthUser>("/user/avatar", { method: "DELETE" });
+    setUser(data);
+  }, []);
+
   const changePassword = useCallback(
     async (currentPassword: string, password: string, passwordConfirmation: string) => {
       await apiFetch("/user/password", {
@@ -193,6 +210,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         registerDealer,
         updateProfile,
+        uploadAvatar,
+        removeAvatar,
         changePassword,
         requestPasswordReset,
         resetPassword,
