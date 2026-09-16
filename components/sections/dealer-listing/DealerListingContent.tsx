@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Pagination from "@/components/common/Pagination";
 import DealerListingToolbar from "@/components/common/DealerListingToolbar";
 import DealerListingCard from "@/components/sections/dealer-listing/DealerListingCard";
 import { useDealers } from "@/hooks/useDealers";
+import { useMakeFacets } from "@/hooks/useMakeFacets";
 import { getDealerListingResults } from "@/lib/dealerListingUtils";
 import type { NiceSelectOption } from "@/components/common/NiceSelect";
 import type { DealerSortOption } from "@/types/dealers";
@@ -16,19 +18,21 @@ type DealerListingContentProps = {
 export default function DealerListingContent({
   title = "Find Car Dealerships",
 }: DealerListingContentProps) {
-  const { dealers, loading, error } = useDealers();
+  // "Dealerships by Brands" tiles deep-link here as /dealer-listing?brand=Ford.
+  const searchParams = useSearchParams();
   const [location, setLocation] = useState("");
-  const [brand, setBrand] = useState("");
+  const [brand, setBrand] = useState(() => searchParams.get("brand") ?? "");
   const [perPage, setPerPage] = useState(8);
   const [sortBy, setSortBy] = useState<DealerSortOption>("date");
   const [page, setPage] = useState(1);
 
-  // data/niceSelectOptions.ts's DEALER_LOCATION_OPTIONS/DEALER_BRAND_OPTIONS are derived
-  // from the mock data/dealers.ts array (US state names, specific car-brand names). Real
-  // dealers report their rooftop's city as `state` and always "Multi-Brand" as `brand`, so
-  // those mock-derived options wouldn't match anything a real dealer actually has. Derive
-  // the dropdown options from whichever dealers actually came back instead, so filtering
-  // never silently returns zero results.
+  // A real dealer isn't one brand (mapApiDealerToDealer reports "Multi-Brand" for all of
+  // them), so filtering happens server-side by "has a live listing of this make" instead —
+  // see DealerController::index(). makeCounts gives the same real, non-empty option list
+  // the homepage's brand tiles use, rather than a mock/derived one that might match nothing.
+  const { dealers, loading, error } = useDealers({ make: brand || undefined });
+  const { makes } = useMakeFacets();
+
   const locationOptions: NiceSelectOption[] = useMemo(() => {
     const states = [...new Set(dealers.map((dealer) => dealer.state).filter(Boolean))].sort();
     return [
@@ -38,23 +42,25 @@ export default function DealerListingContent({
   }, [dealers]);
 
   const brandOptions: NiceSelectOption[] = useMemo(() => {
-    const brands = [...new Set(dealers.map((dealer) => dealer.brand).filter(Boolean))].sort();
     return [
       { label: "All brands", value: "" },
-      ...brands.map((brand) => ({ label: brand, value: brand })),
+      ...makes.map((make) => ({ label: make.value, value: make.value })),
     ];
-  }, [dealers]);
+  }, [makes]);
 
   const results = useMemo(
     () =>
       getDealerListingResults(dealers, {
+        // Brand is already applied server-side by useDealers({ make }) above — filtering
+        // again here client-side by the (always "Multi-Brand") dealer.brand field would
+        // incorrectly wipe out every real result.
         location,
-        brand,
+        brand: "",
         sortBy,
         perPage,
         page,
       }),
-    [dealers, location, brand, sortBy, perPage, page],
+    [dealers, location, sortBy, perPage, page],
   );
 
   const resetPage = () => setPage(1);

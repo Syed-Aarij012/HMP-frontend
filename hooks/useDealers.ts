@@ -11,20 +11,32 @@ export type DealersResult = {
   error: string | null;
 };
 
+type UseDealersOptions = {
+  perPage?: number;
+  // "Dealerships by Brands" (FR-C-002): scopes to dealers with a live listing of this make.
+  make?: string;
+};
+
 /**
  * The public, anonymous-browsing GET /dealers endpoint (FR-C-002) — fetched as one page
  * (dealer counts are small) so the existing client-side filter/sort/paginate helpers in
  * lib/dealerListingUtils.ts keep working unchanged against a real Dealer[] array.
  */
-export function useDealers(perPage = 100): DealersResult {
+export function useDealers({ perPage = 100, make }: UseDealersOptions = {}): DealersResult {
   const [dealers, setDealers] = useState<Dealer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLoading(true);
+    });
 
-    apiFetch<ApiDealersResponse>(`/dealers?per_page=${perPage}`, { auth: false })
+    const params = new URLSearchParams({ per_page: String(perPage) });
+    if (make) params.set("make", make);
+
+    apiFetch<ApiDealersResponse>(`/dealers?${params.toString()}`, { auth: false })
       .then((response) => {
         if (!cancelled) setDealers(response.data.map(mapApiDealerToDealer));
       })
@@ -38,7 +50,7 @@ export function useDealers(perPage = 100): DealersResult {
     return () => {
       cancelled = true;
     };
-  }, [perPage]);
+  }, [perPage, make]);
 
   return { dealers, loading, error };
 }
