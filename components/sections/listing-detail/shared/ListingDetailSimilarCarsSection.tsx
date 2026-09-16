@@ -1,7 +1,14 @@
 import Link from "next/link";
 import SimilarCarsSlider from "@/components/common/SimilarCarsSlider";
+import type { Car } from "@/types/cars";
 
-export default function ListingDetailSimilarCarsSection() {
+type ListingDetailSimilarCarsSectionProps = {
+  car: Car;
+};
+
+export default function ListingDetailSimilarCarsSection({
+  car,
+}: ListingDetailSimilarCarsSectionProps) {
   return (
     <>
     <div className="listing-line " />
@@ -13,7 +20,7 @@ export default function ListingDetailSimilarCarsSection() {
           <i className="icon-carus-arrowcircleright" />
         </Link>
       </div>
-      <SimilarCarsSlider />
+      <SimilarCarsSlider currentCar={car} />
     </div>
     </>
   );
