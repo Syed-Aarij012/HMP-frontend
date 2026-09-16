@@ -18,6 +18,7 @@ import type { Car } from "@/types/cars";
 
 const COMPARE_STORAGE_KEY = "hmp-compare-ids";
 const FAVORITE_STORAGE_KEY = "hmp-favorite-ids";
+const CAR_CACHE_STORAGE_KEY = "hmp-car-cache";
 
 type ApiWatchlistItem = {
   id: number;
@@ -79,6 +80,32 @@ function getDefaultFavoriteIds() {
   return favoriteCars.map((car) => car.id);
 }
 
+function readStoredCarCache(): Record<number, Car> {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(CAR_CACHE_STORAGE_KEY);
+    if (raw === null) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === "object" ? (parsed as Record<number, Car>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredCarCache(cache: Record<number, Car>) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(CAR_CACHE_STORAGE_KEY, JSON.stringify(cache));
+}
+
 export function useListingActions() {
   const context = useContext(ListingActionsContext);
   if (!context) {
@@ -115,6 +142,7 @@ export function ListingActionsProvider({
       setFavoriteIds(
         readStoredIds(FAVORITE_STORAGE_KEY, getDefaultFavoriteIds()),
       );
+      setCarCache((current) => ({ ...readStoredCarCache(), ...current }));
       setIsStorageReady(true);
     });
   }, []);
@@ -134,6 +162,27 @@ export function ListingActionsProvider({
 
     writeStoredIds(FAVORITE_STORAGE_KEY, favoriteIds);
   }, [favoriteIds, isStorageReady]);
+
+  // Real cars only live in carCache (a hashed listing id can't be resolved back from
+  // data/cars.ts), so without this a page reload would silently drop them from Compare
+  // and Favorites even though their ids are still in localStorage. Only persist entries
+  // still referenced by either list, so this cache can't grow without bound.
+  useEffect(() => {
+    if (!isStorageReady) {
+      return;
+    }
+
+    const neededIds = new Set([...compareIds, ...favoriteIds]);
+    const trimmedCache: Record<number, Car> = {};
+    for (const id of neededIds) {
+      const car = carCache[id];
+      if (car) {
+        trimmedCache[id] = car;
+      }
+    }
+
+    writeStoredCarCache(trimmedCache);
+  }, [carCache, compareIds, favoriteIds, isStorageReady]);
 
   // Signed-in users' favorites are real Watchlist rows — merge them in on login (and drop
   // them again on logout, so one browser's local list can't leak into the next account).
