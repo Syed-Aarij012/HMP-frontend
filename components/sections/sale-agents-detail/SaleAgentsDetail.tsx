@@ -1,8 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import MobileDealerSidebarShell from "@/components/common/MobileDealerSidebarShell";
 import SaleAgentListingsPanel from "@/components/sections/sale-agents-detail/SaleAgentListingsPanel";
 import { getDealerById } from "@/data/dealers";
+import { useDealers } from "@/hooks/useDealers";
+import { getDealerHref } from "@/lib/mapApiDealer";
 import type { Agent } from "@/types/agents";
 
 type SaleAgentsDetailProps = {
@@ -10,7 +14,11 @@ type SaleAgentsDetailProps = {
 };
 
 function SaleAgentsDetail({ agent }: SaleAgentsDetailProps) {
-  const dealer = getDealerById(agent.dealerId ?? 1)!;
+  // A real agent's "dealer" card must resolve their actual employer, not a fake one — the
+  // mock dealerId field is never set on a real agent (see types/agents.ts).
+  const { dealers } = useDealers();
+  const realDealer = dealers.find((d) => d.organizationId === agent.organizationId);
+  const dealer = agent.isReal ? realDealer : getDealerById(agent.dealerId ?? 1)!;
 
   return (
     <>
@@ -121,66 +129,54 @@ function SaleAgentsDetail({ agent }: SaleAgentsDetailProps) {
                   </div>
                 </div>
               </div>
-              <div className="widget-dealer-contact widget">
-                <h3>Get in touch with the dealer</h3>
-                <div className="infor flex-three gap-20">
-                  <Link
-                    href={`/dealer-detail/${dealer.id}`}
-                    className="image d-block"
-                  >
-                    <Image
-                      src={dealer.logo}
-                      alt={dealer.name}
-                      width={90}
-                      height={90}
+              {dealer && (
+                <div className="widget-dealer-contact widget">
+                  <h3>Get in touch with the dealer</h3>
+                  <div className="infor flex-three gap-20">
+                    <Link href={getDealerHref(dealer)} className="image d-block">
+                      <Image
+                        src={dealer.logo}
+                        alt={dealer.name}
+                        width={90}
+                        height={90}
+                      />
+                    </Link>
+                    <div className="content">
+                      <h4>
+                        <Link href={getDealerHref(dealer)}>{dealer.name}</Link>
+                      </h4>
+                      <div className="verified flex-three">
+                        <i className="icon-carus-shieldcheck" />
+                        Verified dealer
+                      </div>
+                    </div>
+                  </div>
+                  <div className="button-contact">
+                    <Link href={getDealerHref(dealer)} className="button-form-1">
+                      Contact dealer
+                    </Link>
+                    <Link href={getDealerHref(dealer)} className="button-form-2">
+                      Chat via Whatsapp
+                    </Link>
+                    <Link href={getDealerHref(dealer)} className="button-form-3">
+                      Send mesage
+                    </Link>
+                  </div>
+                  <div className="map-contact">
+                    <div
+                      id="map-single"
+                      className="map-single"
+                      data-map-zoom={16}
+                      data-map-scroll="true"
                     />
-                  </Link>
-                  <div className="content">
-                    <h4>
-                      <Link href={`/dealer-detail/${dealer.id}`}>
-                        {dealer.name}
-                      </Link>
-                    </h4>
-                    <div className="verified flex-three">
-                      <i className="icon-carus-shieldcheck" />
-                      Verified dealer
+                    <div className="address-dealer flex-three">
+                      <i className="icon-carus-map" /> {dealer.address}
                     </div>
                   </div>
                 </div>
-                <div className="button-contact">
-                  <Link
-                    href={`/dealer-detail/${dealer.id}`}
-                    className="button-form-1"
-                  >
-                    Contact dealer
-                  </Link>
-                  <Link
-                    href={`/dealer-detail/${dealer.id}`}
-                    className="button-form-2"
-                  >
-                    Chat via Whatsapp
-                  </Link>
-                  <Link
-                    href={`/dealer-detail/${dealer.id}`}
-                    className="button-form-3"
-                  >
-                    Send mesage
-                  </Link>
-                </div>
-                <div className="map-contact">
-                  <div
-                    id="map-single"
-                    className="map-single"
-                    data-map-zoom={16}
-                    data-map-scroll="true"
-                  />
-                  <div className="address-dealer flex-three">
-                    <i className="icon-carus-map" /> {dealer.address}
-                  </div>
-                </div>
-              </div>
+              )}
             </MobileDealerSidebarShell>
-            <SaleAgentListingsPanel />
+            <SaleAgentListingsPanel agent={agent} />
           </div>
         </div>
       </section>

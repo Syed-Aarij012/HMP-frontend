@@ -6,6 +6,7 @@ import ListingViewToggle from "@/components/common/ListingViewToggle";
 import ListingToolbarSelects from "@/components/common/ListingToolbarSelects";
 import SaleAgentListingCard from "@/components/sections/sale-agents-detail/SaleAgentListingCard";
 import { useListingFilterState } from "@/components/listings/useListingFilterState";
+import { useFilteredListings } from "@/hooks/useFilteredListings";
 import {
   setCategoryTab,
   setCurrentPage,
@@ -19,6 +20,7 @@ import {
 } from "@/data/cars";
 import { SALE_AGENT_SHOW_OPTIONS } from "@/data/niceSelectOptions";
 import type { ListingCategoryTab } from "@/types/listingFilter";
+import type { Agent } from "@/types/agents";
 
 type ListingView = "grid" | "list";
 
@@ -31,11 +33,23 @@ function getActiveTab(categoryTab: ListingCategoryTab): SaleAgentListingTab {
   return categoryTab === "new" ? "New car" : "Used car";
 }
 
-export default function SaleAgentListingsPanel() {
+type SaleAgentListingsPanelProps = {
+  agent: Agent;
+};
+
+export default function SaleAgentListingsPanel({ agent }: SaleAgentListingsPanelProps) {
   const [view, setView] = useState<ListingView>("grid");
+
+  // A real agent's own live listings — a mock agent (no real seller_user_id to filter by)
+  // keeps showing the template's sample cars instead.
+  const { cars: realCars, loading, error } = useFilteredListings({
+    sellerUserId: agent.isReal ? agent.id : undefined,
+  });
+  const listings = agent.isReal ? realCars : saleAgentListingCars;
+
   const { state, dispatch, visibleListings, totalPages } =
     useListingFilterState({
-      listings: saleAgentListingCars,
+      listings,
       itemPerPage: 6,
       categoryTab: "used",
     });
@@ -94,7 +108,15 @@ export default function SaleAgentListingsPanel() {
         <div className="content-tab">
           <div className="content-inner tab-content">
             <div className={listClassName}>
-              {visibleListings.length > 0 ? (
+              {agent.isReal && loading ? (
+                <div className="no-results">
+                  <p>Loading listings...</p>
+                </div>
+              ) : agent.isReal && error ? (
+                <div className="no-results">
+                  <p>{error}</p>
+                </div>
+              ) : visibleListings.length > 0 ? (
                 visibleListings.map((car) => (
                   <SaleAgentListingCard key={car.id} car={car} layout={view} />
                 ))
