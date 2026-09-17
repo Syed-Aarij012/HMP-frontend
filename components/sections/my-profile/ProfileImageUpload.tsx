@@ -111,6 +111,7 @@ function ProfileImageUpload({
             src={displaySrc}
             alt={altText}
             unoptimized={displaySrc.startsWith("blob:") || displaySrc.startsWith("http")}
+            style={{ width: "100%", height: "auto" }}
           />
         </div>
         <div className="choose-box">
