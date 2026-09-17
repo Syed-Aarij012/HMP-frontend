@@ -41,6 +41,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${figtree.variable} ${inter.variable} ${outfit.variable}`}
+      data-scroll-behavior="smooth"
     >
       <body>
         <AuthProvider>

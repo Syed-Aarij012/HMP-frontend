@@ -17,6 +17,7 @@ export default function DealerListingCard({ dealer }: DealerListingCardProps) {
             alt={dealer.name}
             width={507}
             height={273}
+            style={{ width: "100%", height: "auto" }}
           />
           <div className="car">
             <Image
