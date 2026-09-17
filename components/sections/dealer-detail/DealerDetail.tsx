@@ -30,21 +30,27 @@ function DealerDetail({ dealer }: DealerDetailProps) {
             <div className="col-lg-8 col-md-12">
               <div className="dealer-content-wrap">
                 <h2 className="title mb-3">About {dealer.name}</h2>
-                <p className="mb-2">
-                  Stay informed about emerging trends in the housing market,
-                  such as the demand for sustainable homes, technological
-                  advancements, and demographic shifts. Companies aligning with
-                  these trends may present attractive investment opportunities.
-                </p>
-                <p className="mb-3">
-                  Take a long-term investment approach if you believe in the
-                  stability and growth potential of the housing sector. Look for
-                  companies with solid fundamentals and a track record of
-                  success. For short-term traders, capitalize on market
-                  fluctuations driven by economic reports, interest rate
-                  changes, or industry-specific news. Keep a close eye on
-                  earnings reports and government housing data releases.
-                </p>
+                {dealer.description ? (
+                  <p className="mb-3">{dealer.description}</p>
+                ) : (
+                  <>
+                    <p className="mb-2">
+                      Stay informed about emerging trends in the housing market,
+                      such as the demand for sustainable homes, technological
+                      advancements, and demographic shifts. Companies aligning with
+                      these trends may present attractive investment opportunities.
+                    </p>
+                    <p className="mb-3">
+                      Take a long-term investment approach if you believe in the
+                      stability and growth potential of the housing sector. Look for
+                      companies with solid fundamentals and a track record of
+                      success. For short-term traders, capitalize on market
+                      fluctuations driven by economic reports, interest rate
+                      changes, or industry-specific news. Keep a close eye on
+                      earnings reports and government housing data releases.
+                    </p>
+                  </>
+                )}
                 <div className="features-thumb mb-4">
                   <Image
                     src={dealer.image}
@@ -209,6 +215,7 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                       alt={dealer.name}
                       width={90}
                       height={90}
+                      unoptimized={dealer.logo.startsWith("http")}
                     />
                   </div>
                   <div className="content">

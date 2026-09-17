@@ -24,6 +24,7 @@ export default function DealerListingCard({ dealer }: DealerListingCardProps) {
               alt=""
               width={64}
               height={35}
+              unoptimized={dealer.logo.startsWith("http")}
             />
           </div>
         </div>

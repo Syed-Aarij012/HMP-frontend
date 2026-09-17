@@ -139,6 +139,7 @@ function SaleAgentsDetail({ agent }: SaleAgentsDetailProps) {
                         alt={dealer.name}
                         width={90}
                         height={90}
+                        unoptimized={dealer.logo.startsWith("http")}
                       />
                     </Link>
                     <div className="content">

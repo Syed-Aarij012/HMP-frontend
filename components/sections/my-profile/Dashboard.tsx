@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import ProfileImageUpload from "@/components/sections/my-profile/ProfileImageUpload";
+import DealerStorefrontSection from "@/components/sections/my-profile/DealerStorefrontSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { describeApiError } from "@/lib/api-client";
 
@@ -107,6 +108,7 @@ function Dashboard() {
                           </div>
                         </form>
                       </div>
+                      <DealerStorefrontSection />
                       <div className="profile-group mb-3">
                         <h3 className="form-title">Password</h3>
                         <p className="fs-14">

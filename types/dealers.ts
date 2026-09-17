@@ -3,6 +3,7 @@ export type Dealer = {
   name: string;
   image: string;
   logo: string;
+  description?: string | null;
   reviewCount: number;
   rating: number;
   phone: string;

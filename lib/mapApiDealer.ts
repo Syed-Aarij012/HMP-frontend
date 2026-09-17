@@ -10,6 +10,8 @@ export type ApiDealer = {
   id: number;
   slug: string;
   display_name: string;
+  description?: string | null;
+  logo_url?: string | null;
   tracked_phone_number?: string | null;
   created_at?: string | null;
   organization: { id: number; name: string } | null;
@@ -47,7 +49,8 @@ export function mapApiDealerToDealer(dealer: ApiDealer): Dealer {
     id: dealer.id,
     name: dealer.display_name,
     image,
-    logo: image,
+    logo: dealer.logo_url || image,
+    description: dealer.description ?? null,
     reviewCount: dealer.review_count ?? 0,
     rating: dealer.average_rating ?? 0,
     phone: rooftop?.phone ?? dealer.tracked_phone_number ?? "",
