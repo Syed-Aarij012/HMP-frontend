@@ -23,12 +23,18 @@ type ProfileImageUploadProps = {
   currentImageSrc: string | null;
   onUpload: (file: File) => Promise<void>;
   onRemove: () => Promise<void>;
+  altText?: string;
+  uploadLabel?: string;
+  defaultImageSrc?: string;
 };
 
 function ProfileImageUpload({
   currentImageSrc,
   onUpload,
   onRemove,
+  altText = "Your avatar",
+  uploadLabel = "Upload a new Avatar",
+  defaultImageSrc = DEFAULT_AVATAR,
 }: ProfileImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
@@ -91,7 +97,7 @@ function ProfileImageUpload({
     }
   };
 
-  const displaySrc = previewSrc ?? currentImageSrc ?? DEFAULT_AVATAR;
+  const displaySrc = previewSrc ?? currentImageSrc ?? defaultImageSrc;
 
   return (
     <div className="tfcl_choose_avatar">
@@ -103,12 +109,12 @@ function ProfileImageUpload({
             width={158}
             height={138}
             src={displaySrc}
-            alt="Your avatar"
+            alt={altText}
             unoptimized={displaySrc.startsWith("blob:") || displaySrc.startsWith("http")}
           />
         </div>
         <div className="choose-box">
-          <label>Upload a new Avatar</label>
+          <label>{uploadLabel}</label>
           <div className="form-group">
             <input
               ref={inputRef}
