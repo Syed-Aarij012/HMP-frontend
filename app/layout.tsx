@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import WowClient from "@/components/common/WowClient";
 import { HeaderSearchProvider } from "@/components/headers/HeaderSearch";
 import { ListingActionsProvider } from "@/components/common/ListingActionsContext";
+import { MessagesProvider } from "@/components/common/MessagesContext";
 import { ContactDealerProvider } from "@/components/common/ContactDealerContext";
 import { MobileMenuPathListener } from "@/components/headers/MobileMenu";
 import AllModals from "@/components/modals/AllModals";
@@ -47,6 +48,7 @@ export default function RootLayout({
         <AuthProvider>
           <HeaderSearchProvider>
             <ListingActionsProvider>
+              <MessagesProvider>
               <ContactDealerProvider>
               <StickyHeaderOffsetProvider>
               <MobileMenuPathListener />
@@ -58,6 +60,7 @@ export default function RootLayout({
               <ScrollTop />
               </StickyHeaderOffsetProvider>
               </ContactDealerProvider>
+              </MessagesProvider>
             </ListingActionsProvider>
           </HeaderSearchProvider>
         </AuthProvider>

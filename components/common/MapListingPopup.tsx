@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 
 import Link from "next/link";
 import type { ListingMapLocation } from "@/data/listingMapLocations";

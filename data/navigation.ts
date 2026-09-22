@@ -15,8 +15,6 @@ export const mainNavMenu: NavMenuItem[] = [
     id: "page",
     label: "Page",
     children: [
-      { id: "about-us", label: "About Us", href: "/about-us" },
-      { id: "faq", label: "Faq's", href: "/faq" },
       { id: "pricing", label: "Pricing", href: "/pricing" },
       { id: "compare", label: "Compare", href: "/compare" },
       {
@@ -29,7 +27,6 @@ export const mainNavMenu: NavMenuItem[] = [
         label: "Agents",
         href: "/sale-agents",
       },
-      { id: "dashboard", label: "Dashboard", href: "/dashboard" },
     ],
   },
   {

@@ -39,7 +39,7 @@ function mapListing(listing: ApiListing): DashboardCar {
   const firstPhoto = (vehicle?.photos ?? [])
     .filter((photo) => photo.type !== "video")
     .sort((a, b) => a.sequence - b.sequence)[0]?.url;
-  const image = firstPhoto ?? "/assets/images/dashboard/avt-profile.jpg";
+  const image = firstPhoto ?? "/assets/images/car-list/car1.webp";
 
   return {
     // Real listing ids are ULID strings (e.g. "01m22w7b..."), not numbers — Number(id)

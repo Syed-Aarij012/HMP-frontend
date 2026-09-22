@@ -2,9 +2,10 @@
 
 import Pagination from "@/components/common/Pagination";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import { useMemo, useState } from "react";
 import { useMyReviews, type MyReview } from "@/hooks/useMyReviews";
+import { useReceivedReviews } from "@/hooks/useReceivedReviews";
 
 const REVIEWS_PER_PAGE = 5;
 
@@ -60,8 +61,17 @@ function ReviewItem({ review }: { review: MyReview }) {
   );
 }
 
-function Dashboard() {
-  const { reviews, loading, error } = useMyReviews();
+function ReviewList({
+  reviews,
+  loading,
+  error,
+  emptyMessage,
+}: {
+  reviews: MyReview[];
+  loading: boolean;
+  error: string | null;
+  emptyMessage: string;
+}) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
@@ -70,6 +80,41 @@ function Dashboard() {
     const start = (currentPage - 1) * REVIEWS_PER_PAGE;
     return reviews.slice(start, start + REVIEWS_PER_PAGE);
   }, [reviews, currentPage]);
+
+  if (loading) {
+    return <p className="tfcl-empty-data">Loading reviews...</p>;
+  }
+
+  if (error) {
+    return <p className="tfcl-empty-data">{error}</p>;
+  }
+
+  if (reviews.length === 0) {
+    return <p className="tfcl-empty-data">{emptyMessage}</p>;
+  }
+
+  return (
+    <>
+      <ul>
+        {paginatedReviews.map((review) => (
+          <ReviewItem key={review.id} review={review} />
+        ))}
+      </ul>
+      {totalPages > 1 && (
+        <Pagination
+          variant="tfcl"
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
+    </>
+  );
+}
+
+function Dashboard() {
+  const received = useReceivedReviews();
+  const written = useMyReviews();
 
   return (
     <>
@@ -81,36 +126,27 @@ function Dashboard() {
               <div className="content-area">
                 <main id="main" className="main-content">
                   <div className="tfcl-dashboard">
-                    <h1 className="admin-title mb-3">All review</h1>
+                    <h1 className="admin-title mb-3">Reviews on my listings</h1>
+                    <div className="tfcl-dashboard-middle-right mb-4">
+                      <div className="tfcl-card tfcl-dashboard-reviews">
+                        <ReviewList
+                          reviews={received.reviews}
+                          loading={received.loading}
+                          error={received.error}
+                          emptyMessage="No one has reviewed your listings yet."
+                        />
+                      </div>
+                    </div>
+
+                    <h1 className="admin-title mb-3">Reviews I&apos;ve written</h1>
                     <div className="tfcl-dashboard-middle-right">
                       <div className="tfcl-card tfcl-dashboard-reviews">
-                        {loading ? (
-                          <p className="tfcl-empty-data">
-                            Loading your reviews...
-                          </p>
-                        ) : error ? (
-                          <p className="tfcl-empty-data">{error}</p>
-                        ) : reviews.length === 0 ? (
-                          <p className="tfcl-empty-data">
-                            You haven&apos;t left any reviews yet.
-                          </p>
-                        ) : (
-                          <>
-                            <ul>
-                              {paginatedReviews.map((review) => (
-                                <ReviewItem key={review.id} review={review} />
-                              ))}
-                            </ul>
-                            {totalPages > 1 && (
-                              <Pagination
-                                variant="tfcl"
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                              />
-                            )}
-                          </>
-                        )}
+                        <ReviewList
+                          reviews={written.reviews}
+                          loading={written.loading}
+                          error={written.error}
+                          emptyMessage="You haven't left any reviews yet."
+                        />
                       </div>
                     </div>
                   </div>

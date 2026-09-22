@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import type { ListingDetailGalleryImage } from "@/data/listingDetailV1Gallery";
 
 type ListingDetailGallerySlideContentProps = {

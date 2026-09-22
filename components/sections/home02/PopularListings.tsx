@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import { useMemo, useState } from "react";
 import { home02PopularListingTabs, home02PopularListings, getCarDetailHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";

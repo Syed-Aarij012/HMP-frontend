@@ -9,7 +9,7 @@ export type ConversationResult = {
   loading: boolean;
   error: string | null;
   sending: boolean;
-  sendMessage: (body: string) => Promise<void>;
+  sendMessage: (body: string, attachments?: File[]) => Promise<void>;
 };
 
 /** FR-C-031: one conversation's full message history, plus a way to reply to it. */
@@ -55,14 +55,24 @@ export function useConversation(conversationId: number | null): ConversationResu
   }, [conversationId]);
 
   const sendMessage = useCallback(
-    async (body: string) => {
+    async (body: string, attachments?: File[]) => {
       if (!conversationId) return;
 
       setSending(true);
       try {
+        let requestBody: unknown;
+        if (attachments && attachments.length > 0) {
+          const formData = new FormData();
+          formData.append("body", body);
+          attachments.forEach((file) => formData.append("attachments[]", file));
+          requestBody = formData;
+        } else {
+          requestBody = { body };
+        }
+
         const response = await apiFetch<{ data: ApiConversation }>(
           `/conversations/${conversationId}/messages`,
-          { method: "POST", body: { body } }
+          { method: "POST", body: requestBody }
         );
         setConversation(response.data);
       } finally {

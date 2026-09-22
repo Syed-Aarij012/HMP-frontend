@@ -7,6 +7,7 @@ export type ApiReview = {
   comment: string | null;
   verified_purchase: boolean;
   reviewer_name?: string;
+  reviewer_avatar_url?: string | null;
   listing?: {
     id: string;
     vehicle?: { make?: string; model?: string; derivative?: string } | null;
@@ -25,7 +26,7 @@ export function mapApiReviewToListingReview(review: ApiReview): ListingReview {
   return {
     id: review.id,
     author: review.reviewer_name ?? "Verified buyer",
-    avatar: "/assets/images/blog/avt1.webp",
+    avatar: review.reviewer_avatar_url ?? "/assets/images/blog/avt1.webp",
     date: new Date(review.created_at).toLocaleDateString("en-GB", {
       year: "numeric",
       month: "long",

@@ -13,9 +13,10 @@ export type ApiConversation = {
     id: string;
     vehicle?: { make?: string; model?: string; derivative?: string } | null;
   } | null;
-  buyer: { id: number; name: string } | null;
-  seller: { id: number; name: string } | null;
+  buyer: { id: number; name: string; avatar_url: string | null } | null;
+  seller: { id: number; name: string; avatar_url: string | null } | null;
   last_message_at: string | null;
+  unread_count?: number;
   messages: ApiMessage[];
 };
 
@@ -39,4 +40,9 @@ export function conversationTitle(conversation: ApiConversation, viewerId: numbe
 export function otherPartyName(conversation: ApiConversation, viewerId: number | undefined): string {
   const otherParty = conversation.buyer?.id === viewerId ? conversation.seller : conversation.buyer;
   return otherParty?.name ?? "Unknown";
+}
+
+export function otherPartyAvatar(conversation: ApiConversation, viewerId: number | undefined): string | null {
+  const otherParty = conversation.buyer?.id === viewerId ? conversation.seller : conversation.buyer;
+  return otherParty?.avatar_url ?? null;
 }

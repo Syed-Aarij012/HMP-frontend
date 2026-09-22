@@ -1,27 +1,34 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import {
+  useEffect,
   useMemo,
+  useRef,
   useState,
+  type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useMobileDealerSidebar } from "@/hooks/useMobileDealerSidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useConversations } from "@/hooks/useConversations";
+import { useMessages } from "@/components/common/MessagesContext";
 import { useConversation } from "@/hooks/useConversation";
+import { describeApiError } from "@/lib/api-client";
 import {
   conversationTitle,
+  otherPartyAvatar,
   otherPartyName,
   type ApiConversation,
   type ApiMessage,
 } from "@/lib/mapApiConversation";
 
-// The backend has no per-user avatar images yet, so every conversation/message uses this
-// generic placeholder (same pattern documented in lib/mapApiListing.ts for listing photos).
+// Fallback only for a party who hasn't uploaded a profile avatar yet.
 const PLACEHOLDER_AVATAR = "/assets/images/dashboard/avt-profile.jpg";
+
+// Matches SendMessageRequest's 'attachments' => ['sometimes', 'array', 'max:5'] on the backend.
+const MAX_ATTACHMENTS = 5;
 
 function truncatePreview(text: string, maxLength = 45) {
   const normalized = text.replace(/\s+/g, " ").trim();
@@ -30,6 +37,50 @@ function truncatePreview(text: string, maxLength = 45) {
   }
 
   return `${normalized.slice(0, maxLength)}...`;
+}
+
+function isImageUrl(url: string) {
+  return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url);
+}
+
+function attachmentFileName(url: string) {
+  try {
+    return decodeURIComponent(new URL(url).pathname.split("/").pop() ?? "Attachment");
+  } catch {
+    return "Attachment";
+  }
+}
+
+function AttachmentPreview({ url }: { url: string }) {
+  if (isImageUrl(url)) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer">
+        <Image src={url} alt="attachment" width={60} height={60} />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 60,
+        height: 60,
+        background: "#E9EDF4",
+        fontSize: 11,
+        textAlign: "center",
+        padding: 4,
+        overflow: "hidden",
+      }}
+    >
+      {attachmentFileName(url)}
+    </a>
+  );
 }
 
 function renderMessageText(text: string) {
@@ -149,6 +200,13 @@ function ChatMessageBubble({
           </div>
           <div className="content">
             <p>{renderMessageText(message.body)}</p>
+            {message.attachments?.length ? (
+              <div className="attrach">
+                {message.attachments.map((attachment, index) => (
+                  <AttachmentPreview key={`${attachment}-${index}`} url={attachment} />
+                ))}
+              </div>
+            ) : null}
             <div className="date-pushlish">
               {formatMessageTimestamp(message.created_at)}
             </div>
@@ -169,13 +227,7 @@ function ChatMessageBubble({
           <>
             <div className="attrach">
               {message.attachments.map((attachment, index) => (
-                <Image
-                  key={`${attachment}-${index}`}
-                  src={attachment}
-                  alt="attachment"
-                  width={60}
-                  height={60}
-                />
+                <AttachmentPreview key={`${attachment}-${index}`} url={attachment} />
               ))}
             </div>
             <div className="date-pushlish mb-3">
@@ -197,12 +249,28 @@ function Message() {
     conversations,
     loading: conversationsLoading,
     error: conversationsError,
-  } = useConversations();
+    refetch: refetchConversations,
+  } = useMessages();
   const [activeConversationId, setActiveConversationId] = useState<
     number | null
   >(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [draftMessage, setDraftMessage] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<File[]>([]);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const pendingAttachmentPreviews = useMemo(
+    () => pendingAttachments.map((file) => URL.createObjectURL(file)),
+    [pendingAttachments]
+  );
+
+  useEffect(() => {
+    return () => {
+      pendingAttachmentPreviews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [pendingAttachmentPreviews]);
 
   // Default to the most recent conversation once the list has loaded, mirroring the
   // previous mock's "start on a conversation" behaviour — derived rather than synced
@@ -216,6 +284,18 @@ function Message() {
     sending,
     sendMessage,
   } = useConversation(effectiveConversationId);
+
+  // Opening a conversation marks its messages read server-side (see
+  // ConversationController::show) — refresh the shared unread count so the sidebar badge
+  // reflects that immediately instead of only after a full reload.
+  useEffect(() => {
+    if (activeConversation) {
+      refetchConversations();
+    }
+    // Only when the *thread itself* finishes loading, not every conversations refetch —
+    // including refetchConversations/conversations here would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConversation?.id, activeConversation?.messages.length]);
 
   const filteredConversations = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -238,17 +318,39 @@ function Message() {
 
   const handleSendMessage = async () => {
     const text = draftMessage.trim();
-    if (!text || !activeConversationId || sending) {
+    if ((!text && pendingAttachments.length === 0) || !effectiveConversationId || sending) {
       return;
     }
 
+    const attachments = pendingAttachments;
     setDraftMessage("");
+    setPendingAttachments([]);
+    setSendError(null);
     try {
-      await sendMessage(text);
-    } catch {
-      // Send failed — restore the draft so the user doesn't lose what they typed.
+      await sendMessage(text, attachments);
+    } catch (err) {
+      // Send failed — restore the draft so the user doesn't lose what they typed, and show
+      // why, so a real failure (e.g. an oversized/unsupported file) doesn't just look like
+      // Send silently did nothing.
       setDraftMessage(text);
+      setPendingAttachments(attachments);
+      setSendError(describeApiError(err, "Could not send this message. Please try again."));
     }
+  };
+
+  const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files?.length) {
+      setSendError(null);
+      setPendingAttachments((current) =>
+        [...current, ...Array.from(files)].slice(0, MAX_ATTACHMENTS)
+      );
+    }
+    event.target.value = "";
+  };
+
+  const removeAttachment = (index: number) => {
+    setPendingAttachments((current) => current.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -358,7 +460,7 @@ function Message() {
                                   >
                                     <div className="avatar">
                                       <Image
-                                        src={PLACEHOLDER_AVATAR}
+                                        src={otherPartyAvatar(conversation, viewerId) ?? PLACEHOLDER_AVATAR}
                                         alt={conversationTitle(conversation, viewerId)}
                                         width={60}
                                         height={60}
@@ -388,7 +490,7 @@ function Message() {
                             <div className="user-infor">
                               <div className="avatar">
                                 <Image
-                                  src={PLACEHOLDER_AVATAR}
+                                  src={otherPartyAvatar(activeConversation, viewerId) ?? PLACEHOLDER_AVATAR}
                                   alt={conversationTitle(activeConversation, viewerId)}
                                   width={60}
                                   height={60}
@@ -414,7 +516,7 @@ function Message() {
                                 <ChatMessageBubble
                                   key={message.id}
                                   message={message}
-                                  avatar={PLACEHOLDER_AVATAR}
+                                  avatar={otherPartyAvatar(activeConversation, viewerId) ?? PLACEHOLDER_AVATAR}
                                 />
                               ))
                             )}
@@ -422,6 +524,82 @@ function Message() {
                               className="controller-chat"
                               onSubmit={handleSubmit}
                             >
+                              {sendError && (
+                                <p className="text-danger fs-14 mb-2">{sendError}</p>
+                              )}
+                              {pendingAttachments.length > 0 && (
+                                <div className="attrach mb-2">
+                                  {pendingAttachments.map((file, index) => (
+                                    <div
+                                      key={`${file.name}-${index}`}
+                                      style={{ position: "relative", display: "inline-block" }}
+                                    >
+                                      {file.type.startsWith("image/") ? (
+                                        <Image
+                                          src={pendingAttachmentPreviews[index]}
+                                          alt={file.name}
+                                          width={60}
+                                          height={60}
+                                          unoptimized
+                                        />
+                                      ) : (
+                                        <div
+                                          style={{
+                                            width: 60,
+                                            height: 60,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            background: "#E9EDF4",
+                                            fontSize: 11,
+                                            textAlign: "center",
+                                            padding: 4,
+                                            overflow: "hidden",
+                                          }}
+                                          title={file.name}
+                                        >
+                                          {file.name}
+                                        </div>
+                                      )}
+                                      <button
+                                        type="button"
+                                        aria-label={`Remove ${file.name}`}
+                                        onClick={() => removeAttachment(index)}
+                                        style={{
+                                          position: "absolute",
+                                          top: -6,
+                                          right: -6,
+                                          border: "none",
+                                          borderRadius: "50%",
+                                          width: 20,
+                                          height: 20,
+                                          lineHeight: "20px",
+                                          background: "#24272C",
+                                          color: "#fff",
+                                        }}
+                                      >
+                                        &times;
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <input
+                                ref={fileInputRef}
+                                type="file"
+                                hidden
+                                accept="image/*,.pdf,.doc,.docx,.txt"
+                                multiple
+                                onChange={handleFileSelect}
+                              />
+                              <input
+                                ref={imageInputRef}
+                                type="file"
+                                hidden
+                                accept="image/*"
+                                multiple
+                                onChange={handleFileSelect}
+                              />
                               <div className="form-message">
                                 <input
                                   type="text"
@@ -440,10 +618,22 @@ function Message() {
                                 </button>
                               </div>
                               <div className="controll">
-                                <button type="button" className="file">
+                                <button
+                                  type="button"
+                                  className="file"
+                                  aria-label="Attach a file"
+                                  disabled={sending || pendingAttachments.length >= MAX_ATTACHMENTS}
+                                  onClick={() => fileInputRef.current?.click()}
+                                >
                                   <AttachmentIcon />
                                 </button>
-                                <button type="button" className="image">
+                                <button
+                                  type="button"
+                                  className="image"
+                                  aria-label="Attach an image"
+                                  disabled={sending || pendingAttachments.length >= MAX_ATTACHMENTS}
+                                  onClick={() => imageInputRef.current?.click()}
+                                >
                                   <ImageIcon />
                                 </button>
                               </div>

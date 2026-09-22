@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import { recommendedCars, getCarDetailHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { Swiper, SwiperSlide } from "swiper/react";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import { home05Agents } from "@/data/agents";
 
 function AboutTeam() {

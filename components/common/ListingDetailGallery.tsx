@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import { useState } from "react";
 import type { Swiper as SwiperInstance } from "swiper";
 import { FreeMode, Navigation, Thumbs } from "swiper/modules";

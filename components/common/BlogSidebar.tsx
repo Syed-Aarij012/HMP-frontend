@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import Link from "next/link";
 import BlogNewsletterForm from "@/components/common/BlogNewsletterForm";
 import BlogSearchForm from "@/components/common/BlogSearchForm";

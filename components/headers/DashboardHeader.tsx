@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import Link from "next/link";
 import React from "react";
 import {
@@ -76,34 +76,6 @@ export default function DashboardHeader() {
                     </p>
                   </a>
                   <div className="dropdown-menu dashboard-menu">
-                    <Link className="dropdown-item" href={`/dashboard`}>
-                      <i className="icon-carus-diamondsfour" />
-                      Dashboard
-                    </Link>
-                    <Link className="dropdown-item" href="/add-listing">
-                      <i className="icon-carus-icon1" />
-                      Add listing
-                    </Link>
-                    <Link className="dropdown-item" href="/my-listing">
-                      <i className="icon-carus-pencilline" />
-                      My Listing
-                    </Link>
-                    <Link className="dropdown-item" href="/my-favorite">
-                      <i className="icon-carus-heartstraight" />
-                      My Favorites
-                    </Link>
-                    <Link className="dropdown-item" href={`/message`}>
-                      <i className="icon-carus-envelopesimple" />
-                      Message
-                    </Link>
-                    <Link className="dropdown-item" href={`/my-review`}>
-                      <i className="icon-carus-chatcircledots" />
-                      My Reviews
-                    </Link>
-                    <Link className="dropdown-item" href={`/my-profile`}>
-                      <i className="icon-carus-profile" />
-                      Profile
-                    </Link>
                     <Link className="dropdown-item" href="/" onClick={() => logout()}>
                       <i className="icon-carus-signout" />
                       Logout

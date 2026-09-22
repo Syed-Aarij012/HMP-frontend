@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import { useRef, useState } from "react";
 import { home02HeroSlides } from "@/data/hero";
 import { Swiper, SwiperSlide } from "swiper/react";

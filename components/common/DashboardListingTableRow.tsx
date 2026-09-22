@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import Link from "next/link";
 import NiceSelect from "@/components/common/NiceSelect";
 import { DASHBOARD_LISTING_STATUS_META } from "@/data/dashboardListings";
@@ -26,6 +26,17 @@ type DashboardListingTableRowProps = {
 
 const DEFAULT_LISTING_DESCRIPTION =
   "1st owned, automatic transmission, Apple Carplay...";
+
+function formatListingDate(isoDate: string): string {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return isoDate;
+
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 const LISTING_STATUS_OPTIONS = [
   { label: "Live", value: "live" },
@@ -178,6 +189,7 @@ export default function DashboardListingTableRow({
               alt={listing.title}
               width={168}
               height={95}
+              unoptimized={listing.dashboardImage.startsWith("http")}
             />
           </Link>
           <div className="tfcl-listing-summary">
@@ -205,7 +217,7 @@ export default function DashboardListingTableRow({
         </span>
       </td>
       <td className="column-date">
-        <div className="tfcl-listing-date">{listing.postingDate}</div>
+        <div className="tfcl-listing-date">{formatListingDate(listing.postingDate)}</div>
       </td>
       <td className="column-controller">
         {canEdit && (

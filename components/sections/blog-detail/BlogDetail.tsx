@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import BlogSidebar from "@/components/common/BlogSidebar";
 import LeaveReplyForm from "@/components/common/LeaveReplyForm";
 import type { Blog } from "@/types/blogs";

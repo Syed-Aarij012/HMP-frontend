@@ -1,7 +1,7 @@
 import ListingResultsPanel from "@/components/common/ListingResultsPanel";
 import Pagination from "@/components/common/Pagination";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 
 function ListingGridList() {
   return (

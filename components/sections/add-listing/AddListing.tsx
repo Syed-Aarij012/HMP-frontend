@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import NiceSelect from "@/components/common/NiceSelect";
@@ -48,8 +48,13 @@ function AddListing() {
   const [priceType, setPriceType] = useState("fixed");
   const [description, setDescription] = useState("");
 
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handlePhotosChange = useCallback((files: File[]) => {
+    setPhotoFiles(files);
+  }, []);
 
   async function submitListing(publish: boolean) {
     setError(null);
@@ -82,6 +87,15 @@ function AddListing() {
           current_mileage: Number(mileage),
         },
       });
+
+      for (const file of photoFiles) {
+        const formData = new FormData();
+        formData.append("photo", file);
+        await apiFetch(`/vehicles/${vehicleResponse.data.id}/photos`, {
+          method: "POST",
+          body: formData,
+        });
+      }
 
       const listingResponse = await apiFetch<ApiListing>("/listings", {
         method: "POST",
@@ -151,7 +165,7 @@ function AddListing() {
                 <main id="main" className="main-content">
                   <form className="tfcl-dashboard add-list" onSubmit={handleSubmit}>
                     <h1 className="admin-title mb-3">Add listing</h1>
-                    <UploadPhotoSection />
+                    <UploadPhotoSection onPhotosChange={handlePhotosChange} />
                     <div className="tfcl-add-listing car-details">
                       <h3>Car details</h3>
                       <div className="form-group-4">

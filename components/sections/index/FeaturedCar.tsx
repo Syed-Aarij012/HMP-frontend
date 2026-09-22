@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { featuredCar, getCarDetailHref } from "@/data/cars";
 

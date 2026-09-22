@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import LeaveReplyForm from "@/components/common/LeaveReplyForm";
 import LatePriceListWidget from "@/components/common/LatePriceListWidget";
 import MobileDealerSidebarShell from "@/components/common/MobileDealerSidebarShell";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import React from "react";
 import RegisterForm from "./RegisterForm";
 
