@@ -21,14 +21,14 @@ export default function ListingDetailScrollspySections({
 }: ListingDetailScrollspySectionsProps) {
   return (
     <>
-      <ListingDetailDescriptionSection />
+      <ListingDetailDescriptionSection car={car} />
       {showOverview ? (
         <ScrollspySection id="scrollspyHeading1">
-          <ListingDetailOverviewSection />
+          <ListingDetailOverviewSection car={car} />
         </ScrollspySection>
       ) : null}
       <ScrollspySection id="scrollspyHeading2">
-        <ListingDetailFeaturesSection />
+        <ListingDetailFeaturesSection car={car} />
       </ScrollspySection>
       <ScrollspySection id="scrollspyHeading3">
         <ListingDetailSimilarCarsSection car={car} />

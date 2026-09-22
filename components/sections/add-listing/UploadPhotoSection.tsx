@@ -1,7 +1,8 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import {
+  useEffect,
   useRef,
   useState,
   type ChangeEvent,
@@ -37,10 +38,18 @@ function DeleteIcon() {
   );
 }
 
-export default function UploadPhotoSection() {
+type UploadPhotoSectionProps = {
+  onPhotosChange?: (files: File[]) => void;
+};
+
+export default function UploadPhotoSection({ onPhotosChange }: UploadPhotoSectionProps) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<ListingPhoto[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    onPhotosChange?.(photos.flatMap((photo) => (photo.file ? [photo.file] : [])));
+  }, [photos, onPhotosChange]);
 
   const addPhotos = (files: FileList | File[]) => {
     const imageFiles = Array.from(files).filter((file) =>

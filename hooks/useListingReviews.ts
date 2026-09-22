@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
-import { mapApiReviewToListingReview, type ApiReviewsResponse } from "@/lib/mapApiReview";
+import {
+  mapApiReviewToListingReview,
+  type ApiReview,
+  type ApiReviewsResponse,
+} from "@/lib/mapApiReview";
 import type { ListingReview } from "@/data/listingReviews";
 
 export type ListingReviewsResult = {
@@ -10,6 +14,7 @@ export type ListingReviewsResult = {
   averageRating: number | null;
   loading: boolean;
   error: string | null;
+  submitReview: (rating: number, comment: string) => Promise<void>;
 };
 
 /**
@@ -62,5 +67,19 @@ export function useListingReviews(publicId: string | undefined): ListingReviewsR
       ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10) / 10
       : null;
 
-  return { reviews, averageRating, loading, error };
+  const submitReview = useCallback(
+    async (rating: number, comment: string) => {
+      if (!publicId) return;
+
+      const response = await apiFetch<{ data: ApiReview }>(`/listings/${publicId}/reviews`, {
+        method: "POST",
+        body: { rating, comment: comment || undefined },
+      });
+
+      setReviews((current) => [mapApiReviewToListingReview(response.data), ...current]);
+    },
+    [publicId]
+  );
+
+  return { reviews, averageRating, loading, error, submitReview };
 }

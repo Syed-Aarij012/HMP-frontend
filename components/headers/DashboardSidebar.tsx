@@ -1,11 +1,12 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useDashboardSidebar } from "@/components/dashboard/DashboardSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMessages } from "@/components/common/MessagesContext";
 import { isNavLinkActive } from "@/lib/navigation";
 
 const DEFAULT_AVATAR = "/assets/images/dashboard/avatar.png";
@@ -16,7 +17,6 @@ type DashboardMenuItem = {
   className: string;
   iconClass: string;
   label: string;
-  badge?: number;
 };
 
 const dashboardMenuItems: DashboardMenuItem[] = [
@@ -54,7 +54,6 @@ const dashboardMenuItems: DashboardMenuItem[] = [
     className: "menu-index-4",
     iconClass: "icon-carus-envelopesimple",
     label: "Message",
-    badge: 7,
   },
   {
     id: "my-review",
@@ -83,6 +82,7 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
   const { isOpen, close } = useDashboardSidebar();
   const { user } = useAuth();
+  const { unreadCount: unreadMessageCount } = useMessages();
 
   useEffect(() => {
     close();
@@ -94,11 +94,11 @@ export default function DashboardSidebar() {
   return (
     <aside className={`sidebar-dashboard${isOpen ? " active" : ""}`}>
       <div className="db-content db-logo pad-30">
-        <Link href="/" title="carus">
+        <Link href="/" title="HMP">
           <Image
             className="site-logo"
-            src="/assets/images/dashboard/logo.png"
-            alt="carus"
+            src="/assets/images/logo/logo-footer@2x.png"
+            alt="HMP"
             width={329}
             height={64}
           />
@@ -138,8 +138,8 @@ export default function DashboardSidebar() {
                 >
                   <i className={item.iconClass} />
                   {item.label}
-                  {item.badge != null && (
-                    <span className="count-page">{item.badge}</span>
+                  {item.id === "message" && unreadMessageCount > 0 && (
+                    <span className="count-page">{unreadMessageCount}</span>
                   )}
                 </Link>
               </li>

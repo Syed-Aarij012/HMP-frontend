@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import Link from "next/link";
 import { useMemo } from "react";
 import { getCarDetailHref } from "@/data/cars";

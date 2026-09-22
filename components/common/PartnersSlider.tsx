@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 
 const PARTNER_IMAGES = [
   "/assets/images/partner/par1.webp",

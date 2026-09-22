@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import LatePriceListWidget from "@/components/common/LatePriceListWidget";
 import ListingDetailDealerSidebarShell from "@/components/common/listing-detail/ListingDetailDealerSidebarShell";
 import { useContactDealer } from "@/components/common/ContactDealerContext";

@@ -1,8 +1,9 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import { useMemo, useState } from "react";
 import LeaveReplyForm from "@/components/common/LeaveReplyForm";
+import { useAuth } from "@/contexts/AuthContext";
 import { useListingReviews } from "@/hooks/useListingReviews";
 import {
   LISTING_REVIEWS,
@@ -81,11 +82,13 @@ export default function ListingDetailReviewsSection({
 }: ListingDetailReviewsSectionProps) {
   const [activeTab, setActiveTab] = useState<ListingReviewTabId>("all");
   const isRealListing = Boolean(car.publicId);
+  const { user } = useAuth();
   const {
     reviews: realReviews,
     averageRating,
     loading,
     error,
+    submitReview,
   } = useListingReviews(car.publicId);
 
   // Mock/demo listings (no publicId) keep showing the existing sample reviews so the
@@ -177,7 +180,12 @@ export default function ListingDetailReviewsSection({
           </div>
         </div>
       </div>
-      <LeaveReplyForm />
+      <LeaveReplyForm
+        onSubmit={isRealListing && user ? submitReview : undefined}
+        disabledMessage={
+          isRealListing && !user ? "Please log in to leave a review." : undefined
+        }
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import Link from "next/link";
 import MobileDealerSidebarShell from "@/components/common/MobileDealerSidebarShell";
 import SaleAgentListingsPanel from "@/components/sections/sale-agents-detail/SaleAgentListingsPanel";

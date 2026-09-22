@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/common/AppImage";
 import { useStickyHeader } from "@/hooks/useStickyHeader";
 import { StickyHeaderOffsetSync } from "@/contexts/StickyHeaderOffsetContext";
 import {
@@ -70,30 +70,51 @@ export default function Header2() {
               </div>
               <div className="register">
                 <ul className="flex align-center">
-                  <li>
-                    <i className="icon-carus-user fs-20" />
-                  </li>
-                  <li className="">
-                    <a
-                      href="#"
-                      data-bs-toggle="modal"
-                      data-bs-target="#popup_bid"
-                    >
-                      Login
-                    </a>
-                  </li>
-                  <li>
-                    <span>/</span>
-                  </li>
-                  <li className="">
-                    <a
-                      href="#"
-                      data-bs-toggle="modal"
-                      data-bs-target="#popup_bid2"
-                    >
-                      Register
-                    </a>
-                  </li>
+                  {user ? (
+                    <>
+                      <li>
+                        <i className="icon-carus-user fs-20" />
+                      </li>
+                      <li className="">
+                        <Link href="/dashboard">Dashboard</Link>
+                      </li>
+                      <li>
+                        <span>/</span>
+                      </li>
+                      <li className="">
+                        <a href="#" onClick={() => logout()}>
+                          Logout
+                        </a>
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li>
+                        <i className="icon-carus-user fs-20" />
+                      </li>
+                      <li className="">
+                        <a
+                          href="#"
+                          data-bs-toggle="modal"
+                          data-bs-target="#popup_bid"
+                        >
+                          Login
+                        </a>
+                      </li>
+                      <li>
+                        <span>/</span>
+                      </li>
+                      <li className="">
+                        <a
+                          href="#"
+                          data-bs-toggle="modal"
+                          data-bs-target="#popup_bid2"
+                        >
+                          Register
+                        </a>
+                      </li>
+                    </>
+                  )}
                 </ul>
               </div>
               <div className="flat-bt-top">
