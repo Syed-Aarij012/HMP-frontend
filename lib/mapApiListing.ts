@@ -20,6 +20,14 @@ export type ApiListing = {
     current_mileage?: number;
     photos?: { id: number; type: string; url: string; is_360: boolean; sequence: number }[];
   } | null;
+  condition_report?: {
+    condition_grade: number | null;
+    mechanical_grade: string | null;
+    published_at: string | null;
+    // Free-form, inspector-authored (see StoreConditionReportRequest) — "overview" is just
+    // the convention this app's own dev seed data/factory uses, not a guaranteed key.
+    summary?: { overview?: string; [key: string]: unknown } | null;
+  } | null;
 };
 
 export type ApiListingsResponse = {
@@ -91,6 +99,13 @@ export function mapApiListingToCar(listing: ApiListing): Car {
     filterSeats: vehicle?.seats,
     filterColor: vehicle?.colour,
     filterYear: vehicle?.year,
+    conditionReport: listing.condition_report
+      ? {
+          conditionGrade: listing.condition_report.condition_grade,
+          mechanicalGrade: listing.condition_report.mechanical_grade,
+          summaryText: listing.condition_report.summary?.overview ?? null,
+        }
+      : undefined,
   };
 }
 

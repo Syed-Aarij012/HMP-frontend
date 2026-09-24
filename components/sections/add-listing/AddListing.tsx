@@ -6,6 +6,9 @@ import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import NiceSelect from "@/components/common/NiceSelect";
 import AttachmentsSection from "@/components/sections/add-listing/AttachmentsSection";
 import UploadPhotoSection from "@/components/sections/add-listing/UploadPhotoSection";
+import UploadVideoSpinSection, {
+  type VideoSelection,
+} from "@/components/sections/add-listing/UploadVideoSpinSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch, describeApiError } from "@/lib/api-client";
 import {
@@ -49,6 +52,8 @@ function AddListing() {
   const [description, setDescription] = useState("");
 
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [video, setVideo] = useState<VideoSelection>(null);
+  const [spinFrames, setSpinFrames] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,6 +97,25 @@ function AddListing() {
         const formData = new FormData();
         formData.append("photo", file);
         await apiFetch(`/vehicles/${vehicleResponse.data.id}/photos`, {
+          method: "POST",
+          body: formData,
+        });
+      }
+
+      if (video) {
+        const formData = new FormData();
+        formData.append("video", video.file);
+        formData.append("duration_seconds", String(video.durationSeconds));
+        await apiFetch(`/vehicles/${vehicleResponse.data.id}/videos`, {
+          method: "POST",
+          body: formData,
+        });
+      }
+
+      if (spinFrames.length > 0) {
+        const formData = new FormData();
+        spinFrames.forEach((frame) => formData.append("frames[]", frame));
+        await apiFetch(`/vehicles/${vehicleResponse.data.id}/spin-sets`, {
           method: "POST",
           body: formData,
         });
@@ -166,6 +190,7 @@ function AddListing() {
                   <form className="tfcl-dashboard add-list" onSubmit={handleSubmit}>
                     <h1 className="admin-title mb-3">Add listing</h1>
                     <UploadPhotoSection onPhotosChange={handlePhotosChange} />
+                    <UploadVideoSpinSection onVideoChange={setVideo} onSpinFramesChange={setSpinFrames} />
                     <div className="tfcl-add-listing car-details">
                       <h3>Car details</h3>
                       <div className="form-group-4">

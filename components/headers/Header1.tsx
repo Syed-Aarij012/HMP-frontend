@@ -98,19 +98,19 @@ export default function Header1() {
                 <Link href={`/`}>
                   <Image
                     className="lazyload img-none"
-                    data-src="/assets/images/logo/logo@2x.png"
-                    src="/assets/images/logo/logo@2x.png"
-                    alt=""
-                    width={164}
-                    height={32}
+                    data-src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                    src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                    alt="HMP"
+                    width={100}
+                    height={50}
                   />
                   <Image
                     className="lazyload img-is-fixed"
-                    data-src="/assets/images/logo/logo@2x.png"
-                    src="/assets/images/logo/logo@2x.png"
-                    alt=""
-                    width={164}
-                    height={32}
+                    data-src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                    src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                    alt="HMP"
+                    width={100}
+                    height={50}
                   />
                 </Link>
               </div>

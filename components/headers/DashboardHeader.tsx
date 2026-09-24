@@ -33,10 +33,10 @@ export default function DashboardHeader() {
                   <div className="logo">
                     <Link href={`/`}>
                       <Image
-                        src="/assets/images/logo/logo.png"
-                        alt=""
-                        width={225}
-                        height={40}
+                        src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                        alt="HMP"
+                        width={140}
+                        height={70}
                       />
                     </Link>
                   </div>
