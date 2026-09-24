@@ -37,6 +37,31 @@ export type ApiListingsResponse = {
     body_type?: { value: string; count: number }[];
     [key: string]: unknown;
   };
+  // FR-B-006: what the server understood from the free-text query.
+  // FR-B-003: per-listing distance / drive-time band / delivery flag, keyed by listing id.
+  location?: {
+    postcode: string;
+    area: string | null;
+    radius_miles: number;
+    results: Record<string, { distance_miles: number | null; drive_time_band: string | null; delivery_eligible: boolean }>;
+  };
+  // FR-B-004: per-listing representative finance example, keyed by listing id.
+  finance?: Record<string, {
+    monthly_payment: string;
+    apr: string;
+    representative_example: string;
+  } | null>;
+  // FR-B-009: per-listing price-drop and market-context badges.
+  badges?: Record<string, {
+    price_drop: { amount: string } | null;
+    market_context: { label: "below_market" | "above_market" | "at_market" } | null;
+  }>;
+  search?: {
+    mode: "vrm" | "text";
+    filters: Record<string, string | number>;
+    terms: string[];
+    corrections: Record<string, string>;
+  } | null;
 };
 
 const BODY_TYPE_LABELS: Record<string, string> = {
