@@ -49,6 +49,13 @@ const dashboardMenuItems: DashboardMenuItem[] = [
     label: "My favorite",
   },
   {
+    id: "saved-searches",
+    href: "/saved-searches",
+    className: "menu-index-4",
+    iconClass: "icon-carus-listings",
+    label: "Saved searches",
+  },
+  {
     id: "message",
     href: "/message",
     className: "menu-index-4",

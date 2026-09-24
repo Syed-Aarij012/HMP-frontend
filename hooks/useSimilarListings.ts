@@ -12,11 +12,10 @@ export type SimilarListingsResult = {
 };
 
 /**
- * Other live listings sharing this car's make, excluding itself — the closest honest
- * "similar cars" signal the backend's real filters support (body_type would need the raw
- * enum token, not the display label Car.filterBodyType carries, to filter server-side).
- * Only fetched for a real listing (car.publicId set); a mock/demo car has no real make to
- * filter by, so the caller keeps showing whatever static list it already has.
+ * FR-B-007: the server's similar-vehicles ranking (GET /listings/{id}/similar) — same model
+ * first, then same make/body type, scored by price/year closeness. Only fetched for a real
+ * listing (car.publicId set); a mock/demo car has no real record to compare against, so the
+ * caller keeps showing whatever static list it already has.
  */
 export function useSimilarListings(car: Car, limit = 8): SimilarListingsResult {
   const [cars, setCars] = useState<Car[]>([]);
@@ -26,7 +25,7 @@ export function useSimilarListings(car: Car, limit = 8): SimilarListingsResult {
   useEffect(() => {
     let cancelled = false;
 
-    if (!car.publicId || !car.filterMake) {
+    if (!car.publicId) {
       queueMicrotask(() => {
         if (!cancelled) {
           setCars([]);
@@ -46,20 +45,10 @@ export function useSimilarListings(car: Car, limit = 8): SimilarListingsResult {
       }
     });
 
-    const params = new URLSearchParams({
-      make: car.filterMake,
-      per_page: String(limit + 1),
-    });
-
-    apiFetch<ApiListingsResponse>(`/listings?${params.toString()}`, { auth: false })
+    apiFetch<ApiListingsResponse>(`/listings/${car.publicId}/similar?limit=${limit}`, { auth: false })
       .then((response) => {
         if (cancelled) return;
-        setCars(
-          response.data
-            .filter((listing) => listing.id !== car.publicId)
-            .slice(0, limit)
-            .map(mapApiListingToCar)
-        );
+        setCars(response.data.map(mapApiListingToCar));
       })
       .catch(() => {
         if (!cancelled) setError("Could not load similar cars from the server.");
@@ -71,7 +60,7 @@ export function useSimilarListings(car: Car, limit = 8): SimilarListingsResult {
     return () => {
       cancelled = true;
     };
-  }, [car.publicId, car.filterMake, limit]);
+  }, [car.publicId, limit]);
 
   return { cars, loading, error };
 }
