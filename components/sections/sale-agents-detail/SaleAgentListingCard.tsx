@@ -110,6 +110,33 @@ export default function SaleAgentListingCard({
             </div>
           </>
         )}
+        {car.extras && (
+          <div className="text-color-1 mt-1" style={{ fontSize: 13, lineHeight: 1.5 }}>
+            {car.extras.priceDropAmount ? (
+              <div style={{ color: "#27ae60", fontWeight: 600 }}>
+                Price drop: £{car.extras.priceDropAmount.toLocaleString()} off
+              </div>
+            ) : null}
+            {car.extras.marketLabel === "below_market" && (
+              <div style={{ color: "#27ae60" }}>Below market price</div>
+            )}
+            {car.extras.marketLabel === "above_market" && (
+              <div style={{ color: "#e67e22" }}>Above market price</div>
+            )}
+            {car.extras.monthlyPayment ? (
+              <div title={car.extras.representativeExample ?? undefined}>
+                From <b>£{car.extras.monthlyPayment.toLocaleString("en-GB", { maximumFractionDigits: 0 })}/mo</b>
+                {car.extras.apr ? ` (${car.extras.apr}% APR representative)` : ""}
+              </div>
+            ) : null}
+            {car.extras.distanceMiles != null && (
+              <div>
+                {car.extras.distanceMiles} mi away
+                {car.extras.deliveryEligible ? " · delivery available" : ""}
+              </div>
+            )}
+          </div>
+        )}
         <div className="days-box flex justify-space align-center">
           <div className="money fs-24 fw-7 lh-30 text-color-2">
             ${car.price.toLocaleString("en-US")}

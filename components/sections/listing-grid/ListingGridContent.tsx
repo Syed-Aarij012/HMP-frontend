@@ -1,20 +1,22 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Filters from "@/components/common/Filters";
 import ListingResultsPanel from "@/components/common/ListingResultsPanel";
 import Pagination from "@/components/common/Pagination";
 import { setCurrentPage } from "@/components/reducer/listingFilterActions";
 import { useListingFilterState } from "@/components/listings/useListingFilterState";
 import SaleAgentListingCard from "@/components/sections/sale-agents-detail/SaleAgentListingCard";
-import { useHomepageListings } from "@/hooks/useHomepageListings";
+import { DEFAULT_SEARCH_PARAMS, useSearchListings } from "@/hooks/useSearchListings";
+import ListingSearchBar from "./ListingSearchBar";
 import {
   buildListingPriceOptions,
   getListingPriceBounds,
 } from "@/lib/buildListingPriceOptions";
 
 export default function ListingGridContent() {
-  const { cars, loading, error } = useHomepageListings(60);
+  const [params, setParams] = useState(DEFAULT_SEARCH_PARAMS);
+  const { cars, interpretation, locationArea, loading, error, searchError } = useSearchListings(params, 60);
 
   const priceBounds = useMemo(() => getListingPriceBounds(cars), [cars]);
   const priceOptions = useMemo(() => buildListingPriceOptions(cars), [cars]);
@@ -25,16 +27,6 @@ export default function ListingGridContent() {
       itemPerPage: 10,
       priceMax: priceBounds.max,
     });
-
-  if (loading) {
-    return (
-      <section className="tf-section listing-detail">
-        <div className="container">
-          <p>Loading live listings...</p>
-        </div>
-      </section>
-    );
-  }
 
   if (error) {
     return (
@@ -48,6 +40,18 @@ export default function ListingGridContent() {
 
   return (
     <>
+      <ListingSearchBar
+        params={params}
+        interpretation={interpretation}
+        locationArea={locationArea}
+        searchError={searchError}
+        onChange={setParams}
+      />
+      {loading && (
+        <div className="container">
+          <p>Loading live listings...</p>
+        </div>
+      )}
       <div className="flat-filter-search tf-section-listing">
         <div className="container">
           <div className="flat-tabs">
