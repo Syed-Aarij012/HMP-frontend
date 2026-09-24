@@ -10,7 +10,11 @@ import {
   type MouseEvent,
 } from "react";
 
-const MAX_PHOTOS = 10;
+// FR-A-010 (M): "up to 100 stills" — matches config('media.max_stills_per_vehicle') on the
+// backend (VehicleMediaService::assertWithinLimit), which is the real enforcement point;
+// this is just the UI's own pre-submit cap so a seller isn't surprised by a 422 after
+// picking 100+ files.
+const MAX_PHOTOS = 100;
 
 type ListingPhoto = {
   id: string;

@@ -13,11 +13,11 @@ function AboutTeam() {
               <div className="heading-section">
                 <Image
                   className="ls-is-cached lazyloaded"
-                  data-src="/assets/images/logo/logo-about.svg"
-                  src="/assets/images/logo/logo-about.svg"
-                  alt="images"
-                  width={165}
-                  height={32}
+                  data-src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                  src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                  alt="HMP"
+                  width={100}
+                  height={50}
                 />
                 <h2 className="heading-tittle fw-7">
                   Meet our best consultants, who will help you find your dream

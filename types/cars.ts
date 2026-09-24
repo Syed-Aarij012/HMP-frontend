@@ -40,6 +40,13 @@ export type Car = {
   // listing again (favoriting, reviews) rather than just displaying it.
   images?: string[];
   publicId?: string;
+  // FR-A-023: the consumer-safe projection only — a private buyer never gets damage-item/
+  // hotspot detail, that's the trade-only projection shown on the auction lot page instead.
+  conditionReport?: {
+    conditionGrade: number | null;
+    mechanicalGrade: string | null;
+    summaryText: string | null;
+  };
 };
 
 export type DashboardCar = Car & {

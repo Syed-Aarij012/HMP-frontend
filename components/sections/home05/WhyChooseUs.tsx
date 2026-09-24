@@ -9,10 +9,10 @@ function WhyChooseUs() {
             <div className="col-lg-5">
               <div className="heading-section wow fadeInUp">
                 <Image
-                  src="/assets/images/logo/logo-about.svg"
-                  alt="image"
-                  width={165}
-                  height={32}
+                  src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                  alt="HMP"
+                  width={100}
+                  height={50}
                 />
                 <h2 className="heading-tittle mb-22">Why Choose Us</h2>
                 <p className="fs-16 fw-4 text-color-2">
@@ -210,10 +210,10 @@ function WhyChooseUs() {
                 <div className="center">
                   <div className="center-logo">
                     <Image
-                      src="/assets/images/logo/logo2.png"
-                      alt="image"
-                      width={329}
-                      height={64}
+                      src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                      alt="HMP"
+                      width={200}
+                      height={100}
                     />
                   </div>
                 </div>

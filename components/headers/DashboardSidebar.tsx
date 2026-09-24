@@ -78,11 +78,132 @@ const dashboardMenuItems: DashboardMenuItem[] = [
   },
 ];
 
+// A trade buyer holds none of browse-retail-listings / manage-own-listings / manage-org-
+// listings (see RolesAndPermissionsSeeder's P4 block), so the retail menu above — listing,
+// favoriting, messaging a seller, reviewing a listing — has nothing real behind it for this
+// persona. This is the auction-side menu instead (view-auction-catalog / place-bid /
+// place-proxy-bid / consign-vehicle), sharing only Profile and Logout with the retail menu.
+const tradeBuyerMenuItems: DashboardMenuItem[] = [
+  {
+    id: "dashboard",
+    href: "/dashboard",
+    className: "menu-index-1",
+    iconClass: "icon-carus-diamondsfour",
+    label: "Dashboard",
+  },
+  {
+    id: "auction",
+    href: "/auction",
+    className: "menu-index-2",
+    iconClass: "icon-carus-listings",
+    label: "Auction catalog",
+  },
+  {
+    id: "consign-vehicle",
+    href: "/consign-vehicle",
+    className: "menu-index-3",
+    iconClass: "icon-carus-car",
+    label: "Consign a vehicle",
+  },
+  {
+    id: "my-consigned-lots",
+    href: "/my-consigned-lots",
+    className: "menu-index-3",
+    iconClass: "icon-carus-pencilline",
+    label: "My consigned vehicles",
+  },
+  {
+    id: "trade-marketplace",
+    href: "/trade-marketplace",
+    className: "menu-index-2",
+    iconClass: "icon-carus-listings",
+    label: "Trade marketplace (Buy Now)",
+  },
+  {
+    id: "list-fixed-price",
+    href: "/list-fixed-price",
+    className: "menu-index-3",
+    iconClass: "icon-carus-car",
+    label: "List at fixed price",
+  },
+  {
+    id: "my-fixed-price-listings",
+    href: "/my-fixed-price-listings",
+    className: "menu-index-3",
+    iconClass: "icon-carus-pencilline",
+    label: "My fixed-price listings",
+  },
+  {
+    id: "my-bids",
+    href: "/my-bids",
+    className: "menu-index-4",
+    iconClass: "icon-carus-checkcircle",
+    label: "My bids",
+  },
+  {
+    id: "my-exposure",
+    href: "/my-exposure",
+    className: "menu-index-4",
+    iconClass: "icon-carus-shieldcheck",
+    label: "My exposure",
+  },
+  {
+    id: "bidding-deposits",
+    href: "/bidding-deposits",
+    className: "menu-index-6",
+    iconClass: "icon-carus-power",
+    label: "Bidding deposits",
+  },
+  {
+    id: "my-proxy-bids",
+    href: "/my-proxy-bids",
+    className: "menu-index-4",
+    iconClass: "icon-carus-sliders",
+    label: "My proxy bids",
+  },
+  {
+    id: "my-provisional-sales",
+    href: "/my-provisional-sales",
+    className: "menu-index-4",
+    iconClass: "icon-carus-pending",
+    label: "Provisional sales",
+  },
+  {
+    id: "my-trade-orders",
+    href: "/my-trade-orders",
+    className: "menu-index-6",
+    iconClass: "icon-carus-checkcircle",
+    label: "My trade orders",
+  },
+  {
+    id: "security",
+    href: "/security",
+    className: "menu-index-6",
+    iconClass: "icon-carus-usercheck",
+    label: "Security",
+  },
+  {
+    id: "my-profile",
+    href: "/my-profile",
+    className: "menu-index-6",
+    iconClass: "icon-carus-profile",
+    label: "Profile",
+  },
+  {
+    id: "logout",
+    href: "/",
+    className: "menu-index-7",
+    iconClass: "icon-carus-signout",
+    label: "Logout",
+  },
+];
+
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const { isOpen, close } = useDashboardSidebar();
   const { user } = useAuth();
   const { unreadCount: unreadMessageCount } = useMessages();
+  const menuItems = user?.user_type === "trade_buyer" ? tradeBuyerMenuItems : dashboardMenuItems;
 
   useEffect(() => {
     close();
@@ -97,10 +218,10 @@ export default function DashboardSidebar() {
         <Link href="/" title="HMP">
           <Image
             className="site-logo"
-            src="/assets/images/logo/logo-footer@2x.png"
+            src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
             alt="HMP"
-            width={329}
-            height={64}
+            width={200}
+            height={100}
           />
         </Link>
       </div>
@@ -129,7 +250,7 @@ export default function DashboardSidebar() {
         <h6 className="db-title">Menu</h6>
         <div className="db-dashboard-menu">
           <ul>
-            {dashboardMenuItems.map((item) => (
+            {menuItems.map((item) => (
               <li key={item.id}>
                 <Link
                   href={item.href}
