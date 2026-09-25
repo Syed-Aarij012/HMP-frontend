@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useTradeOrder } from "@/hooks/useTradeOrder";
+import PostSalePanel from "./PostSalePanel";
 
 export default function TradeOrderDetail({ id }: { id: number }) {
-  const { tradeOrder, loading, error, payError, paying, pay } = useTradeOrder(id);
+  const { tradeOrder, loading, error, payError, paying, pay, reload } = useTradeOrder(id);
   const [notice, setNotice] = useState<string | null>(null);
 
   async function handlePay() {
@@ -75,12 +76,12 @@ export default function TradeOrderDetail({ id }: { id: number }) {
                       )}
 
                       {tradeOrder.status === "paid" && (
-                        <p className="tfcl-empty-data">
-                          Paid{tradeOrder.paidAt ? ` on ${new Date(tradeOrder.paidAt).toLocaleDateString()}` : ""}.
-                          {tradeOrder.transportJobStatus
-                            ? ` Transport: ${tradeOrder.transportJobStatus.replace(/_/g, " ")}.`
-                            : " No transport has been booked yet."}
-                        </p>
+                        <>
+                          <p className="tfcl-empty-data">
+                            Paid{tradeOrder.paidAt ? ` on ${new Date(tradeOrder.paidAt).toLocaleDateString()}` : ""}.
+                          </p>
+                          <PostSalePanel order={tradeOrder} onChanged={reload} />
+                        </>
                       )}
                     </>
                   )}

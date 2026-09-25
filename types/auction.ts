@@ -158,6 +158,12 @@ export type TradeOrder = {
   feeLines: TradeOrderFeeLine[];
   transportJobId: number | null;
   transportJobStatus: string | null;
+  // FR-F-010/011/020: post-sale record ids and assurance cover.
+  releaseNoteId: number | null;
+  releaseStatus: string | null;
+  titleTransferId: number | null;
+  isHmpAssured: boolean;
+  assuranceClaimWindowClosesAt: string | null;
 };
 
 export type ProvisionalSale = {

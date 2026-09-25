@@ -105,3 +105,31 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 
   return data as T;
 }
+
+/**
+ * Downloads a file from an authenticated endpoint (e.g. a vault PDF). A plain <a href> can't
+ * carry the bearer token, so this fetches the bytes with it and triggers a browser save.
+ * `url` may be a full "/api/..." path as returned by the backend or an API-relative one.
+ */
+export async function downloadFile(url: string, filename: string): Promise<void> {
+  const relative = url.replace(/^\/api/, "");
+  const token = getStoredToken();
+
+  const response = await fetch(`${API_URL}${relative}`, {
+    headers: token ? { Authorization: `Bearer ${token}`, Accept: "application/pdf,*/*" } : { Accept: "application/pdf,*/*" },
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`Download failed with status ${response.status}`, response.status, null);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}

@@ -55,5 +55,5 @@ export function useTradeOrder(id: number | undefined) {
     }
   }, [id, load]);
 
-  return { tradeOrder, loading, error, payError, paying, pay };
+  return { tradeOrder, loading, error, payError, paying, pay, reload: load };
 }
