@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import ConditionReportSection from "./ConditionReportSection";
+import LotCountdown from "./LotCountdown";
 import MediaGallery from "./MediaGallery";
 import { useAuctionLot } from "@/hooks/useAuctionLot";
+import { useServerClock } from "@/hooks/useServerClock";
 import { useFeeEstimate } from "@/hooks/useFeeEstimate";
 import { useStepUp } from "@/hooks/useStepUp";
 import { useAuth } from "@/contexts/AuthContext";
-import { ApiError } from "@/lib/api-client";
+import { ApiError, downloadFile } from "@/lib/api-client";
 
 // NFR-S-005 / EnsureStepUpVerified: bids at/above this need a fresh 2FA code on top of the
 // standing session. Mirrors config('step_up.thresholds.bid_amount')'s default — there's no
@@ -128,14 +130,34 @@ function StepUpPrompt({
 }
 
 export default function LotDetail({ publicId }: { publicId: string }) {
-  const { lot, bids, loading, error, actionError, submitting, live, placeBid, placeProxyBid, retractBid } =
+  const { lot, bids, snapshot, loading, error, actionError, submitting, live, connectionDropped, placeBid, placeProxyBid, retractBid } =
     useAuctionLot(publicId);
+  const { offsetMs } = useServerClock();
   const [bidAmount, setBidAmount] = useState("");
   const [proxyAmount, setProxyAmount] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmingBid, setConfirmingBid] = useState(false);
   const [confirmingProxy, setConfirmingProxy] = useState(false);
   const [stepUpFor, setStepUpFor] = useState<"bid" | "proxy" | null>(null);
+  const [integrityAcknowledged, setIntegrityAcknowledged] = useState(false);
+
+  const isBiddable = lot?.status === "open" || lot?.status === "in_lane";
+  const isConcluded = lot !== null && ["hammered", "provisional", "not_sold", "withdrawn", "settled"].includes(lot.status);
+  // FR-D-035: bidding never depends on the live channel, but a bidder on a degraded
+  // connection must be warned before we accept another tap.
+  const connectionDegraded = isBiddable && connectionDropped;
+  const nextBid = snapshot?.nextBid ?? null;
+  const closesAt = snapshot?.closesAt ?? lot?.closesAt ?? null;
+
+  async function handleDownloadBidLog() {
+    if (!lot) return;
+    setNotice(null);
+    try {
+      await downloadFile(`/auction/lots/${lot.id}/bid-log?format=csv`, `bid-log-${lot.id}.csv`);
+    } catch {
+      setNotice("The bid log could not be downloaded right now.");
+    }
+  }
 
   async function submitBid() {
     setNotice(null);
@@ -167,11 +189,16 @@ export default function LotDetail({ publicId }: { publicId: string }) {
 
   function handleBidSubmit(event: FormEvent) {
     event.preventDefault();
+    if (connectionDegraded && !integrityAcknowledged) {
+      setIntegrityAcknowledged(true);
+      return;
+    }
     if (Number(bidAmount) >= STEP_UP_THRESHOLD && !confirmingBid) {
       setConfirmingBid(true);
       return;
     }
     setConfirmingBid(false);
+    setIntegrityAcknowledged(false);
     submitBid();
   }
 
@@ -225,9 +252,41 @@ export default function LotDetail({ publicId }: { publicId: string }) {
                         </span>
                       </p>
 
+                      {snapshot?.laneStatus === "paused" && (
+                        <div className="alert alert-danger mb-3">
+                          This lane is paused by the auctioneer. Bidding resumes when they restart it.
+                        </div>
+                      )}
+
+                      {connectionDegraded && (
+                        <div className="alert alert-danger mb-3">
+                          Live updates dropped, so the price shown may be out of date. You can
+                          still bid, but check the latest price first. We refresh it every few seconds.
+                        </div>
+                      )}
+
                       <div className="row mb-4">
                         <div className="col-md-6">
-                          <p><b>Current price:</b> {formatPrice(lot.currentPrice)}</p>
+                          <p><b>Current price:</b> {formatPrice(snapshot?.currentPrice ?? lot.currentPrice)}
+                            {snapshot?.isLeading && isBiddable && <span style={{ color: "#2ecc71" }}> · You&apos;re the highest bidder</span>}
+                          </p>
+                          <LotCountdown closesAt={closesAt} offsetMs={offsetMs} />
+                          {isBiddable && nextBid && (
+                            <p>
+                              <b>Next minimum bid:</b> £{nextBid.minimum.toLocaleString()}{" "}
+                              <span className="text-color-1">(increment £{nextBid.increment.toLocaleString()})</span>{" "}
+                              <button
+                                type="button"
+                                className="sc-button"
+                                onClick={() => {
+                                  setBidAmount(String(nextBid.minimum));
+                                  setConfirmingBid(false);
+                                }}
+                              >
+                                <span>Use this amount</span>
+                              </button>
+                            </p>
+                          )}
                           <p>
                             <b>Reserve:</b>{" "}
                             {lot.reservePrice !== null
@@ -288,6 +347,13 @@ export default function LotDetail({ publicId }: { publicId: string }) {
 
                             {/* UX-021 (M): total-cost calculator, shown before the bid can be committed. */}
                             <TotalCostCalculator lotId={lot.id} amount={bidAmount} />
+
+                            {integrityAcknowledged && (
+                              <div className="alert alert-danger my-2">
+                                Your live connection is down, so this price may be stale. Click again to
+                                place the bid anyway.
+                              </div>
+                            )}
 
                             {confirmingBid && (
                               <div className="alert alert-danger my-2">
@@ -351,7 +417,14 @@ export default function LotDetail({ publicId }: { publicId: string }) {
                         </div>
                       </div>
 
-                      <h4 className="mb-2">Bid history</h4>
+                      <div className="flex gap-10 mb-2" style={{ alignItems: "center" }}>
+                        <h4 className="mb-0">Bid history</h4>
+                        {isConcluded && (
+                          <button type="button" className="sc-button" onClick={handleDownloadBidLog}>
+                            <span>Download bid log (CSV)</span>
+                          </button>
+                        )}
+                      </div>
                       {bids.length === 0 && <p className="tfcl-empty-data">No bids on this lot yet.</p>}
                       {bids.length > 0 && (
                         <div className="table-responsive">

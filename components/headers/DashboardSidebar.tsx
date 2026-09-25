@@ -205,12 +205,42 @@ const tradeBuyerMenuItems: DashboardMenuItem[] = [
   },
 ];
 
+const liveLanesItem: DashboardMenuItem = {
+  id: "live-lanes",
+  href: "/live-lanes",
+  className: "menu-index-4",
+  iconClass: "icon-carus-listings",
+  label: "Live lanes",
+};
+
+const rostrumItem: DashboardMenuItem = {
+  id: "rostrum",
+  href: "/rostrum",
+  className: "menu-index-4",
+  iconClass: "icon-carus-sliders",
+  label: "Rostrum console",
+};
+
+function insertBefore(items: DashboardMenuItem[], extra: DashboardMenuItem, beforeId: string): DashboardMenuItem[] {
+  const index = items.findIndex((item) => item.id === beforeId);
+  if (index === -1) return items;
+  return [...items.slice(0, index), extra, ...items.slice(index)];
+}
+
+function menuFor(userType: string | undefined): DashboardMenuItem[] {
+  // FR-D-033: multi-lane viewing is a trade-buyer surface; FR-D-034: the rostrum is the
+  // auctioneer's (and Super Admin's) console.
+  if (userType === "trade_buyer") return insertBefore(tradeBuyerMenuItems, liveLanesItem, "my-bids");
+  if (userType === "auctioneer" || userType === "super_admin") return insertBefore(dashboardMenuItems, rostrumItem, "security");
+  return dashboardMenuItems;
+}
+
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const { isOpen, close } = useDashboardSidebar();
   const { user } = useAuth();
   const { unreadCount: unreadMessageCount } = useMessages();
-  const menuItems = user?.user_type === "trade_buyer" ? tradeBuyerMenuItems : dashboardMenuItems;
+  const menuItems = menuFor(user?.user_type);
 
   useEffect(() => {
     close();
