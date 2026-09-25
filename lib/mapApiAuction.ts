@@ -302,6 +302,11 @@ export type ApiTradeOrder = {
   fee_lines: { fee_type: string; amount: string; vat_amount: string }[];
   transport_job_id: number | null;
   transport_job_status: string | null;
+  release_note_id?: number | null;
+  release_status?: string | null;
+  title_transfer_id?: number | null;
+  is_hmp_assured?: boolean;
+  assurance_claim_window_closes_at?: string | null;
 };
 
 export function mapApiTradeOrder(order: ApiTradeOrder): TradeOrder {
@@ -328,6 +333,11 @@ export function mapApiTradeOrder(order: ApiTradeOrder): TradeOrder {
     })),
     transportJobId: order.transport_job_id,
     transportJobStatus: order.transport_job_status,
+    releaseNoteId: order.release_note_id ?? null,
+    releaseStatus: order.release_status ?? null,
+    titleTransferId: order.title_transfer_id ?? null,
+    isHmpAssured: Boolean(order.is_hmp_assured),
+    assuranceClaimWindowClosesAt: order.assurance_claim_window_closes_at ?? null,
   };
 }
 
