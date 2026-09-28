@@ -181,7 +181,25 @@ export default function DashboardListingsTable({
     setListings((current) =>
       current.map((item) =>
         item.id === id
-          ? { ...item, dashboardStatus: mapStatus(response.data.status) }
+          ? { ...item, dashboardStatus: mapStatus(response.data.status), rawStatus: response.data.status }
+          : item,
+      ),
+    );
+  };
+
+  const handleRenew = async (id: number) => {
+    const listing = listings.find((item) => item.id === id);
+    if (!listing?.publicId) return;
+
+    const response = await apiFetch<{ data: { status: string; expires_at: string | null } }>(
+      `/listings/${listing.publicId}/renew`,
+      { method: "POST" }
+    );
+
+    setListings((current) =>
+      current.map((item) =>
+        item.id === id
+          ? { ...item, dashboardStatus: mapStatus(response.data.status), rawStatus: response.data.status }
           : item,
       ),
     );
@@ -203,6 +221,7 @@ export default function DashboardListingsTable({
               price: Number(response.data.price) || 0,
               description: response.data.description ?? undefined,
               dashboardStatus: mapStatus(response.data.status),
+              rawStatus: response.data.status,
             }
           : item,
       ),
@@ -314,6 +333,7 @@ export default function DashboardListingsTable({
               onDelete={handleDelete}
               onSave={handleSave}
               onMarkSold={handleMarkSold}
+              onRenew={handleRenew}
             />
           </table>
         </div>

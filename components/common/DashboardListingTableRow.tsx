@@ -8,6 +8,7 @@ import { DASHBOARD_LISTING_STATUS_META } from "@/data/dashboardListings";
 import { ADD_LISTING_PRICE_TYPE_OPTIONS } from "@/data/niceSelectOptions";
 import { formatCarPrice, getCarHref } from "@/data/cars";
 import { describeApiError } from "@/lib/api-client";
+import { usePricingSuggestion } from "@/hooks/useListingTools";
 import type { DashboardCar } from "@/types/cars";
 
 export type ListingEditableFields = {
@@ -22,6 +23,7 @@ type DashboardListingTableRowProps = {
   onDelete?: (id: number) => void;
   onSave?: (id: number, updates: ListingEditableFields) => Promise<void>;
   onMarkSold?: (id: number) => Promise<void>;
+  onRenew?: (id: number) => Promise<void>;
 };
 
 const DEFAULT_LISTING_DESCRIPTION =
@@ -45,11 +47,45 @@ const LISTING_STATUS_OPTIONS = [
   { label: "Sold", value: "sold" },
 ];
 
+/** FR-C-003: a valuation-anchored asking-price suggestion, shown while editing a listing. */
+function PricingSuggestionHint({ vehiclePublicId }: { vehiclePublicId: string }) {
+  const { suggestion, loading, error, fetchSuggestion } = usePricingSuggestion();
+
+  if (!suggestion && !loading && !error) {
+    return (
+      <button
+        type="button"
+        className="btn-action tfcl-dashboard-action-edit mb-2"
+        onClick={() => fetchSuggestion(vehiclePublicId)}
+      >
+        Get a pricing suggestion
+      </button>
+    );
+  }
+
+  if (loading) return <p className="mb-2">Checking similar cars on the platform...</p>;
+  if (error) return <div className="alert alert-danger mb-2">{error}</div>;
+  if (!suggestion) return null;
+
+  if (suggestion.suggestedPrice === null) {
+    return <p className="tfcl-empty-data mb-2">{suggestion.message}</p>;
+  }
+
+  return (
+    <div className="alert alert-success mb-2">
+      Similar cars suggest around <b>£{suggestion.suggestedPrice.toLocaleString()}</b> (£
+      {suggestion.rangeLow?.toLocaleString()}–£{suggestion.rangeHigh?.toLocaleString()}), based on{" "}
+      {suggestion.comparables} comparable listing{suggestion.comparables === 1 ? "" : "s"}.
+    </div>
+  );
+}
+
 export default function DashboardListingTableRow({
   listing,
   onDelete,
   onSave,
   onMarkSold,
+  onRenew,
 }: DashboardListingTableRowProps) {
   const detailHref = getCarHref(listing);
   const statusMeta = DASHBOARD_LISTING_STATUS_META[listing.dashboardStatus];
@@ -57,8 +93,15 @@ export default function DashboardListingTableRow({
   const canMarkSold = Boolean(
     listing.publicId && onMarkSold && listing.dashboardStatus !== "sold"
   );
+  // FR-C-003: renewal only ever applies to a listing that has (or had) an end date to extend
+  // — live/under-offer/expired, never a draft, sold or withdrawn one.
+  const canRenew = Boolean(
+    listing.publicId && onRenew && ["live", "under_offer", "expired"].includes(listing.rawStatus ?? "")
+  );
   const [markingSold, setMarkingSold] = useState(false);
   const [markSoldError, setMarkSoldError] = useState<string | null>(null);
+  const [renewing, setRenewing] = useState(false);
+  const [renewError, setRenewError] = useState<string | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [price, setPrice] = useState(String(listing.price));
@@ -89,6 +132,20 @@ export default function DashboardListingTableRow({
     }
   };
 
+  const handleRenew = async () => {
+    if (!onRenew) return;
+
+    setRenewing(true);
+    setRenewError(null);
+    try {
+      await onRenew(listing.id);
+    } catch (err) {
+      setRenewError(describeApiError(err, "Could not renew this listing."));
+    } finally {
+      setRenewing(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!onSave) return;
 
@@ -114,6 +171,7 @@ export default function DashboardListingTableRow({
       <tr>
         <td colSpan={4}>
           <div className="tfcl-listing-edit-inline p-3">
+            {listing.vehiclePublicId && <PricingSuggestionHint vehiclePublicId={listing.vehiclePublicId} />}
             <div className="grid-2 gap-30 mb-2">
               <div className="form-group mb-0">
                 <label>Price</label>
@@ -259,6 +317,26 @@ export default function DashboardListingTableRow({
             </button>
           </div>
         )}
+        {canRenew && (
+          <div className="inner-controller">
+            <span className="icon">
+              <Image
+                src="/assets/images/dashboard/pen.svg"
+                alt="icon"
+                width={20}
+                height={20}
+              />
+            </span>
+            <button
+              type="button"
+              className="btn-action tfcl-dashboard-action-edit"
+              onClick={handleRenew}
+              disabled={renewing}
+            >
+              {renewing ? "Renewing..." : listing.rawStatus === "expired" ? "Relist" : "Renew"}
+            </button>
+          </div>
+        )}
         <div className="inner-controller">
           <span className="icon">
             <Image
@@ -278,6 +356,9 @@ export default function DashboardListingTableRow({
         </div>
         {markSoldError && (
           <div className="text-danger fs-12 w-100 mt-1">{markSoldError}</div>
+        )}
+        {renewError && (
+          <div className="text-danger fs-12 w-100 mt-1">{renewError}</div>
         )}
       </td>
     </tr>

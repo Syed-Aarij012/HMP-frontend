@@ -65,5 +65,10 @@ export type Car = {
 export type DashboardCar = Car & {
   dashboardImage: string;
   dashboardStatus: DashboardListingStatus;
+  // FR-C-003: the raw backend lifecycle status (live/under_offer/expired/...), since
+  // dashboardStatus collapses everything but sold/live into "pending" for display and can't
+  // tell a renewable listing from a draft one.
+  rawStatus?: string;
+  vehiclePublicId?: string;
   postingDate: string;
 };

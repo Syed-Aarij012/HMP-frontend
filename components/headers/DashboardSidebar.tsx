@@ -56,6 +56,20 @@ const dashboardMenuItems: DashboardMenuItem[] = [
     label: "Saved searches",
   },
   {
+    id: "my-offers",
+    href: "/my-offers",
+    className: "menu-index-4",
+    iconClass: "icon-carus-pending",
+    label: "My offers",
+  },
+  {
+    id: "my-appointments",
+    href: "/my-appointments",
+    className: "menu-index-4",
+    iconClass: "icon-carus-clock",
+    label: "My appointments",
+  },
+  {
     id: "message",
     href: "/message",
     className: "menu-index-4",
@@ -227,11 +241,23 @@ function insertBefore(items: DashboardMenuItem[], extra: DashboardMenuItem, befo
   return [...items.slice(0, index), extra, ...items.slice(index)];
 }
 
-function menuFor(userType: string | undefined): DashboardMenuItem[] {
+const dealerAnalyticsItem: DashboardMenuItem = {
+  id: "dealer-analytics",
+  href: "/dealer-analytics",
+  className: "menu-index-4",
+  iconClass: "icon-carus-checkcircle",
+  label: "Dealer analytics",
+};
+
+function menuFor(userType: string | undefined, organizationId: number | null): DashboardMenuItem[] {
   // FR-D-033: multi-lane viewing is a trade-buyer surface; FR-D-034: the rostrum is the
   // auctioneer's (and Super Admin's) console.
   if (userType === "trade_buyer") return insertBefore(tradeBuyerMenuItems, liveLanesItem, "my-bids");
   if (userType === "auctioneer" || userType === "super_admin") return insertBefore(dashboardMenuItems, rostrumItem, "security");
+
+  // FR-C-022: self-serve performance analytics — dealer accounts only.
+  if (organizationId !== null) return insertBefore(dashboardMenuItems, dealerAnalyticsItem, "security");
+
   return dashboardMenuItems;
 }
 
@@ -240,7 +266,8 @@ export default function DashboardSidebar() {
   const { isOpen, close } = useDashboardSidebar();
   const { user } = useAuth();
   const { unreadCount: unreadMessageCount } = useMessages();
-  const menuItems = menuFor(user?.user_type);
+  const organizationId = typeof user?.organization_id === "number" ? user.organization_id : null;
+  const menuItems = menuFor(user?.user_type, organizationId);
 
   useEffect(() => {
     close();

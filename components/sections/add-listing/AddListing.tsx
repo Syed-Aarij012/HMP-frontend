@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import NiceSelect from "@/components/common/NiceSelect";
 import AttachmentsSection from "@/components/sections/add-listing/AttachmentsSection";
+import PhotoGuidanceChecklist from "@/components/sections/add-listing/PhotoGuidanceChecklist";
 import UploadPhotoSection from "@/components/sections/add-listing/UploadPhotoSection";
 import UploadVideoSpinSection, {
   type VideoSelection,
@@ -189,6 +190,7 @@ function AddListing() {
                 <main id="main" className="main-content">
                   <form className="tfcl-dashboard add-list" onSubmit={handleSubmit}>
                     <h1 className="admin-title mb-3">Add listing</h1>
+                    <PhotoGuidanceChecklist />
                     <UploadPhotoSection onPhotosChange={handlePhotosChange} />
                     <UploadVideoSpinSection onVideoChange={setVideo} onSpinFramesChange={setSpinFrames} />
                     <div className="tfcl-add-listing car-details">
