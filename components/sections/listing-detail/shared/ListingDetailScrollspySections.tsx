@@ -1,6 +1,7 @@
 "use client";
 
 import ScrollspySection from "@/components/common/ScrollspySection";
+import ListingDetailActionsSection from "./ListingDetailActionsSection";
 import ListingDetailDescriptionSection from "./ListingDetailDescriptionSection";
 import ListingDetailOverviewSection from "./ListingDetailOverviewSection";
 import ListingDetailFeaturesSection from "./ListingDetailFeaturesSection";
@@ -21,6 +22,7 @@ export default function ListingDetailScrollspySections({
 }: ListingDetailScrollspySectionsProps) {
   return (
     <>
+      <ListingDetailActionsSection car={car} />
       <ListingDetailDescriptionSection car={car} />
       {showOverview ? (
         <ScrollspySection id="scrollspyHeading1">
