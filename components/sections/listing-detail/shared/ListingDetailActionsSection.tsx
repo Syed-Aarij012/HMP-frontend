@@ -1,29 +1,49 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMakeOffer } from "@/hooks/useOffers";
 import { useBookAppointment } from "@/hooks/useAppointments";
+import { useInitiateDirectBuy } from "@/hooks/useDirectBuy";
 import type { Car } from "@/types/cars";
 
+// FR-C-030/FR-E-011: the deposit is a fixed, platform-wide amount (config('direct_buy.deposit_amount')),
+// not derived from the listing price — shown here only as a heads-up before the buyer commits; the
+// authoritative figure comes back on the created order itself.
+const DIRECT_BUY_DEPOSIT_DISPLAY = 199;
+const DIRECT_BUY_COOLING_OFF_DAYS = 14;
+
 /**
- * FR-C-032/033: making an offer and booking a test drive, directly on the listing a buyer
- * is already looking at — previously only reachable via the raw API.
+ * FR-C-032/033/030: making an offer, booking a test drive, or buying outright with a
+ * refundable holding deposit — directly on the listing a buyer is already looking at,
+ * previously only reachable (buy-now not reachable at all) via the raw API.
  */
 export default function ListingDetailActionsSection({ car }: { car: Car }) {
   const { user } = useAuth();
+  const router = useRouter();
   const listingId = car.publicId;
 
   const { submit: submitOffer, submitting: offerSubmitting, error: offerError } = useMakeOffer(listingId ?? "");
   const { submit: submitAppointment, submitting: appointmentSubmitting, error: appointmentError, booked } = useBookAppointment(listingId ?? "");
+  const { initiate: initiateDirectBuy, submitting: buySubmitting, error: buyError } = useInitiateDirectBuy(listingId ?? "");
 
   const [offerAmount, setOfferAmount] = useState("");
   const [offerSent, setOfferSent] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
-  const [activeForm, setActiveForm] = useState<"offer" | "test-drive" | null>(null);
+  const [activeForm, setActiveForm] = useState<"offer" | "test-drive" | "buy" | null>(null);
 
   if (!listingId) return null;
+
+  const canBuyNow = car.rawStatus === "live";
+
+  async function handleBuyNowConfirm() {
+    const order = await initiateDirectBuy();
+    if (order) {
+      router.push(`/my-orders/${order.publicId}`);
+    }
+  }
 
   async function handleOfferSubmit(event: FormEvent) {
     event.preventDefault();
@@ -54,6 +74,15 @@ export default function ListingDetailActionsSection({ car }: { car: Car }) {
   return (
     <div className="tfcl-card p-3 mb-4">
       <div className="flex gap-10 mb-2" style={{ flexWrap: "wrap" }}>
+        {canBuyNow && (
+          <button
+            type="button"
+            className="sc-button"
+            onClick={() => setActiveForm(activeForm === "buy" ? null : "buy")}
+          >
+            <span>Buy now</span>
+          </button>
+        )}
         <button
           type="button"
           className="sc-button"
@@ -72,6 +101,20 @@ export default function ListingDetailActionsSection({ car }: { car: Car }) {
           <span>Free valuation</span>
         </Link>
       </div>
+
+      {activeForm === "buy" && (
+        <div className="mt-2">
+          <p className="mb-2">
+            Reserve this car at £{car.price.toLocaleString()} with a refundable £{DIRECT_BUY_DEPOSIT_DISPLAY}{" "}
+            holding deposit, taken now. You have {DIRECT_BUY_COOLING_OFF_DAYS} days to cancel for a full refund
+            — the exact deposit and cancellation deadline will be confirmed on the next screen.
+          </p>
+          <button type="button" className="sc-button" disabled={buySubmitting} onClick={handleBuyNowConfirm}>
+            <span>{buySubmitting ? "Placing deposit..." : "Confirm & pay deposit"}</span>
+          </button>
+          {buyError && <div className="alert alert-danger mt-2">{buyError}</div>}
+        </div>
+      )}
 
       {activeForm === "offer" && (
         <div className="mt-2">
