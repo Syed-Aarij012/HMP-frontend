@@ -101,6 +101,7 @@ export function mapApiListingToCar(listing: ApiListing): Car {
     image: galleryImages[0],
     images: galleryImages,
     publicId: listing.id,
+    rawStatus: listing.status,
     title: title || "Untitled listing",
     price: Number(listing.price) || 0,
     mileage,

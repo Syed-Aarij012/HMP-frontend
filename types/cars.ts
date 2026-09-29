@@ -51,6 +51,9 @@ export type Car = {
   // listing again (favoriting, reviews) rather than just displaying it.
   images?: string[];
   publicId?: string;
+  // FR-C-030: the raw backend lifecycle status (live/reserved/sold/...) — needed to gate the
+  // "Buy now" direct-buy action, which only makes sense while a listing is actually live.
+  rawStatus?: string;
   /** FR-B-003/004/009: per-result search annotations from the server. */
   extras?: CarSearchExtras;
   // FR-A-023: the consumer-safe projection only — a private buyer never gets damage-item/
@@ -65,10 +68,6 @@ export type Car = {
 export type DashboardCar = Car & {
   dashboardImage: string;
   dashboardStatus: DashboardListingStatus;
-  // FR-C-003: the raw backend lifecycle status (live/under_offer/expired/...), since
-  // dashboardStatus collapses everything but sold/live into "pending" for display and can't
-  // tell a renewable listing from a draft one.
-  rawStatus?: string;
   vehiclePublicId?: string;
   postingDate: string;
 };
