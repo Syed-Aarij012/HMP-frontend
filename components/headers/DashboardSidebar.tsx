@@ -70,6 +70,13 @@ const dashboardMenuItems: DashboardMenuItem[] = [
     label: "My appointments",
   },
   {
+    id: "my-payouts",
+    href: "/my-payouts",
+    className: "menu-index-4",
+    iconClass: "icon-carus-power",
+    label: "My payouts",
+  },
+  {
     id: "message",
     href: "/message",
     className: "menu-index-4",
