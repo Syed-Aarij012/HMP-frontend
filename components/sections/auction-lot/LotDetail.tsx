@@ -130,7 +130,7 @@ function StepUpPrompt({
 }
 
 export default function LotDetail({ publicId }: { publicId: string }) {
-  const { lot, bids, snapshot, loading, error, actionError, submitting, live, connectionDropped, placeBid, placeProxyBid, retractBid } =
+  const { lot, bids, snapshot, loading, error, actionError, submitting, live, connectionDropped, latencyDegraded, placeBid, placeProxyBid, retractBid } =
     useAuctionLot(publicId);
   const { offsetMs } = useServerClock();
   const [bidAmount, setBidAmount] = useState("");
@@ -144,8 +144,10 @@ export default function LotDetail({ publicId }: { publicId: string }) {
   const isBiddable = lot?.status === "open" || lot?.status === "in_lane";
   const isConcluded = lot !== null && ["hammered", "provisional", "not_sold", "withdrawn", "settled"].includes(lot.status);
   // FR-D-035: bidding never depends on the live channel, but a bidder on a degraded
-  // connection must be warned before we accept another tap.
-  const connectionDegraded = isBiddable && connectionDropped;
+  // connection must be warned before we accept another tap — either because the WebSocket
+  // itself dropped, or because the server has told us our own measured round-trip latency
+  // to the lot crossed its threshold (a live socket says nothing about that on its own).
+  const connectionDegraded = isBiddable && (connectionDropped || latencyDegraded);
   const nextBid = snapshot?.nextBid ?? null;
   const closesAt = snapshot?.closesAt ?? lot?.closesAt ?? null;
 
@@ -260,8 +262,9 @@ export default function LotDetail({ publicId }: { publicId: string }) {
 
                       {connectionDegraded && (
                         <div className="alert alert-danger mb-3">
-                          Live updates dropped, so the price shown may be out of date. You can
-                          still bid, but check the latest price first. We refresh it every few seconds.
+                          {connectionDropped
+                            ? "Live updates dropped, so the price shown may be out of date. You can still bid, but check the latest price first. We refresh it every few seconds."
+                            : "Your connection to the auction is slow right now, so the price shown may be a moment behind. You can still bid, but check the latest price first."}
                         </div>
                       )}
 

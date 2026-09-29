@@ -18,6 +18,11 @@ import type { LotSnapshot } from "@/types/liveAuction";
 // silently goes stale — bidding itself keeps working over REST.
 const FALLBACK_POLL_MS = 8000;
 
+// FR-D-035: how often this client reports its own measured latency to the lot's heartbeat
+// endpoint — independent of whether the WebSocket itself is still connected, since a live
+// socket says nothing about how slow requests to the server actually are.
+const HEARTBEAT_INTERVAL_MS = 5000;
+
 function newIdempotencyKey(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -44,7 +49,9 @@ export function useAuctionLot(publicId: string | undefined) {
   const [submitting, setSubmitting] = useState(false);
   const [live, setLive] = useState(false);
   const [wasLive, setWasLive] = useState(false);
+  const [latencyDegraded, setLatencyDegraded] = useState(false);
   const lastSequence = useRef(0);
+  const lastLatencyMs = useRef(0);
 
   const loadSnapshot = useCallback(() => {
     if (!publicId) return;
@@ -145,6 +152,40 @@ export function useAuctionLot(publicId: string | undefined) {
     return () => window.clearInterval(timer);
   }, [publicId, live, loadSnapshot]);
 
+  // FR-D-035: reports this client's own round-trip latency to the lot, independent of the
+  // WebSocket's connected/disconnected state — a live socket says nothing about how slow
+  // requests to the server actually are. Each tick reports the latency measured by the
+  // *previous* tick (there's no way to know this call's own latency before it completes),
+  // starting from 0 on the very first heartbeat.
+  useEffect(() => {
+    if (!publicId) return;
+    let cancelled = false;
+
+    const sendHeartbeat = () => {
+      const start = performance.now();
+      apiFetch<{ degraded: boolean }>(`/auction/lots/${publicId}/heartbeat`, {
+        method: "POST",
+        body: { latency_ms: Math.round(lastLatencyMs.current) },
+      })
+        .then((response) => {
+          if (cancelled) return;
+          lastLatencyMs.current = performance.now() - start;
+          setLatencyDegraded(response.degraded);
+        })
+        .catch(() => {
+          // Best-effort health signal — a failed heartbeat isn't itself an error worth
+          // surfacing to the bidder.
+        });
+    };
+
+    sendHeartbeat();
+    const timer = window.setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [publicId]);
+
   const placeBid = useCallback(
     async (amount: string) => {
       if (!publicId) return;
@@ -230,6 +271,7 @@ export function useAuctionLot(publicId: string | undefined) {
     submitting,
     live,
     connectionDropped: wasLive && !live,
+    latencyDegraded,
     placeBid,
     placeProxyBid,
     retractBid,
