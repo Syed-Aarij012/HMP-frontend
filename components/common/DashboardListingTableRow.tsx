@@ -337,6 +337,21 @@ export default function DashboardListingTableRow({
             </button>
           </div>
         )}
+        {listing.vehiclePublicId && (
+          <div className="inner-controller">
+            <span className="icon">
+              <Image
+                src="/assets/images/dashboard/pen.svg"
+                alt="icon"
+                width={20}
+                height={20}
+              />
+            </span>
+            <Link href={`/guided-capture/${listing.vehiclePublicId}`} className="btn-action tfcl-dashboard-action-edit">
+              Guided photos
+            </Link>
+          </div>
+        )}
         <div className="inner-controller">
           <span className="icon">
             <Image
