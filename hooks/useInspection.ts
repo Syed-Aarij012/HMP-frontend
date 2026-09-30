@@ -30,29 +30,26 @@ export function useInspectorVehicle(vehiclePublicId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
+  const load = useCallback(() => {
+    setLoading(true);
     apiFetch<{ data: ApiInspectorVehicle }>(`/vehicles/${vehiclePublicId}`)
       .then((response) => {
-        if (!cancelled) {
-          setVehicle(mapApiInspectorVehicle(response.data));
-          setError(null);
-        }
+        setVehicle(mapApiInspectorVehicle(response.data));
+        setError(null);
       })
       .catch(() => {
-        if (!cancelled) setError("Could not load this vehicle. Check the ID and that you have inspector access.");
+        setError("Could not load this vehicle. Check the ID and that you have inspector access.");
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [vehiclePublicId]);
 
-  return { vehicle, loading, error };
+  useEffect(() => {
+    queueMicrotask(load);
+  }, [load]);
+
+  return { vehicle, loading, error, reload: load };
 }
 
 /** FR-A-013/025: a vehicle's own media, so damage can be pinned to a real photo frame. */
@@ -229,4 +226,95 @@ export function useConditionReportSubmission(vehicleNumericId: number | null) {
   }, [report]);
 
   return { submit, submitting, submitError, report, publish, publishing, publishError };
+}
+
+export type MotHistoryEntry = {
+  id: number;
+  testDate: string;
+  result: string;
+  odometerValue: number | null;
+  advisories: { description: string; category?: string }[];
+};
+
+/** FR-A-002/003/005: VES lookup, VIN decode, and MOT history — real enrichment, never wired to a UI. */
+export function useVehicleEnrichment(vehiclePublicId: string, onEnriched: () => void) {
+  const [vesLoading, setVesLoading] = useState(false);
+  const [vesError, setVesError] = useState<string | null>(null);
+  const [vinLoading, setVinLoading] = useState(false);
+  const [vinError, setVinError] = useState<string | null>(null);
+  const [motLoading, setMotLoading] = useState(false);
+  const [motError, setMotError] = useState<string | null>(null);
+  const [motHistory, setMotHistory] = useState<MotHistoryEntry[] | null>(null);
+
+  const runVesLookup = useCallback(
+    async (vrm: string): Promise<boolean> => {
+      setVesLoading(true);
+      setVesError(null);
+      try {
+        await apiFetch(`/vehicles/${vehiclePublicId}/ves-lookup`, { method: "POST", body: { vrm } });
+        onEnriched();
+        return true;
+      } catch (err) {
+        setVesError(describeApiError(err, "VES lookup failed."));
+        return false;
+      } finally {
+        setVesLoading(false);
+      }
+    },
+    [vehiclePublicId, onEnriched],
+  );
+
+  const runVinDecode = useCallback(async (): Promise<boolean> => {
+    setVinLoading(true);
+    setVinError(null);
+    try {
+      await apiFetch(`/vehicles/${vehiclePublicId}/vin-decode`, { method: "POST" });
+      onEnriched();
+      return true;
+    } catch (err) {
+      setVinError(describeApiError(err, "VIN decode failed."));
+      return false;
+    } finally {
+      setVinLoading(false);
+    }
+  }, [vehiclePublicId, onEnriched]);
+
+  const runMotRefresh = useCallback(async (): Promise<boolean> => {
+    setMotLoading(true);
+    setMotError(null);
+    try {
+      const response = await apiFetch<ApiListResponse<{ id: number; test_date: string; result: string; odometer_value: number | null; advisories: { description: string; category?: string }[] }>>(
+        `/vehicles/${vehiclePublicId}/mot-history/refresh`,
+        { method: "POST" },
+      );
+      setMotHistory(
+        response.data.map((r) => ({
+          id: r.id,
+          testDate: r.test_date,
+          result: r.result,
+          odometerValue: r.odometer_value,
+          advisories: r.advisories ?? [],
+        })),
+      );
+      return true;
+    } catch (err) {
+      setMotError(describeApiError(err, "MOT history refresh failed."));
+      return false;
+    } finally {
+      setMotLoading(false);
+    }
+  }, [vehiclePublicId]);
+
+  return {
+    runVesLookup,
+    vesLoading,
+    vesError,
+    runVinDecode,
+    vinLoading,
+    vinError,
+    runMotRefresh,
+    motLoading,
+    motError,
+    motHistory,
+  };
 }

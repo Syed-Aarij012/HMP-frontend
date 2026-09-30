@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type MouseEvent } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import EnrichmentPanel from "@/components/sections/inspections/EnrichmentPanel";
 import {
   useActiveGradingMatrix,
   useConditionReportSubmission,
@@ -97,7 +98,7 @@ function PhotoWithPins({
 }
 
 export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId: string }) {
-  const { vehicle, loading: vehicleLoading, error: vehicleError } = useInspectorVehicle(vehiclePublicId);
+  const { vehicle, loading: vehicleLoading, error: vehicleError, reload: reloadVehicle } = useInspectorVehicle(vehiclePublicId);
   const { media, loading: mediaLoading, error: mediaError } = useVehicleMedia(vehiclePublicId);
   const { suggestions } = useCvDamageSuggestions(vehiclePublicId);
   const { matrix, loading: matrixLoading, error: matrixError } = useActiveGradingMatrix();
@@ -236,6 +237,8 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
                   <p className="text-color-1 mb-3">
                     VIN {vehicle.vin} · VRM {vehicle.currentVrm ?? "-"} · Provenance: {vehicle.provenanceStatus}
                   </p>
+
+                  {!report && <EnrichmentPanel vehiclePublicId={vehiclePublicId} vin={vehicle.vin} onEnriched={reloadVehicle} />}
 
                   {report && (
                     <div className={`alert ${report.status === "published" ? "alert-success" : "alert-info"} mb-3`}>
