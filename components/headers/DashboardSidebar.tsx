@@ -283,6 +283,15 @@ const gradingMatrixItem: DashboardMenuItem = {
   label: "Grading matrix",
 };
 
+// FR-A-006: taxonomy version administration — super_admin only.
+const taxonomyItem: DashboardMenuItem = {
+  id: "taxonomy",
+  href: "/taxonomy",
+  className: "menu-index-4",
+  iconClass: "icon-carus-list",
+  label: "Taxonomy",
+};
+
 function menuFor(userType: string | undefined, organizationId: number | null): DashboardMenuItem[] {
   // FR-D-033: multi-lane viewing is a trade-buyer surface; FR-D-034: the rostrum is the
   // auctioneer's (and Super Admin's) console.
@@ -310,6 +319,9 @@ export default function DashboardSidebar() {
     : baseMenuItems;
   if (isQualitySupervisorPersona && !menuItems.some((item) => item.id === "grading-matrix")) {
     menuItems = insertBefore(menuItems, gradingMatrixItem, "security");
+  }
+  if (hasRole(user, "super_admin") && !menuItems.some((item) => item.id === "taxonomy")) {
+    menuItems = insertBefore(menuItems, taxonomyItem, "security");
   }
 
   useEffect(() => {
