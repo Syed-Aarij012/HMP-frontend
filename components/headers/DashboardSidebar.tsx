@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useDashboardSidebar } from "@/components/dashboard/DashboardSidebarContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { hasRole, useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/components/common/MessagesContext";
 import { isNavLinkActive } from "@/lib/navigation";
 
@@ -263,6 +263,17 @@ const dealerAnalyticsItem: DashboardMenuItem = {
   label: "Dealer analytics",
 };
 
+// FR-A-013/020/022/025: inspector (or quality_supervisor / super_admin) condition-report
+// tooling — a distinct internal persona, not gated by user_type like the retail/dealer/trade
+// menus above, since quality_supervisor is an additional role rather than its own user_type.
+const inspectionsItem: DashboardMenuItem = {
+  id: "inspections",
+  href: "/inspections",
+  className: "menu-index-4",
+  iconClass: "icon-carus-checkcircle",
+  label: "Inspections",
+};
+
 function menuFor(userType: string | undefined, organizationId: number | null): DashboardMenuItem[] {
   // FR-D-033: multi-lane viewing is a trade-buyer surface; FR-D-034: the rostrum is the
   // auctioneer's (and Super Admin's) console.
@@ -281,7 +292,12 @@ export default function DashboardSidebar() {
   const { user } = useAuth();
   const { unreadCount: unreadMessageCount } = useMessages();
   const organizationId = typeof user?.organization_id === "number" ? user.organization_id : null;
-  const menuItems = menuFor(user?.user_type, organizationId);
+  const baseMenuItems = menuFor(user?.user_type, organizationId);
+  const isInspectionPersona =
+    hasRole(user, "inspector") || hasRole(user, "quality_supervisor") || hasRole(user, "super_admin");
+  const menuItems = isInspectionPersona && !baseMenuItems.some((item) => item.id === "inspections")
+    ? insertBefore(baseMenuItems, inspectionsItem, "security")
+    : baseMenuItems;
 
   useEffect(() => {
     close();
