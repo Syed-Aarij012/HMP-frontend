@@ -263,6 +263,15 @@ const dealerAnalyticsItem: DashboardMenuItem = {
   label: "Dealer analytics",
 };
 
+// FR-A-031: bulk CSV stock ingestion — dealer accounts only.
+const dealerStockFeedItem: DashboardMenuItem = {
+  id: "dealer-stock-feed",
+  href: "/dealer-stock-feed",
+  className: "menu-index-4",
+  iconClass: "icon-carus-upload",
+  label: "Bulk stock upload",
+};
+
 // FR-A-013/020/022/025: inspector (or quality_supervisor / super_admin) condition-report
 // tooling — a distinct internal persona, not gated by user_type like the retail/dealer/trade
 // menus above, since quality_supervisor is an additional role rather than its own user_type.
@@ -292,6 +301,15 @@ const taxonomyItem: DashboardMenuItem = {
   label: "Taxonomy",
 };
 
+// FR-A-032: auto-routing rules administration — super_admin (or manage-run-list) only.
+const routingRulesItem: DashboardMenuItem = {
+  id: "routing-rules",
+  href: "/routing-rules",
+  className: "menu-index-4",
+  iconClass: "icon-carus-arrowsleftright",
+  label: "Auto-routing rules",
+};
+
 function menuFor(userType: string | undefined, organizationId: number | null): DashboardMenuItem[] {
   // FR-D-033: multi-lane viewing is a trade-buyer surface; FR-D-034: the rostrum is the
   // auctioneer's (and Super Admin's) console.
@@ -299,7 +317,9 @@ function menuFor(userType: string | undefined, organizationId: number | null): D
   if (userType === "auctioneer" || userType === "super_admin") return insertBefore(dashboardMenuItems, rostrumItem, "security");
 
   // FR-C-022: self-serve performance analytics — dealer accounts only.
-  if (organizationId !== null) return insertBefore(dashboardMenuItems, dealerAnalyticsItem, "security");
+  if (organizationId !== null) {
+    return insertBefore(insertBefore(dashboardMenuItems, dealerAnalyticsItem, "security"), dealerStockFeedItem, "security");
+  }
 
   return dashboardMenuItems;
 }
@@ -322,6 +342,9 @@ export default function DashboardSidebar() {
   }
   if (hasRole(user, "super_admin") && !menuItems.some((item) => item.id === "taxonomy")) {
     menuItems = insertBefore(menuItems, taxonomyItem, "security");
+  }
+  if (hasRole(user, "super_admin") && !menuItems.some((item) => item.id === "routing-rules")) {
+    menuItems = insertBefore(menuItems, routingRulesItem, "security");
   }
 
   useEffect(() => {
