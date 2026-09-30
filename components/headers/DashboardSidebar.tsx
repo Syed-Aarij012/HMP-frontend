@@ -274,6 +274,15 @@ const inspectionsItem: DashboardMenuItem = {
   label: "Inspections",
 };
 
+// FR-A-021: dual-approval matrix authoring — quality_supervisor (or super_admin) only.
+const gradingMatrixItem: DashboardMenuItem = {
+  id: "grading-matrix",
+  href: "/grading-matrix",
+  className: "menu-index-4",
+  iconClass: "icon-carus-sliders",
+  label: "Grading matrix",
+};
+
 function menuFor(userType: string | undefined, organizationId: number | null): DashboardMenuItem[] {
   // FR-D-033: multi-lane viewing is a trade-buyer surface; FR-D-034: the rostrum is the
   // auctioneer's (and Super Admin's) console.
@@ -295,9 +304,13 @@ export default function DashboardSidebar() {
   const baseMenuItems = menuFor(user?.user_type, organizationId);
   const isInspectionPersona =
     hasRole(user, "inspector") || hasRole(user, "quality_supervisor") || hasRole(user, "super_admin");
-  const menuItems = isInspectionPersona && !baseMenuItems.some((item) => item.id === "inspections")
+  const isQualitySupervisorPersona = hasRole(user, "quality_supervisor") || hasRole(user, "super_admin");
+  let menuItems = isInspectionPersona && !baseMenuItems.some((item) => item.id === "inspections")
     ? insertBefore(baseMenuItems, inspectionsItem, "security")
     : baseMenuItems;
+  if (isQualitySupervisorPersona && !menuItems.some((item) => item.id === "grading-matrix")) {
+    menuItems = insertBefore(menuItems, gradingMatrixItem, "security");
+  }
 
   useEffect(() => {
     close();

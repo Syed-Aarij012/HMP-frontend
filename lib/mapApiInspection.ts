@@ -91,9 +91,16 @@ export function mapApiGradingMatrixEntry(api: ApiGradingMatrixEntry): GradingMat
   };
 }
 
+export type ApiGradeThreshold = { max_points: number | null; grade: number };
+
 export type ApiGradingMatrixVersion = {
   id: number;
   version_label: string;
+  grade_thresholds: ApiGradeThreshold[];
+  effective_from: string;
+  approved_by_user_id: number | null;
+  second_approved_by_user_id: number | null;
+  published_at: string | null;
   entries: ApiGradingMatrixEntry[];
 };
 
@@ -101,6 +108,11 @@ export function mapApiGradingMatrixVersion(api: ApiGradingMatrixVersion): Gradin
   return {
     id: api.id,
     versionLabel: api.version_label,
+    gradeThresholds: (api.grade_thresholds ?? []).map((t) => ({ maxPoints: t.max_points, grade: t.grade })),
+    effectiveFrom: api.effective_from,
+    approvedByUserId: api.approved_by_user_id,
+    secondApprovedByUserId: api.second_approved_by_user_id,
+    publishedAt: api.published_at,
     entries: (api.entries ?? []).map(mapApiGradingMatrixEntry),
   };
 }

@@ -141,6 +141,78 @@ export function useActiveGradingMatrix() {
   return { matrix, loading, error };
 }
 
+/** FR-A-021: matrix versions awaiting a second approval, plus drafting and approving one. */
+export function useGradingMatrixAdmin() {
+  const [pending, setPending] = useState<GradingMatrixVersion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [drafting, setDrafting] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [approveError, setApproveError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    apiFetch<ApiListResponse<ApiGradingMatrixVersion>>("/grading-matrix-versions/pending")
+      .then((response) => {
+        setPending(response.data.map(mapApiGradingMatrixVersion));
+        setError(null);
+      })
+      .catch(() => setError("Could not load pending grading matrix versions."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(load);
+  }, [load]);
+
+  const draft = useCallback(
+    async (
+      versionLabel: string,
+      effectiveFrom: string,
+      gradeThresholds: { max_points: number | null; grade: number }[],
+      entries: { damage_type: string; panel: string; severity: string; repair_cost_band: string; points: number }[],
+    ): Promise<boolean> => {
+      setDrafting(true);
+      setDraftError(null);
+      try {
+        await apiFetch("/grading-matrix-versions", {
+          method: "POST",
+          body: { version_label: versionLabel, effective_from: effectiveFrom, grade_thresholds: gradeThresholds, entries },
+        });
+        load();
+        return true;
+      } catch (err) {
+        setDraftError(describeApiError(err, "Could not draft this grading matrix version."));
+        return false;
+      } finally {
+        setDrafting(false);
+      }
+    },
+    [load],
+  );
+
+  const approve = useCallback(
+    async (versionId: number): Promise<boolean> => {
+      setApprovingId(versionId);
+      setApproveError(null);
+      try {
+        await apiFetch(`/grading-matrix-versions/${versionId}/approve`, { method: "POST" });
+        load();
+        return true;
+      } catch (err) {
+        setApproveError(describeApiError(err, "Could not approve this grading matrix version."));
+        return false;
+      } finally {
+        setApprovingId(null);
+      }
+    },
+    [load],
+  );
+
+  return { pending, loading, error, draft, drafting, draftError, approve, approvingId, approveError };
+}
+
 /** FR-A-020/022/023: submitting the draft condition report, then publishing it. */
 export function useConditionReportSubmission(vehicleNumericId: number | null) {
   const [submitting, setSubmitting] = useState(false);
