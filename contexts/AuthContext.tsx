@@ -15,8 +15,16 @@ export type AuthUser = {
   name: string;
   email: string;
   user_type: string;
+  // Spatie roles, now loaded on every auth-issuing response (register/login/2FA challenge)
+  // and GET /user — the only way to tell apart a persona like quality_supervisor that isn't
+  // its own user_type, just an additional role granted on top of another one.
+  roles?: { name: string }[];
   [key: string]: unknown;
 };
+
+export function hasRole(user: AuthUser | null, roleName: string): boolean {
+  return Boolean(user?.roles?.some((role) => role.name === roleName));
+}
 
 type LoginResult =
   | { status: "ok" }
