@@ -5,8 +5,50 @@ import Link from "next/link";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { usePhotoGuidance } from "@/hooks/useListingTools";
 import { useGuidedCapture } from "@/hooks/useGuidedCapture";
+import { useBackgroundReplacement } from "@/hooks/useBackgroundReplacement";
 
-type ShotState = { status: "pending" | "passed" | "failed"; message: string | null };
+type ShotState = { status: "pending" | "passed" | "failed"; message: string | null; photoId: number | null };
+
+const BACKGROUND_COLOR_OPTIONS = [
+  { label: "Light grey", value: "#F5F5F5" },
+  { label: "White", value: "#FFFFFF" },
+  { label: "Showroom blue", value: "#D6E4F0" },
+];
+
+/** FR-A-015: opt-in background replacement for the shot just captured. */
+function BackgroundReplacementControl({ vehiclePublicId, photoId }: { vehiclePublicId: string; photoId: number }) {
+  const { replace, processing, error } = useBackgroundReplacement(vehiclePublicId);
+  const [color, setColor] = useState(BACKGROUND_COLOR_OPTIONS[0].value);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  async function handleReplace() {
+    const url = await replace(photoId, color);
+    if (url) setPreviewUrl(url);
+  }
+
+  return (
+    <div className="mt-2">
+      <div className="flex gap-10" style={{ alignItems: "center" }}>
+        <select className="form-control" value={color} onChange={(e) => setColor(e.target.value)} style={{ maxWidth: 180 }}>
+          {BACKGROUND_COLOR_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <button type="button" className="sc-button" disabled={processing} onClick={handleReplace}>
+          <span>{processing ? "Processing..." : "Try background replacement"}</span>
+        </button>
+      </div>
+      {error && <div className="alert alert-danger mt-2">{error}</div>}
+      {previewUrl && (
+        <div className="mt-2">
+          <p className="text-color-1 mb-1">Preview (the original photo is kept either way):</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={previewUrl} alt="Background-replaced preview" style={{ maxWidth: 320, borderRadius: 6 }} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * FR-A-014: walks a seller through each recommended shot one at a time, uploading and
@@ -44,11 +86,14 @@ export default function GuidedCapture({ vehiclePublicId }: { vehiclePublicId: st
     event.target.value = "";
     if (!file || !currentShot) return;
 
-    setShotStates((prev) => ({ ...prev, [currentShot.key]: { status: "pending", message: null } }));
+    setShotStates((prev) => ({ ...prev, [currentShot.key]: { status: "pending", message: null, photoId: null } }));
 
     const result = await uploadShot(file);
 
-    setShotStates((prev) => ({ ...prev, [currentShot.key]: { status: result.status, message: result.message } }));
+    setShotStates((prev) => ({
+      ...prev,
+      [currentShot.key]: { status: result.status, message: result.message, photoId: result.photoId },
+    }));
 
     if (result.status === "passed" && shotIndex < shots.length - 1) {
       setShotIndex(shotIndex + 1);
@@ -129,6 +174,10 @@ export default function GuidedCapture({ vehiclePublicId }: { vehiclePublicId: st
                               : "Capture this shot"}
                         </span>
                       </button>
+
+                      {currentState?.status === "passed" && currentState.photoId && (
+                        <BackgroundReplacementControl vehiclePublicId={vehiclePublicId} photoId={currentState.photoId} />
+                      )}
                     </div>
                   )}
                 </div>
