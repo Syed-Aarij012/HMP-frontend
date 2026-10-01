@@ -39,9 +39,16 @@ export type GradingMatrixEntry = {
   points: number;
 };
 
+export type GradeThreshold = { maxPoints: number | null; grade: number };
+
 export type GradingMatrixVersion = {
   id: number;
   versionLabel: string;
+  gradeThresholds: GradeThreshold[];
+  effectiveFrom: string;
+  approvedByUserId: number | null;
+  secondApprovedByUserId: number | null;
+  publishedAt: string | null;
   entries: GradingMatrixEntry[];
 };
 

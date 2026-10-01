@@ -11,6 +11,7 @@ import UploadVideoSpinSection, {
   type VideoSelection,
 } from "@/components/sections/add-listing/UploadVideoSpinSection";
 import { useAuth } from "@/contexts/AuthContext";
+import { useResumableUpload } from "@/hooks/useResumableUpload";
 import { apiFetch, describeApiError } from "@/lib/api-client";
 import {
   ADD_LISTING_BODY_TYPE_OPTIONS,
@@ -57,6 +58,8 @@ function AddListing() {
   const [spinFrames, setSpinFrames] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { upload: uploadFileResumable, uploading: fileUploading, progress: fileUploadProgress, clearSession: clearFileUploadSession } = useResumableUpload();
+  const [photoUploadStatus, setPhotoUploadStatus] = useState<string | null>(null);
 
   const handlePhotosChange = useCallback((files: File[]) => {
     setPhotoFiles(files);
@@ -94,23 +97,42 @@ function AddListing() {
         },
       });
 
-      for (const file of photoFiles) {
-        const formData = new FormData();
-        formData.append("photo", file);
-        await apiFetch(`/vehicles/${vehicleResponse.data.id}/photos`, {
+      // FR-A-010: every still, same as the video below, goes through a resumable chunked
+      // session — any one of up to 100 photos can hit a dropped mobile connection, not just
+      // the single video.
+      for (let i = 0; i < photoFiles.length; i++) {
+        const file = photoFiles[i];
+        setPhotoUploadStatus(`Uploading photo ${i + 1} of ${photoFiles.length}...`);
+        const uploadSessionId = await uploadFileResumable(file);
+        if (!uploadSessionId) {
+          setError(`Could not upload photo ${i + 1}. Please try again.`);
+          setSubmitting(false);
+          setPhotoUploadStatus(null);
+          return;
+        }
+        await apiFetch(`/vehicles/${vehicleResponse.data.id}/photos/from-upload`, {
           method: "POST",
-          body: formData,
+          body: { upload_session_id: uploadSessionId },
         });
+        clearFileUploadSession(file);
       }
+      setPhotoUploadStatus(null);
 
       if (video) {
-        const formData = new FormData();
-        formData.append("video", video.file);
-        formData.append("duration_seconds", String(video.durationSeconds));
-        await apiFetch(`/vehicles/${vehicleResponse.data.id}/videos`, {
+        // Uploaded in chunks against a resumable session — if this tab reloads mid-upload,
+        // re-selecting the same file resumes from whichever chunks already landed instead of
+        // starting over.
+        const uploadSessionId = await uploadFileResumable(video.file);
+        if (!uploadSessionId) {
+          setError("Could not upload the video. Please try again.");
+          setSubmitting(false);
+          return;
+        }
+        await apiFetch(`/vehicles/${vehicleResponse.data.id}/videos/from-upload`, {
           method: "POST",
-          body: formData,
+          body: { upload_session_id: uploadSessionId, duration_seconds: video.durationSeconds },
         });
+        clearFileUploadSession(video.file);
       }
 
       if (spinFrames.length > 0) {
@@ -365,6 +387,8 @@ function AddListing() {
                     </div>
 
                     {error && <div className="alert alert-danger">{error}</div>}
+                    {photoUploadStatus && <p className="text-color-1">{photoUploadStatus} {fileUploading ? `(${fileUploadProgress}%)` : ""}</p>}
+                    {!photoUploadStatus && fileUploading && <p className="text-color-1">Uploading video... {fileUploadProgress}%</p>}
 
                     <div className="group-button-submit">
                       <button className="pre-btn" type="submit" disabled={submitting}>

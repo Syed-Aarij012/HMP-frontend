@@ -116,6 +116,10 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
   const [tyreRr, setTyreRr] = useState("6");
   const [sohPercentage, setSohPercentage] = useState("90");
   const [chargeCableInventory, setChargeCableInventory] = useState("Type 2");
+  const [chargingSessionVerified, setChargingSessionVerified] = useState(false);
+  const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [capturingGeo, setCapturingGeo] = useState(false);
 
   const [damageItems, setDamageItems] = useState<DraftDamageItem[]>([]);
   const [pending, setPending] = useState<PendingPin | null>(null);
@@ -189,6 +193,26 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
     setDamageItems((prev) => prev.filter((item) => item.key !== key));
   }
 
+  function captureGeo() {
+    if (!navigator.geolocation) {
+      setGeoError("Location isn't available in this browser.");
+      return;
+    }
+    setCapturingGeo(true);
+    setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGeo({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setCapturingGeo(false);
+      },
+      () => {
+        setGeoError("Could not get your location — you can still submit without it.");
+        setCapturingGeo(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
+
   async function handleSubmit() {
     const ok = await submit(
       vehicleCategory,
@@ -197,7 +221,7 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
         warning_lamps: warningLamps.split(",").map((s) => s.trim()).filter(Boolean),
         service_history_verified: serviceHistoryVerified,
         tyre_depths: { fl: Number(tyreFl), fr: Number(tyreFr), rl: Number(tyreRl), rr: Number(tyreRr) },
-        ...(vehicleCategory === "bev" ? { charging_session_verified: true } : {}),
+        ...(vehicleCategory === "bev" ? { charging_session_verified: chargingSessionVerified } : {}),
       },
       damageItems,
       vehicleCategory === "bev"
@@ -206,6 +230,7 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
             chargeCableInventory: chargeCableInventory.split(",").map((s) => s.trim()).filter(Boolean),
           }
         : undefined,
+      geo ?? undefined,
     );
     if (ok) window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -312,12 +337,34 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
                               <label>State of health (%)</label>
                               <input type="number" className="form-control" value={sohPercentage} onChange={(e) => setSohPercentage(e.target.value)} />
                             </div>
-                            <div className="col-md-8 form-group">
+                            <div className="col-md-5 form-group">
                               <label>Charge cable inventory (comma-separated)</label>
                               <input type="text" className="form-control" value={chargeCableInventory} onChange={(e) => setChargeCableInventory(e.target.value)} />
                             </div>
+                            <div className="col-md-3 form-group">
+                              <label className="flex gap-10" style={{ alignItems: "center" }}>
+                                <input type="checkbox" checked={chargingSessionVerified} onChange={(e) => setChargingSessionVerified(e.target.checked)} />
+                                Charging session verified
+                              </label>
+                            </div>
                           </div>
                         )}
+                        <div className="row">
+                          <div className="col-md-12 form-group">
+                            <label>Location of capture</label>
+                            <div className="flex gap-10" style={{ alignItems: "center" }}>
+                              <button type="button" className="sc-button" disabled={capturingGeo} onClick={captureGeo}>
+                                <span>{capturingGeo ? "Getting location..." : geo ? "Re-capture location" : "Capture my location"}</span>
+                              </button>
+                              {geo && (
+                                <span className="text-color-1">
+                                  {geo.lat.toFixed(5)}, {geo.lng.toFixed(5)}
+                                </span>
+                              )}
+                            </div>
+                            {geoError && <p className="text-color-danger mb-0">{geoError}</p>}
+                          </div>
+                        </div>
                       </div>
 
                       {matrixLoading && <p>Loading the active grading matrix...</p>}
