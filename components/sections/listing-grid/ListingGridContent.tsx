@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Filters from "@/components/common/Filters";
+import { useState } from "react";
 import ListingResultsPanel from "@/components/common/ListingResultsPanel";
 import Pagination from "@/components/common/Pagination";
 import { setCurrentPage } from "@/components/reducer/listingFilterActions";
@@ -9,23 +8,21 @@ import { useListingFilterState } from "@/components/listings/useListingFilterSta
 import SaleAgentListingCard from "@/components/sections/sale-agents-detail/SaleAgentListingCard";
 import { DEFAULT_SEARCH_PARAMS, useSearchListings } from "@/hooks/useSearchListings";
 import ListingSearchBar from "./ListingSearchBar";
-import {
-  buildListingPriceOptions,
-  getListingPriceBounds,
-} from "@/lib/buildListingPriceOptions";
+import LiveFilters from "./LiveFilters";
 
 export default function ListingGridContent() {
   const [params, setParams] = useState(DEFAULT_SEARCH_PARAMS);
-  const { cars, interpretation, locationArea, loading, error, searchError } = useSearchListings(params, 60);
+  const { cars, interpretation, locationArea, facets, meta, loading, error, searchError } = useSearchListings(params, 60);
 
-  const priceBounds = useMemo(() => getListingPriceBounds(cars), [cars]);
-  const priceOptions = useMemo(() => buildListingPriceOptions(cars), [cars]);
-
+  // FR-B-001: cars arriving here are already filtered server-side against every param above —
+  // this hook now only drives client-side sort-dropdown/page-size/pagination UI state, not
+  // filtering (no legacy Filters control writes into it any more, so its own filter fields
+  // never leave their all-match defaults).
   const { state, dispatch, visibleListings, totalPages } =
     useListingFilterState({
       listings: cars,
       itemPerPage: 10,
-      priceMax: priceBounds.max,
+      priceMax: facets?.price?.max ?? undefined,
     });
 
   if (error) {
@@ -52,31 +49,21 @@ export default function ListingGridContent() {
           <p>Loading live listings...</p>
         </div>
       )}
-      <div className="flat-filter-search tf-section-listing">
-        <div className="container">
-          <div className="flat-tabs">
-            <Filters
-              state={state}
-              dispatch={dispatch}
-              priceOptions={priceOptions}
-            />
-          </div>
-        </div>
-      </div>
+      <LiveFilters params={params} facets={facets ?? null} onChange={setParams} />
       <section className="tf-section listing-detail">
         <div className="container">
           <ListingResultsPanel
             defaultView="grid"
             gridColumns={4}
             showMobileFilter={false}
-            resultCount={state.sorted.length}
+            resultCount={meta?.total ?? state.sorted.length}
             filterState={state}
             filterDispatch={dispatch}
             footer={
               <Pagination
                 className="center mt-40"
                 listClassName="justify-center"
-                totalPages={totalPages}
+                totalPages={meta ? Math.ceil(meta.total / state.itemPerPage) : totalPages}
                 currentPage={state.currentPage}
                 onPageChange={(page) => setCurrentPage(page, dispatch)}
               />

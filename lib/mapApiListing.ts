@@ -30,11 +30,27 @@ export type ApiListing = {
   } | null;
 };
 
+export type ApiFacetBucket = { value: string; count: number };
+export type ApiNumericFacetBucket = { value: number; count: number };
+export type ApiFacetRange = { min: number | null; max: number | null };
+
 export type ApiListingsResponse = {
   data: ApiListing[];
+  meta?: { current_page: number; last_page: number; per_page: number; total: number };
   facets?: {
-    make?: { value: string; count: number }[];
-    body_type?: { value: string; count: number }[];
+    make?: ApiFacetBucket[];
+    model?: ApiFacetBucket[];
+    derivative?: ApiFacetBucket[];
+    body_type?: ApiFacetBucket[];
+    fuel_type?: ApiFacetBucket[];
+    transmission?: ApiFacetBucket[];
+    colour?: ApiFacetBucket[];
+    doors?: ApiNumericFacetBucket[];
+    seats?: ApiNumericFacetBucket[];
+    seller_type?: ApiFacetBucket[];
+    price?: ApiFacetRange;
+    year?: ApiFacetRange;
+    mileage?: ApiFacetRange;
     [key: string]: unknown;
   };
   // FR-B-006: what the server understood from the free-text query.
