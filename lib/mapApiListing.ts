@@ -51,6 +51,10 @@ export type ApiListingsResponse = {
     price?: ApiFacetRange;
     year?: ApiFacetRange;
     mileage?: ApiFacetRange;
+    tax_band?: ApiFacetBucket[];
+    condition_grade?: ApiNumericFacetBucket[];
+    // Only present when a postcode narrowed/broadened the search (see `location` below).
+    distance_band?: ApiFacetBucket[];
     [key: string]: unknown;
   };
   // FR-B-006: what the server understood from the free-text query.

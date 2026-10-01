@@ -53,6 +53,17 @@ function AuctionFacetFilters({
     () => facetOptions(facets?.condition_grade, "Any condition grade", (v) => `Grade ${v}`),
     [facets?.condition_grade],
   );
+  const taxBandOptions = useMemo(
+    () => facetOptions(facets?.tax_band, "Any tax band", (v) => `Band ${v}`),
+    [facets?.tax_band],
+  );
+  const auctionDateOptions = useMemo((): NiceSelectOption[] => [
+    { label: "Any sale date", value: "" },
+    ...(facets?.auction_date ?? []).map((entry) => ({
+      label: `${entry.label} (${entry.count})`,
+      value: String(entry.value),
+    })),
+  ], [facets?.auction_date]);
 
   return (
     <div className="mb-3">
@@ -83,6 +94,12 @@ function AuctionFacetFilters({
         </div>
         <div className="col-6 col-md-3 col-lg-2">
           <NiceSelect options={conditionGradeOptions} value={filters.conditionGrade} onChange={(v) => set("conditionGrade", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={taxBandOptions} value={filters.taxBand} onChange={(v) => set("taxBand", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={auctionDateOptions} value={filters.saleId} onChange={(v) => set("saleId", String(v))} />
         </div>
       </div>
     </div>

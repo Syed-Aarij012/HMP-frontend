@@ -126,6 +126,8 @@ export type ApiAuctionFacets = {
   year?: ApiAuctionFacetRange;
   mileage?: ApiAuctionFacetRange;
   condition_grade?: ApiAuctionNumericFacetBucket[];
+  tax_band?: ApiAuctionFacetBucket[];
+  auction_date?: { value: number; count: number; label: string; scheduled_start_at: string | null }[];
   [key: string]: unknown;
 };
 

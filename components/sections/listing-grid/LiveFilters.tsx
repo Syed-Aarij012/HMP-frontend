@@ -70,6 +70,14 @@ export default function LiveFilters({ params, facets, onChange }: Props) {
     () => facetOptions(facets?.seller_type, "Dealer or private", (v) => (v === "dealer" ? "Dealer" : "Private seller")),
     [facets?.seller_type],
   );
+  const taxBandOptions = useMemo(
+    () => facetOptions(facets?.tax_band, "Any tax band", (v) => `Band ${v}`),
+    [facets?.tax_band],
+  );
+  const conditionGradeOptions = useMemo(
+    () => facetOptions(facets?.condition_grade, "Any condition grade", (v) => `Grade ${v}`),
+    [facets?.condition_grade],
+  );
 
   const yearBounds: [number, number] = [
     facets?.year?.min ?? FALLBACK_YEAR_MIN,
@@ -201,6 +209,24 @@ export default function LiveFilters({ params, facets, onChange }: Props) {
                         value={yearValue}
                         onChange={([lo, hi]) => onChange({ ...params, yearMin: String(lo), yearMax: String(hi) })}
                       />
+                    </div>
+                  </div>
+                  <div className="box1 grid-4 align-center">
+                    <div className="form-group wg-box3">
+                      <div className="group-select">
+                        <label>Tax band</label>
+                        <NiceSelect options={taxBandOptions} value={params.taxBand} onChange={(v) => set("taxBand", String(v))} />
+                      </div>
+                    </div>
+                    <div className="form-group wg-box3">
+                      <div className="group-select">
+                        <label>Condition grade</label>
+                        <NiceSelect
+                          options={conditionGradeOptions}
+                          value={params.conditionGrade}
+                          onChange={(v) => set("conditionGrade", String(v))}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

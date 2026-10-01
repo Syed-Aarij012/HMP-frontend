@@ -19,6 +19,8 @@ export type AuctionLotFilters = {
   yearMax: string;
   mileageMin: string;
   mileageMax: string;
+  taxBand: string;
+  saleId: string;
 };
 
 export const DEFAULT_AUCTION_LOT_FILTERS: AuctionLotFilters = {
@@ -35,6 +37,8 @@ export const DEFAULT_AUCTION_LOT_FILTERS: AuctionLotFilters = {
   yearMax: "",
   mileageMin: "",
   mileageMax: "",
+  taxBand: "",
+  saleId: "",
 };
 
 /**
@@ -51,7 +55,7 @@ export function useAuctionLots(statusFilter: string | undefined, filters: Auctio
 
   const {
     make, model, bodyType, fuelType, transmission, colour, doors, seats,
-    conditionGrade, yearMin, yearMax, mileageMin, mileageMax,
+    conditionGrade, yearMin, yearMax, mileageMin, mileageMax, taxBand, saleId,
   } = filters;
 
   useEffect(() => {
@@ -76,6 +80,8 @@ export function useAuctionLots(statusFilter: string | undefined, filters: Auctio
     if (yearMax) qs.set("year_max", yearMax);
     if (mileageMin) qs.set("mileage_min", mileageMin);
     if (mileageMax) qs.set("mileage_max", mileageMax);
+    if (taxBand) qs.set("tax_band", taxBand);
+    if (saleId) qs.set("sale_id", saleId);
     const query = qs.toString() ? `?${qs.toString()}` : "";
 
     apiFetch<ApiListResponse<ApiAuctionLot>>(`/auction/lots${query}`)
@@ -96,7 +102,7 @@ export function useAuctionLots(statusFilter: string | undefined, filters: Auctio
     return () => {
       cancelled = true;
     };
-  }, [statusFilter, make, model, bodyType, fuelType, transmission, colour, doors, seats, conditionGrade, yearMin, yearMax, mileageMin, mileageMax]);
+  }, [statusFilter, make, model, bodyType, fuelType, transmission, colour, doors, seats, conditionGrade, yearMin, yearMax, mileageMin, mileageMax, taxBand, saleId]);
 
   return { lots, facets, loading, error };
 }

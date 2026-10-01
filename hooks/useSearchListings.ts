@@ -43,6 +43,8 @@ export type ListingSearchParams = {
   mileageMax: string;
   priceMin: string;
   priceMax: string;
+  taxBand: string;
+  conditionGrade: string;
 };
 
 export const DEFAULT_SEARCH_PARAMS: ListingSearchParams = {
@@ -69,6 +71,8 @@ export const DEFAULT_SEARCH_PARAMS: ListingSearchParams = {
   mileageMax: "",
   priceMin: "",
   priceMax: "",
+  taxBand: "",
+  conditionGrade: "",
 };
 
 /**
@@ -92,6 +96,7 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
     query, sort, postcode, radius, monthlyMax, deposit, term, product,
     make, model, bodyType, fuelType, transmission, colour, doors, seats,
     sellerType, yearMin, yearMax, mileageMin, mileageMax, priceMin, priceMax,
+    taxBand, conditionGrade,
   } = params;
 
   useEffect(() => {
@@ -127,6 +132,8 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
     if (mileageMax) qs.set("mileage_max", mileageMax);
     if (priceMin) qs.set("price_min", priceMin);
     if (priceMax) qs.set("price_max", priceMax);
+    if (taxBand) qs.set("tax_band", taxBand);
+    if (conditionGrade) qs.set("condition_grade", conditionGrade);
 
     apiFetch<ApiListingsResponse>(`/listings?${qs.toString()}`, { auth: false })
       .then((response) => {
@@ -182,6 +189,7 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
     query, sort, postcode, radius, monthlyMax, deposit, term, product, perPage,
     make, model, bodyType, fuelType, transmission, colour, doors, seats,
     sellerType, yearMin, yearMax, mileageMin, mileageMax, priceMin, priceMax,
+    taxBand, conditionGrade,
   ]);
 
   return { cars, interpretation, locationArea, nationalFallback, facets, meta, loading, error, searchError };
