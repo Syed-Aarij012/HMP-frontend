@@ -29,8 +29,33 @@ export default function ListingSearchBar({ params, interpretation, locationArea,
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   async function saveSearch() {
+    // FR-B-005: saved search criteria must match what filterByVehicleAttributes() reads back
+    // server-side (SavedSearchAlertService::check) — previously only `q` was ever sent, so
+    // picking "BMW, automatic, 2020+" and saving the search silently saved "everything", and
+    // the recurring alert would fire for every new listing rather than just matching ones.
+    // `params` (not the search box's own local `draft`) is used because it is the one state
+    // shared with the facet filters above — draft only tracks this box's own text/sort fields.
     const query: Record<string, unknown> = {};
-    if (draft.query.trim()) query.q = draft.query.trim();
+    if (params.query.trim()) query.q = params.query.trim();
+    // seller_type is deliberately excluded: SavedSearchAlertService.check() only re-applies
+    // filterByVehicleAttributes() + price_min/max, which never reads seller_type — saving it
+    // here would silently promise a filter the recurring alert can't actually honour.
+    const stringFields = [
+      "make", "model", "bodyType", "fuelType", "transmission", "colour",
+      "doors", "seats", "yearMin", "yearMax",
+      "mileageMin", "mileageMax", "priceMin", "priceMax",
+    ] as const;
+    const fieldToFilterKey: Record<(typeof stringFields)[number], string> = {
+      make: "make", model: "model", bodyType: "body_type", fuelType: "fuel_type",
+      transmission: "transmission", colour: "colour", doors: "doors", seats: "seats",
+      yearMin: "year_min", yearMax: "year_max",
+      mileageMin: "mileage_min", mileageMax: "mileage_max",
+      priceMin: "price_min", priceMax: "price_max",
+    };
+    for (const field of stringFields) {
+      const value = params[field];
+      if (value) query[fieldToFilterKey[field]] = value;
+    }
     const failure = await save(query);
     setSaveMessage(failure ?? "Saved. Manage alerts under Saved searches.");
   }
