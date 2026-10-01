@@ -13,6 +13,7 @@ type Props = {
   params: ListingSearchParams;
   interpretation: SearchInterpretation | null;
   locationArea: string | null;
+  nationalFallback?: boolean;
   searchError: string | null;
   onChange: (params: ListingSearchParams) => void;
 };
@@ -22,7 +23,7 @@ type Props = {
  * radius (FR-B-003), monthly budget (FR-B-004) and sort — plus a line showing how the server
  * read the query, with any typo/synonym corrections it applied (FR-B-006).
  */
-export default function ListingSearchBar({ params, interpretation, locationArea, searchError, onChange }: Props) {
+export default function ListingSearchBar({ params, interpretation, locationArea, nationalFallback, searchError, onChange }: Props) {
   const [draft, setDraft] = useState(params);
   const { user } = useAuth();
   const { save } = useSavedSearches();
@@ -194,12 +195,18 @@ export default function ListingSearchBar({ params, interpretation, locationArea,
               Showing results for <b>{to}</b> (searched: {from}).{" "}
             </span>
           ))}
-          {locationArea && (
+          {locationArea && !nationalFallback && (
             <>
               Near <b>{locationArea}</b> (approximate, by postcode area).
             </>
           )}
         </p>
+      )}
+      {nationalFallback && (
+        <div className="alert alert-info mt-2">
+          Nothing matched near <b>{locationArea}</b>, so we&apos;re showing results from across the
+          country instead — check each listing&apos;s delivery eligibility.
+        </div>
       )}
     </div>
   );

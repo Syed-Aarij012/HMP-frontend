@@ -80,6 +80,7 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
   const [cars, setCars] = useState<Car[]>([]);
   const [interpretation, setInterpretation] = useState<SearchInterpretation | null>(null);
   const [locationArea, setLocationArea] = useState<string | null>(null);
+  const [nationalFallback, setNationalFallback] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -153,6 +154,7 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
         setCars(mapped);
         setInterpretation(response.search ?? null);
         setLocationArea(response.location?.area ?? null);
+        setNationalFallback(response.location?.national_fallback ?? false);
         setFacets(response.facets ?? null);
         setMeta(response.meta ?? null);
         setSearchError(null);
@@ -182,5 +184,5 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
     sellerType, yearMin, yearMax, mileageMin, mileageMax, priceMin, priceMax,
   ]);
 
-  return { cars, interpretation, locationArea, facets, meta, loading, error, searchError };
+  return { cars, interpretation, locationArea, nationalFallback, facets, meta, loading, error, searchError };
 }

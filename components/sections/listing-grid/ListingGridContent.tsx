@@ -12,7 +12,7 @@ import LiveFilters from "./LiveFilters";
 
 export default function ListingGridContent() {
   const [params, setParams] = useState(DEFAULT_SEARCH_PARAMS);
-  const { cars, interpretation, locationArea, facets, meta, loading, error, searchError } = useSearchListings(params, 60);
+  const { cars, interpretation, locationArea, nationalFallback, facets, meta, loading, error, searchError } = useSearchListings(params, 60);
 
   // FR-B-001: cars arriving here are already filtered server-side against every param above —
   // this hook now only drives client-side sort-dropdown/page-size/pagination UI state, not
@@ -41,6 +41,7 @@ export default function ListingGridContent() {
         params={params}
         interpretation={interpretation}
         locationArea={locationArea}
+        nationalFallback={nationalFallback}
         searchError={searchError}
         onChange={setParams}
       />

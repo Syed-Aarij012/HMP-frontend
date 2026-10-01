@@ -58,7 +58,10 @@ export type ApiListingsResponse = {
   location?: {
     postcode: string;
     area: string | null;
-    radius_miles: number;
+    radius_miles: number | null;
+    // FR-B-003: true when nothing was within the requested radius and the server broadened
+    // to every other-filter match nationwide instead of returning an empty page.
+    national_fallback: boolean;
     results: Record<string, { distance_miles: number | null; drive_time_band: string | null; delivery_eligible: boolean }>;
   };
   // FR-B-004: per-listing representative finance example, keyed by listing id.
