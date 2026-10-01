@@ -108,7 +108,28 @@ export type ApiBiddingDeposit = {
   status: string;
 };
 
-export type ApiListResponse<T> = { data: T[] };
+export type ApiAuctionFacetBucket = { value: string; count: number };
+export type ApiAuctionNumericFacetBucket = { value: number; count: number };
+export type ApiAuctionFacetRange = { min: number | null; max: number | null };
+
+export type ApiAuctionFacets = {
+  make?: ApiAuctionFacetBucket[];
+  model?: ApiAuctionFacetBucket[];
+  derivative?: ApiAuctionFacetBucket[];
+  body_type?: ApiAuctionFacetBucket[];
+  fuel_type?: ApiAuctionFacetBucket[];
+  transmission?: ApiAuctionFacetBucket[];
+  colour?: ApiAuctionFacetBucket[];
+  doors?: ApiAuctionNumericFacetBucket[];
+  seats?: ApiAuctionNumericFacetBucket[];
+  current_price?: ApiAuctionFacetRange;
+  year?: ApiAuctionFacetRange;
+  mileage?: ApiAuctionFacetRange;
+  condition_grade?: ApiAuctionNumericFacetBucket[];
+  [key: string]: unknown;
+};
+
+export type ApiListResponse<T> = { data: T[]; facets?: ApiAuctionFacets };
 
 export function mapApiSale(sale: ApiAuctionSale): AuctionSale {
   return {
