@@ -227,6 +227,7 @@ export function useConditionReportSubmission(vehicleNumericId: number | null) {
       checklist: ConditionReportChecklist,
       damageItems: DraftDamageItem[],
       bevExtras?: { sohPercentage: number; chargeCableInventory: string[] },
+      geo?: { lat: number; lng: number },
     ): Promise<boolean> => {
       if (!vehicleNumericId) return false;
 
@@ -243,6 +244,10 @@ export function useConditionReportSubmission(vehicleNumericId: number | null) {
               checklist,
               soh_percentage: bevExtras?.sohPercentage,
               charge_cable_inventory: bevExtras?.chargeCableInventory,
+              // FR-A-023: geolocation of capture — nullable, but worth sending whenever the
+              // inspector's browser actually granted it.
+              geo_lat: geo?.lat,
+              geo_lng: geo?.lng,
               damage_items: damageItems.map((item) => ({
                 panel: item.panel,
                 damage_type: item.damageType,

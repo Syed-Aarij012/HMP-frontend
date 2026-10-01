@@ -64,11 +64,12 @@ function MappingTemplateForm({ onCreate, creating, createError }: { onCreate: (n
 export default function DealerStockFeedDashboard() {
   const { user } = useAuth();
   const { templates, loading: templatesLoading, error: templatesError, create, creating, createError } = useDealerFeedMappingTemplates();
-  const { runs, loading: runsLoading, error: runsError, upload, uploading, uploadError, lastRun } = useDealerStockFeedRuns();
+  const { runs, loading: runsLoading, error: runsError, upload, uploading, uploadError, lastRun, syncDms, syncing, syncError } = useDealerStockFeedRuns();
 
   const [file, setFile] = useState<File | null>(null);
   const [templateId, setTemplateId] = useState("");
   const [dryRun, setDryRun] = useState(true);
+  const [dmsDryRun, setDmsDryRun] = useState(true);
 
   async function handleUpload(event: FormEvent) {
     event.preventDefault();
@@ -130,6 +131,21 @@ export default function DealerStockFeedDashboard() {
                       <span>{uploading ? "Processing..." : "Upload"}</span>
                     </button>
                   </form>
+
+                  <div className="tfcl-card p-3 mb-3">
+                    <h4 className="mb-2">Sync from your DMS</h4>
+                    <p className="text-color-1 mb-2">Pulls stock directly from your connected dealer management system.</p>
+                    {syncError && <div className="alert alert-danger">{syncError}</div>}
+                    <div className="flex gap-10" style={{ alignItems: "center" }}>
+                      <label className="flex gap-10 mb-0" style={{ alignItems: "center" }}>
+                        <input type="checkbox" checked={dmsDryRun} onChange={(e) => setDmsDryRun(e.target.checked)} />
+                        Dry run
+                      </label>
+                      <button type="button" className="sc-button" disabled={syncing} onClick={() => syncDms(dmsDryRun)}>
+                        <span>{syncing ? "Syncing..." : "Sync now"}</span>
+                      </button>
+                    </div>
+                  </div>
 
                   {lastRun && (
                     <div className="tfcl-card p-3 mb-3">

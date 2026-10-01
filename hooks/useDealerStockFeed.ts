@@ -104,5 +104,30 @@ export function useDealerStockFeedRuns() {
     [load],
   );
 
-  return { runs, loading, error, upload, uploading, uploadError, lastRun };
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  const syncDms = useCallback(
+    async (dryRun: boolean): Promise<boolean> => {
+      setSyncing(true);
+      setSyncError(null);
+      try {
+        const response = await apiFetch<{ data: ApiDealerStockFeedRun }>("/dealer/stock-feeds/dms-sync", {
+          method: "POST",
+          body: { dry_run: dryRun },
+        });
+        setLastRun(mapApiDealerStockFeedRun(response.data));
+        load();
+        return true;
+      } catch (err) {
+        setSyncError(describeApiError(err, "Could not sync from your DMS."));
+        return false;
+      } finally {
+        setSyncing(false);
+      }
+    },
+    [load],
+  );
+
+  return { runs, loading, error, upload, uploading, uploadError, lastRun, syncDms, syncing, syncError };
 }

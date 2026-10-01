@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePhotoGuidance } from "@/hooks/useListingTools";
 import { useGuidedCapture } from "@/hooks/useGuidedCapture";
 import { useBackgroundReplacement } from "@/hooks/useBackgroundReplacement";
@@ -57,6 +58,9 @@ function BackgroundReplacementControl({ vehiclePublicId, photoId }: { vehiclePub
  * after the fact that a blurred photo silently never made it into the gallery.
  */
 export default function GuidedCapture({ vehiclePublicId }: { vehiclePublicId: string }) {
+  const { user } = useAuth();
+  // FR-A-015: background replacement is dealer-opt-in only — a private seller never sees it.
+  const isDealer = typeof user?.organization_id === "number";
   const { guidance, loading } = usePhotoGuidance(vehiclePublicId);
   const { uploadShot, uploading } = useGuidedCapture(vehiclePublicId);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -175,7 +179,7 @@ export default function GuidedCapture({ vehiclePublicId }: { vehiclePublicId: st
                         </span>
                       </button>
 
-                      {currentState?.status === "passed" && currentState.photoId && (
+                      {isDealer && currentState?.status === "passed" && currentState.photoId && (
                         <BackgroundReplacementControl vehiclePublicId={vehiclePublicId} photoId={currentState.photoId} />
                       )}
                     </div>
