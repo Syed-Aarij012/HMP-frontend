@@ -34,7 +34,7 @@ export function useSponsoredListings(placement: string, context: { make?: string
     if (model) qs.set("model", model);
     const query = qs.toString() ? `?${qs.toString()}` : "";
 
-    apiFetch<{ data: ApiSponsoredEntry[] }>(`/ads/${placement}${query}`, { auth: false })
+    apiFetch<{ data: ApiSponsoredEntry[] }>(`/ads/serve/${placement}${query}`, { auth: false })
       .then((response) => {
         if (cancelled) return;
 
