@@ -68,6 +68,9 @@ export default function LoanCalculatorForm() {
           placeholder="$"
           value={totalPrice}
           onChange={(e) => setTotalPrice(e.target.value)}
+          // See LoginForm.tsx: a form-autofill browser extension tags every form control it
+          // scans, not just email inputs — a real, expected, harmless hydration mismatch.
+          suppressHydrationWarning
           required
           min={0}
         />
@@ -83,6 +86,7 @@ export default function LoanCalculatorForm() {
             placeholder="0%"
             value={downPaymentPct}
             onChange={(e) => setDownPaymentPct(e.target.value)}
+            suppressHydrationWarning
             required
             min={0}
             max={99}
@@ -138,7 +142,7 @@ export default function LoanCalculatorForm() {
         </ul>
       </div>
       <div className="button-boxs">
-        <button className="sc-button" id="submit-loan" name="submit" type="submit" disabled={submitting}>
+        <button className="sc-button" id="submit-loan" name="submit" type="submit" disabled={submitting} suppressHydrationWarning>
           <span>{submitting ? "Calculating..." : "Calculate"}</span>
         </button>
       </div>
