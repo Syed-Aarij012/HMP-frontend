@@ -15,6 +15,7 @@ import { useMobileDealerSidebar } from "@/hooks/useMobileDealerSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/components/common/MessagesContext";
 import { useConversation } from "@/hooks/useConversation";
+import QuickReplies from "./QuickReplies";
 import { describeApiError } from "@/lib/api-client";
 import {
   conversationTitle,
@@ -240,7 +241,7 @@ function ChatMessageBubble({
   );
 }
 
-function Message() {
+function Message({ initialConversationId = null }: { initialConversationId?: number | null }) {
   const { isOpen, open, close } = useMobileDealerSidebar();
   const { user } = useAuth();
   const viewerId = user?.id;
@@ -253,7 +254,7 @@ function Message() {
   } = useMessages();
   const [activeConversationId, setActiveConversationId] = useState<
     number | null
-  >(null);
+  >(initialConversationId);
   const [searchQuery, setSearchQuery] = useState("");
   const [draftMessage, setDraftMessage] = useState("");
   const [pendingAttachments, setPendingAttachments] = useState<File[]>([]);
@@ -600,6 +601,7 @@ function Message() {
                                 multiple
                                 onChange={handleFileSelect}
                               />
+                              <QuickReplies draft={draftMessage} disabled={sending} onInsert={setDraftMessage} />
                               <div className="form-message">
                                 <input
                                   type="text"

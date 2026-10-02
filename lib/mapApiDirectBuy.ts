@@ -9,6 +9,8 @@ export type ApiDistanceSellingDisclosure = {
   right_to_cancel_days: number;
   cancellation_deadline: string;
   generated_at: string;
+  trader?: { name: string | null } | null;
+  balance_due?: string;
 };
 
 export type ApiRetailOrder = {
@@ -22,6 +24,9 @@ export type ApiRetailOrder = {
   balance_paid_at: string | null;
   distance_selling_disclosure: ApiDistanceSellingDisclosure | null;
   listing?: ApiListing | null;
+  transport_job_id?: number | null;
+  release_note_id?: number | null;
+  collection_postcode?: string | null;
 };
 
 function mapDisclosure(api: ApiDistanceSellingDisclosure): DistanceSellingDisclosure {
@@ -33,6 +38,8 @@ function mapDisclosure(api: ApiDistanceSellingDisclosure): DistanceSellingDisclo
     rightToCancelDays: api.right_to_cancel_days,
     cancellationDeadline: api.cancellation_deadline,
     generatedAt: api.generated_at,
+    sellerName: api.trader?.name ?? null,
+    balanceDue: api.balance_due !== undefined ? Number(api.balance_due) : null,
   };
 }
 
@@ -48,5 +55,8 @@ export function mapApiRetailOrder(api: ApiRetailOrder): RetailOrder {
     balancePaidAt: api.balance_paid_at,
     disclosure: api.distance_selling_disclosure ? mapDisclosure(api.distance_selling_disclosure) : null,
     car: api.listing ? mapApiListingToCar(api.listing) : null,
+    transportJobId: api.transport_job_id ?? null,
+    releaseNoteId: api.release_note_id ?? null,
+    collectionPostcode: api.collection_postcode ?? null,
   };
 }

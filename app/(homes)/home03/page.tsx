@@ -10,6 +10,7 @@ import LoanCalculator from "@/components/sections/index/LoanCalculator";
 import WhyChooseUs from "@/components/sections/home03/WhyChooseUs";
 import Banner from "@/components/sections/home03/Banner";
 import PersonalizedRails from "@/components/sections/home03/PersonalizedRails";
+import SponsoredHomepageRail from "@/components/sections/home03/SponsoredHomepageRail";
 import SearchByBrand from "@/components/sections/home02/SearchCar";
 import Testimonials from "@/components/sections/home03/Testimonials";
 import LatestNews from "@/components/sections/home03/LatestNews";
@@ -42,6 +43,7 @@ export default function Home03Page() {
 
         <WhyChooseUs />
         <div className="home03-add-top">
+          <SponsoredHomepageRail />
           <PersonalizedRails />
         </div>
         <Testimonials />

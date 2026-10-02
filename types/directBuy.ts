@@ -12,6 +12,9 @@ export type DistanceSellingDisclosure = {
   rightToCancelDays: number;
   cancellationDeadline: string;
   generatedAt: string;
+  // Recorded on orders placed after the full pack was introduced; null on older orders.
+  sellerName: string | null;
+  balanceDue: number | null;
 };
 
 export type RetailOrder = {
@@ -25,4 +28,8 @@ export type RetailOrder = {
   balancePaidAt: string | null;
   disclosure: DistanceSellingDisclosure | null;
   car: Car | null;
+  // FR-C-030 handoff to Module F (FR-F-001/010) — set once the order is paid.
+  transportJobId: number | null;
+  releaseNoteId: number | null;
+  collectionPostcode: string | null;
 };

@@ -26,7 +26,17 @@ function OfferRow({
   return (
     <tr>
       <td>{offer.listing?.vehicleLabel ?? "-"}</td>
-      <td>£{offer.amount.toLocaleString()}</td>
+      <td>
+        £{offer.amount.toLocaleString()}
+        {offer.partExchange && (
+          <div className="fs-13 text-color-1">
+            + part-exchange
+            {offer.partExchange.low !== null && offer.partExchange.high !== null
+              ? ` (£${Math.round(offer.partExchange.low).toLocaleString()}–£${Math.round(offer.partExchange.high).toLocaleString()})`
+              : " (to be appraised)"}
+          </div>
+        )}
+      </td>
       <td>{offer.expiresAt ? new Date(offer.expiresAt).toLocaleDateString() : "-"}</td>
       <td>
         {isOpen ? (

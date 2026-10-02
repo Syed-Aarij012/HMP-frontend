@@ -8,6 +8,7 @@ import { useMakeOffer } from "@/hooks/useOffers";
 import { useBookAppointment } from "@/hooks/useAppointments";
 import { useInitiateDirectBuy } from "@/hooks/useDirectBuy";
 import type { Car } from "@/types/cars";
+import PartExchangeStep from "./PartExchangeStep";
 
 // FR-C-030/FR-E-011: the deposit is a fixed, platform-wide amount (config('direct_buy.deposit_amount')),
 // not derived from the listing price — shown here only as a heads-up before the buyer commits; the
@@ -31,6 +32,8 @@ export default function ListingDetailActionsSection({ car }: { car: Car }) {
 
   const [offerAmount, setOfferAmount] = useState("");
   const [offerSent, setOfferSent] = useState(false);
+  const [sentAmount, setSentAmount] = useState("");
+  const [partExchangeVehicleId, setPartExchangeVehicleId] = useState<number | null>(null);
   const [scheduledAt, setScheduledAt] = useState("");
   const [activeForm, setActiveForm] = useState<"offer" | "test-drive" | "buy" | null>(null);
 
@@ -47,8 +50,9 @@ export default function ListingDetailActionsSection({ car }: { car: Car }) {
 
   async function handleOfferSubmit(event: FormEvent) {
     event.preventDefault();
-    const ok = await submitOffer(offerAmount);
+    const ok = await submitOffer(offerAmount, partExchangeVehicleId !== null ? String(partExchangeVehicleId) : undefined);
     if (ok) {
+      setSentAmount(offerAmount);
       setOfferSent(true);
       setOfferAmount("");
     }
@@ -120,24 +124,29 @@ export default function ListingDetailActionsSection({ car }: { car: Car }) {
         <div className="mt-2">
           {offerSent ? (
             <div className="alert alert-success">
-              Your offer of £{Number(offerAmount || 0).toLocaleString()} has been sent to the
-              seller. Track it under <Link href="/my-offers">My offers</Link>.
+              Your offer of £{Number(sentAmount || 0).toLocaleString()}
+              {partExchangeVehicleId !== null ? " with your part-exchange" : ""} has been sent to the seller. Track it
+              under <Link href="/my-offers">My offers</Link>.
             </div>
           ) : (
-            <form onSubmit={handleOfferSubmit} className="flex gap-10">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                className="form-control"
-                placeholder={`Your offer (asking price £${car.price.toLocaleString()})`}
-                value={offerAmount}
-                onChange={(e) => setOfferAmount(e.target.value)}
-                required
-              />
-              <button type="submit" className="sc-button" disabled={offerSubmitting}>
-                <span>{offerSubmitting ? "Sending..." : "Send offer"}</span>
-              </button>
+            <form onSubmit={handleOfferSubmit}>
+              <div className="flex gap-10">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="form-control"
+                  placeholder={`Your offer (asking price £${car.price.toLocaleString()})`}
+                  value={offerAmount}
+                  onChange={(e) => setOfferAmount(e.target.value)}
+                  required
+                />
+                <button type="submit" className="sc-button" disabled={offerSubmitting}>
+                  <span>{offerSubmitting ? "Sending..." : "Send offer"}</span>
+                </button>
+              </div>
+              {/* FR-C-032: optional part-exchange declaration with VRM lookup + instant range. */}
+              <PartExchangeStep onChange={setPartExchangeVehicleId} />
             </form>
           )}
           {offerError && <div className="alert alert-danger mt-2">{offerError}</div>}

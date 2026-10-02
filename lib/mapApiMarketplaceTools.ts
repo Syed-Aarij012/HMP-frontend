@@ -28,6 +28,8 @@ export type ApiOffer = {
     vehicle_master_record?: { make?: string; model?: string; year?: number } | null;
   } | null;
   events: ApiOfferEvent[];
+  part_exchange_vehicle_master_record_id?: number | null;
+  part_exchange_appraisal?: { trade_in_range?: { low: string; high: string } | null; mileage?: number } | null;
 };
 
 export function mapApiOffer(api: ApiOffer, viewerId: number): Offer {
@@ -47,6 +49,13 @@ export function mapApiOffer(api: ApiOffer, viewerId: number): Offer {
           vehicleLabel: vehicle ? [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ") : null,
         }
       : null,
+    partExchange: api.part_exchange_vehicle_master_record_id
+      ? {
+          low: api.part_exchange_appraisal?.trade_in_range ? Number(api.part_exchange_appraisal.trade_in_range.low) : null,
+          high: api.part_exchange_appraisal?.trade_in_range ? Number(api.part_exchange_appraisal.trade_in_range.high) : null,
+          mileage: api.part_exchange_appraisal?.mileage ?? null,
+        }
+      : null,
     events: (api.events ?? []).map((event) => ({
       id: event.id,
       eventType: event.event_type,
@@ -63,6 +72,9 @@ export type ApiAppointment = {
   scheduled_at: string;
   calendar_ref: string | null;
   listing?: { id: string; vehicle_master_record?: { make?: string; model?: string; year?: number } | null } | null;
+  is_dealer_side?: boolean;
+  buyer?: { id: number; name: string } | null;
+  buyer_no_shows?: number | null;
 };
 
 export function mapApiAppointment(api: ApiAppointment): Appointment {
@@ -73,6 +85,9 @@ export function mapApiAppointment(api: ApiAppointment): Appointment {
     status: api.status,
     scheduledAt: api.scheduled_at,
     calendarRef: api.calendar_ref,
+    isDealerSide: api.is_dealer_side ?? false,
+    buyerName: api.buyer?.name ?? null,
+    buyerNoShows: api.buyer_no_shows ?? null,
     listing: api.listing
       ? { id: api.listing.id, vehicleLabel: vehicle ? [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ") : null }
       : null,
@@ -85,15 +100,29 @@ export type ApiValuation = {
   part_exchange_value: string | null;
   instant_offer_value: string | null;
   confidence_band: ValuationResult["confidenceBand"];
+  sources: {
+    internal: { value: string | null; comparables: number | null };
+    licensed: { value: string | null; source: string } | null;
+  };
 };
 
-export function mapApiValuation(api: ApiValuation): ValuationResult {
+export type ApiValuationVehicle = { vrm: string; make: string | null; model: string | null; year: number | null; colour: string | null };
+
+export function mapApiValuation(api: ApiValuation, vehicle: ApiValuationVehicle | null = null): ValuationResult {
   return {
     id: api.id,
     privateSaleValue: api.private_sale_value !== null ? Number(api.private_sale_value) : null,
     partExchangeValue: api.part_exchange_value !== null ? Number(api.part_exchange_value) : null,
     instantOfferValue: api.instant_offer_value !== null ? Number(api.instant_offer_value) : null,
     confidenceBand: api.confidence_band,
+    internal: {
+      value: api.sources.internal.value !== null ? Number(api.sources.internal.value) : null,
+      comparables: api.sources.internal.comparables ?? 0,
+    },
+    licensed: api.sources.licensed
+      ? { value: api.sources.licensed.value !== null ? Number(api.sources.licensed.value) : null, source: api.sources.licensed.source }
+      : null,
+    vehicle,
   };
 }
 
@@ -148,6 +177,7 @@ export type ApiDealerAnalytics = {
     by_status: { new: number; contacted: number; converted: number; lost: number };
     conversion_rate: number | null;
   };
+  appointments: { booked: number; completed: number; no_show: number; cancelled: number; no_show_rate: number | null };
   average_days_to_sell: number | null;
 };
 
@@ -164,6 +194,13 @@ export function mapApiDealerAnalytics(api: ApiDealerAnalytics): DealerAnalytics 
       total: api.leads.total,
       byStatus: api.leads.by_status,
       conversionRate: api.leads.conversion_rate,
+    },
+    appointments: {
+      booked: api.appointments.booked,
+      completed: api.appointments.completed,
+      noShow: api.appointments.no_show,
+      cancelled: api.appointments.cancelled,
+      noShowRate: api.appointments.no_show_rate,
     },
     averageDaysToSell: api.average_days_to_sell,
   };

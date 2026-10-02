@@ -52,7 +52,17 @@ export type DocumentManifest = {
   proof_of_delivery: VaultDocument | null;
   mot_history_download: VaultDocument;
   vehicle_documents: (VaultDocument & { id: number; type: string; original_name: string })[];
+  // FR-C-030: retail (direct-buy) orders only.
+  distance_selling_pack?: (VaultDocument & { generated_at: string }) | null;
 };
+
+// Module F post-sale flows serve both order types: a trade order is addressed by numeric id,
+// a retail (direct-buy) order by its public_id.
+export type PostSaleOrderRef = { kind: "trade"; id: number } | { kind: "retail"; publicId: string };
+
+export function postSaleOrderPath(order: PostSaleOrderRef): string {
+  return order.kind === "trade" ? `/trade-orders/${order.id}` : `/retail-orders/${order.publicId}`;
+}
 
 export type AssuranceClaim = {
   id: number;

@@ -18,6 +18,7 @@ export default function PricingCard({ plan, price }: PricingCardProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [alreadySubscribed, setAlreadySubscribed] = useState(false);
 
   const organizationId =
     typeof user?.organization_id === "number" ? user.organization_id : null;
@@ -34,6 +35,10 @@ export default function PricingCard({ plan, price }: PricingCardProps) {
       });
       router.push("/dashboard");
     } catch (err) {
+      // FR-C-020: this page only starts a subscription — switching plans is prorated and
+      // lives in the dashboard's Subscription page.
+      const reasonCode = err instanceof ApiError ? (err.body as { reason_code?: string } | null)?.reason_code : undefined;
+      setAlreadySubscribed(reasonCode === "already_subscribed");
       setError(err instanceof ApiError ? err.message : "Could not subscribe right now.");
     } finally {
       setSubmitting(false);
@@ -52,7 +57,7 @@ export default function PricingCard({ plan, price }: PricingCardProps) {
         <p className="text-sub">{plan.subtitle}</p>
       </div>
       <div className="title-price flex-three">
-        <h2>$</h2>
+        <h2>£</h2>
         <div className="price fw-6 font text-color-2">{price}</div>
       </div>
       <ul className="check">
@@ -64,7 +69,14 @@ export default function PricingCard({ plan, price }: PricingCardProps) {
         ))}
       </ul>
 
-      {error && <p className="text-danger fs-14">{error}</p>}
+      {alreadySubscribed ? (
+        <p className="fs-14">
+          Your organization already has a plan. <Link href="/subscription">Change plan</Link> to upgrade or downgrade with
+          proration.
+        </p>
+      ) : (
+        error && <p className="text-danger fs-14">{error}</p>
+      )}
 
       <div className="button-pricing">
         {!user ? (

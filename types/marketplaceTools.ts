@@ -20,6 +20,9 @@ export type Offer = {
     vehicleLabel: string | null;
   } | null;
   events: OfferEvent[];
+  // FR-C-032: present when the buyer declared a part-exchange; low/high null if it couldn't
+  // be valued instantly (too few comparable sales).
+  partExchange: { low: number | null; high: number | null; mileage: number | null } | null;
 };
 
 export type Appointment = {
@@ -31,6 +34,11 @@ export type Appointment = {
     id: string;
     vehicleLabel: string | null;
   } | null;
+  // FR-C-033: whether the viewer is the dealer side (who can mark completed / no-show), and
+  // for them, who booked and how many earlier appointments with this dealer they missed.
+  isDealerSide: boolean;
+  buyerName: string | null;
+  buyerNoShows: number | null;
 };
 
 export type ValuationResult = {
@@ -39,6 +47,10 @@ export type ValuationResult = {
   partExchangeValue: number | null;
   instantOfferValue: number | null;
   confidenceBand: "insufficient_data" | "low" | "medium" | "high";
+  // FR-C-034: what the blended figure rests on.
+  internal: { value: number | null; comparables: number };
+  licensed: { value: number | null; source: string } | null;
+  vehicle: { vrm: string; make: string | null; model: string | null; year: number | null; colour: string | null } | null;
 };
 
 export type PricingSuggestion = {
@@ -78,6 +90,7 @@ export type DealerAnalytics = {
     byStatus: { new: number; contacted: number; converted: number; lost: number };
     conversionRate: number | null;
   };
+  appointments: { booked: number; completed: number; noShow: number; cancelled: number; noShowRate: number | null };
   averageDaysToSell: number | null;
 };
 

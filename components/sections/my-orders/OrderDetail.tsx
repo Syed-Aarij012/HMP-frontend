@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import { DocumentsSection, ReleaseSection, TransportSection } from "@/components/sections/post-sale/PostSaleSections";
 import { useRetailOrder } from "@/hooks/useDirectBuy";
+import { usePostSaleRecords } from "@/hooks/usePostSaleRecords";
 
 function formatDate(value: string | null): string {
   return value ? new Date(value).toLocaleString() : "-";
 }
 
 export default function OrderDetail({ publicId }: { publicId: string }) {
-  const { order, loading, error, cancel, payBalance, acting, actionError } = useRetailOrder(publicId);
+  const { order, loading, error, cancel, payBalance, acting, actionError, reload } = useRetailOrder(publicId);
+  // FR-F-010/012: release code and document vault (incl. the FR-C-030 distance-selling pack).
+  const records = usePostSaleRecords({ kind: "retail", publicId }, order?.releaseNoteId ?? null);
 
   return (
     <div id="themesflat-content">
@@ -81,23 +85,50 @@ export default function OrderDetail({ publicId }: { publicId: string }) {
                         <div className="tfcl-card p-3 mb-3">
                           <h4 className="mb-2">Paid in full</h4>
                           <p className="mb-0">
-                            Paid on {formatDate(order.balancePaidAt)}. Our team will be in touch to arrange
-                            collection or delivery.
+                            Paid on {formatDate(order.balancePaidAt)}. Book delivery below, or collect the vehicle
+                            yourself using your release code.
                           </p>
                         </div>
                       )}
 
+                      {/* FR-C-030: handover/delivery scheduling handoff to Module F, once paid. */}
+                      {order.status === "paid" && (
+                        <div className="tfcl-card p-3 mb-3">
+                          <TransportSection
+                            jobId={order.transportJobId}
+                            order={{ kind: "retail", publicId: order.publicId }}
+                            defaultPickup={order.collectionPostcode ?? ""}
+                            onChanged={reload}
+                          />
+                          <ReleaseSection releaseNoteId={order.releaseNoteId} release={records.release} />
+                        </div>
+                      )}
+
                       {order.disclosure && (
-                        <div className="tfcl-card p-3">
+                        <div className="tfcl-card p-3 mb-3">
                           <h4 className="mb-2">Distance-selling disclosure</h4>
+                          {order.disclosure.sellerName && <p className="mb-1">Seller: {order.disclosure.sellerName}</p>}
                           <p className="mb-1">Seller type: {order.disclosure.sellerType}</p>
                           <p className="mb-1">Goods: {order.disclosure.goodsDescription}</p>
                           <p className="mb-1">Price: £{order.disclosure.price.toLocaleString()}</p>
                           <p className="mb-1">Deposit: £{order.disclosure.depositAmount.toLocaleString()}</p>
-                          <p className="mb-0">
+                          {order.disclosure.balanceDue !== null && (
+                            <p className="mb-1">Balance due after cooling-off: £{order.disclosure.balanceDue.toLocaleString()}</p>
+                          )}
+                          <p className="mb-1">
                             Right to cancel: {order.disclosure.rightToCancelDays} days (until{" "}
                             {formatDate(order.disclosure.cancellationDeadline)})
                           </p>
+                          <p className="mb-0 text-color-1">
+                            The full information and cancellation pack, including a model cancellation form, is in
+                            your documents below.
+                          </p>
+                        </div>
+                      )}
+
+                      {records.documents && (
+                        <div className="tfcl-card p-3">
+                          <DocumentsSection documents={records.documents} />
                         </div>
                       )}
                     </>

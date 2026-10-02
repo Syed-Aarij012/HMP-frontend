@@ -263,6 +263,24 @@ const dealerAnalyticsItem: DashboardMenuItem = {
   label: "Dealer analytics",
 };
 
+// FR-C-032: the dealer lead inbox — enquiries routed by the org's lead routing rules.
+const leadsItem: DashboardMenuItem = {
+  id: "leads",
+  href: "/leads",
+  className: "menu-index-4",
+  iconClass: "icon-carus-chattext",
+  label: "Leads",
+};
+
+// FR-C-020: the org's package, slot usage and pro-rated plan changes — dealer accounts only.
+const subscriptionItem: DashboardMenuItem = {
+  id: "subscription",
+  href: "/subscription",
+  className: "menu-index-4",
+  iconClass: "icon-carus-sliders",
+  label: "Subscription",
+};
+
 // FR-A-031: bulk CSV stock ingestion — dealer accounts only.
 const dealerStockFeedItem: DashboardMenuItem = {
   id: "dealer-stock-feed",
@@ -310,6 +328,16 @@ const routingRulesItem: DashboardMenuItem = {
   label: "Auto-routing rules",
 };
 
+// FR-C-031: the queue of messages auto-flagged by the PII / off-platform-payment detector —
+// trust_safety_analyst (or super_admin) only, an additional role like quality_supervisor.
+const trustSafetyItem: DashboardMenuItem = {
+  id: "trust-safety",
+  href: "/trust-safety",
+  className: "menu-index-4",
+  iconClass: "icon-carus-checkcircle",
+  label: "Trust & Safety",
+};
+
 function menuFor(userType: string | undefined, organizationId: number | null): DashboardMenuItem[] {
   // FR-D-033: multi-lane viewing is a trade-buyer surface; FR-D-034: the rostrum is the
   // auctioneer's (and Super Admin's) console.
@@ -318,7 +346,8 @@ function menuFor(userType: string | undefined, organizationId: number | null): D
 
   // FR-C-022: self-serve performance analytics — dealer accounts only.
   if (organizationId !== null) {
-    return insertBefore(insertBefore(dashboardMenuItems, dealerAnalyticsItem, "security"), dealerStockFeedItem, "security");
+    const dealerItems = [leadsItem, dealerAnalyticsItem, dealerStockFeedItem, subscriptionItem];
+    return dealerItems.reduce((items, item) => insertBefore(items, item, "security"), dashboardMenuItems);
   }
 
   return dashboardMenuItems;
@@ -345,6 +374,9 @@ export default function DashboardSidebar() {
   }
   if (hasRole(user, "super_admin") && !menuItems.some((item) => item.id === "routing-rules")) {
     menuItems = insertBefore(menuItems, routingRulesItem, "security");
+  }
+  if ((hasRole(user, "trust_safety_analyst") || hasRole(user, "super_admin")) && !menuItems.some((item) => item.id === "trust-safety")) {
+    menuItems = insertBefore(menuItems, trustSafetyItem, "security");
   }
 
   useEffect(() => {
