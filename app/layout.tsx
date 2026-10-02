@@ -1,5 +1,6 @@
 import { Figtree, Inter, Outfit } from "next/font/google";
 import BootstrapClient from "@/components/common/BootstrapClient";
+import WebVitalsReporter from "@/components/common/WebVitalsReporter";
 import FlatAccordionClient from "@/components/common/FlatAccordionClient";
 import ScrollTop from "@/components/common/ScrollTop";
 import { StickyHeaderOffsetProvider } from "@/contexts/StickyHeaderOffsetContext";
@@ -52,6 +53,7 @@ export default function RootLayout({
               <ContactDealerProvider>
               <StickyHeaderOffsetProvider>
               <MobileMenuPathListener />
+              <WebVitalsReporter />
               <BootstrapClient />
               <WowClient />
               <FlatAccordionClient />
