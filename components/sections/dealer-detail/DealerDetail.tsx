@@ -9,11 +9,21 @@ import DealerSaleAgentSlider from "@/components/sections/dealer-detail/DealerSal
 import DealerInventorySlider from "@/components/sections/dealer-detail/DealerInventorySlider";
 import { useFilteredListings } from "@/hooks/useFilteredListings";
 import { useAgents } from "@/hooks/useAgents";
-import type { Dealer } from "@/types/dealers";
+import type { Dealer, DealerOpeningHours } from "@/types/dealers";
 
 type DealerDetailProps = {
   dealer: Dealer;
 };
+
+const OPENING_HOURS_DAYS: [keyof DealerOpeningHours, string][] = [
+  ["mon", "Monday"],
+  ["tue", "Tuesday"],
+  ["wed", "Wednesday"],
+  ["thu", "Thursday"],
+  ["fri", "Friday"],
+  ["sat", "Saturday"],
+  ["sun", "Sunday"],
+];
 
 function DealerDetail({ dealer }: DealerDetailProps) {
   const { cars: inventoryCars } = useFilteredListings({ organizationId: dealer.organizationId });
@@ -252,7 +262,36 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                     <i className="icon-carus-map" /> {dealer.address}
                   </div>
                 </div>
+                {dealer.phone && (
+                  // FR-C-002: click-to-call with a tracked number — tracked_phone_number
+                  // (a dedicated line) takes priority over the rooftop's own, in mapApiDealer.
+                  <a href={`tel:${dealer.phone}`} className="address-dealer flex-three">
+                    <i className="icon-carus-phonecall" /> {dealer.phone}
+                  </a>
+                )}
               </div>
+              {dealer.openingHours && (
+                <div className="widget-title-siderbar widget">
+                  <h3 className="title">Opening hours</h3>
+                  <ul className="icon-list">
+                    {OPENING_HOURS_DAYS.map(([key, label]) => {
+                      const hours = dealer.openingHours?.[key];
+                      return (
+                        <li key={key} className="flex justify-space">
+                          <span>{label}</span>
+                          <span>{hours ? `${hours.open} – ${hours.close}` : "Closed"}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+              {dealer.disclosures && (
+                <div className="widget-title-siderbar widget">
+                  <h3 className="title">Regulatory disclosures</h3>
+                  <p className="fs-14 text-color-2">{dealer.disclosures}</p>
+                </div>
+              )}
               <LatePriceListWidget footerHref="/listing-list" />
               <div className="widget-categori-car widget">
                 <div className="listing-header">

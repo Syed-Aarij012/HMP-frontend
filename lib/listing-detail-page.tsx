@@ -5,7 +5,32 @@ import { allCars, getCarById, getCarDetailTitle } from "@/data/cars";
 import { parseNumericRouteId } from "@/lib/routes";
 import { apiFetch } from "@/lib/api-client";
 import { mapApiListingToCar, type ApiListing } from "@/lib/mapApiListing";
+import { getSiteUrl } from "@/lib/site-url";
 import type { Car } from "@/types/cars";
+
+// FR-C-002/C-004: schema.org Vehicle + Offer structured data — only for a real listing
+// (one with a publicId; the template's mock cars don't have one and would otherwise produce
+// a JSON-LD block of fabricated fields).
+function listingJsonLd(car: Car): Record<string, unknown> | null {
+  if (!car.publicId) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Vehicle",
+    name: car.title,
+    image: car.images && car.images.length > 0 ? car.images : undefined,
+    vehicleTransmission: car.transmission !== "-" ? car.transmission : undefined,
+    fuelType: car.fuel !== "-" ? car.fuel : undefined,
+    mileageFromOdometer: { "@type": "QuantitativeValue", value: car.mileage, unitCode: "SMI" },
+    offers: {
+      "@type": "Offer",
+      price: car.price,
+      priceCurrency: "GBP",
+      availability: "https://schema.org/InStock",
+      url: `${getSiteUrl()}${car.href ?? ""}`,
+    },
+  };
+}
 
 // Mock cars are keyed by a small numeric id; real listings use a ULID (e.g.
 // "01m1eb1y..."). A non-numeric route param is always a real backend id, so it's
@@ -72,9 +97,13 @@ export function createListingDetailPageConfig(
     }
 
     const { car, title } = resolved;
+    const jsonLd = listingJsonLd(car);
 
     return (
       <>
+        {jsonLd && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        )}
         <Hero />
         <ListingDetail title={title} car={car} />
       </>
