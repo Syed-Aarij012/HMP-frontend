@@ -9,6 +9,7 @@ import {
   type ApiAuctionBid,
   type ApiAuctionLot,
   type ApiListResponse,
+  type ApiPeerBenchmark,
 } from "@/lib/mapApiAuction";
 import { mapApiSnapshot, type ApiSnapshot } from "@/lib/mapApiLive";
 import type { AuctionBid, AuctionLot } from "@/types/auction";
@@ -41,6 +42,7 @@ function newIdempotencyKey(): string {
  */
 export function useAuctionLot(publicId: string | undefined) {
   const [lot, setLot] = useState<AuctionLot | null>(null);
+  const [peerBenchmark, setPeerBenchmark] = useState<ApiPeerBenchmark | null>(null);
   const [bids, setBids] = useState<AuctionBid[]>([]);
   const [snapshot, setSnapshot] = useState<LotSnapshot | null>(null);
   const [loading, setLoading] = useState(Boolean(publicId));
@@ -74,12 +76,13 @@ export function useAuctionLot(publicId: string | undefined) {
     });
 
     Promise.all([
-      apiFetch<{ data: ApiAuctionLot }>(`/auction/lots/${publicId}`),
+      apiFetch<{ data: ApiAuctionLot; peer_benchmark?: ApiPeerBenchmark }>(`/auction/lots/${publicId}`),
       apiFetch<ApiListResponse<ApiAuctionBid>>(`/auction/lots/${publicId}/bids`),
     ])
       .then(([lotResponse, bidsResponse]) => {
         if (cancelled) return;
         setLot(mapApiLot(lotResponse.data));
+        setPeerBenchmark(lotResponse.peer_benchmark ?? null);
         setBids(bidsResponse.data.map(mapApiBid));
         setError(null);
         loadSnapshot();
@@ -263,6 +266,7 @@ export function useAuctionLot(publicId: string | undefined) {
 
   return {
     lot,
+    peerBenchmark,
     bids,
     snapshot,
     loading,

@@ -133,6 +133,14 @@ export type ApiAuctionFacets = {
 
 export type ApiListResponse<T> = { data: T[]; facets?: ApiAuctionFacets };
 
+// FR-B-007(c): present only for a trade buyer with an organization, and only once there's a
+// real peer sample behind it — see TradeRecommendationService.
+export type ApiPeerBenchmark = {
+  sample_size: number;
+  avg_days_to_retail?: number;
+  avg_margin?: number;
+};
+
 export function mapApiSale(sale: ApiAuctionSale): AuctionSale {
   return {
     id: sale.id,
