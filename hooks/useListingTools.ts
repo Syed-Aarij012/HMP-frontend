@@ -70,6 +70,69 @@ export function useVrmLookup() {
   return { lookup, loading, error };
 }
 
+export type ListingQuality = {
+  score: number;
+  breakdown: {
+    mediaCompleteness: number;
+    specCompleteness: number;
+    descriptionQuality: number;
+    provenanceFreshness: number;
+  };
+  remediationPrompts: string[];
+};
+
+/**
+ * FR-C-014: the 0-100 listing-quality score + remediation prompts — computed on the backend
+ * (ListingQualityService) and already returned by GET /listings/{id} to the owner, but shown
+ * nowhere on the seller's own dashboard until now.
+ */
+export function useListingQuality() {
+  const [quality, setQuality] = useState<ListingQuality | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchQuality = useCallback(async (listingPublicId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await apiFetch<{
+        quality?: {
+          score: number;
+          breakdown: {
+            media_completeness: number;
+            spec_completeness: number;
+            description_quality: number;
+            provenance_freshness: number;
+          };
+          remediation_prompts: string[];
+        };
+      }>(`/listings/${listingPublicId}`);
+
+      if (!response.quality) {
+        setError("Quality score isn't available for this listing.");
+        return;
+      }
+
+      setQuality({
+        score: response.quality.score,
+        breakdown: {
+          mediaCompleteness: response.quality.breakdown.media_completeness,
+          specCompleteness: response.quality.breakdown.spec_completeness,
+          descriptionQuality: response.quality.breakdown.description_quality,
+          provenanceFreshness: response.quality.breakdown.provenance_freshness,
+        },
+        remediationPrompts: response.quality.remediation_prompts,
+      });
+    } catch (err) {
+      setError(describeApiError(err, "Could not load the quality score right now."));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { quality, loading, error, fetchQuality };
+}
+
 /** FR-C-003: the photo shot list sellers are guided to capture. */
 export function usePhotoGuidance(vehiclePublicId?: string) {
   const [guidance, setGuidance] = useState<PhotoGuidance | null>(null);
