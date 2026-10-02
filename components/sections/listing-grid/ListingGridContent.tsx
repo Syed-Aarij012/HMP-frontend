@@ -1,18 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ListingResultsPanel from "@/components/common/ListingResultsPanel";
 import Pagination from "@/components/common/Pagination";
 import { setCurrentPage } from "@/components/reducer/listingFilterActions";
 import { useListingFilterState } from "@/components/listings/useListingFilterState";
 import SaleAgentListingCard from "@/components/sections/sale-agents-detail/SaleAgentListingCard";
-import { DEFAULT_SEARCH_PARAMS, useSearchListings } from "@/hooks/useSearchListings";
+import { DEFAULT_SEARCH_PARAMS, useSearchListings, type ListingSearchParams } from "@/hooks/useSearchListings";
 import { useSponsoredListings } from "@/hooks/useSponsoredListings";
 import ListingSearchBar from "./ListingSearchBar";
 import LiveFilters from "./LiveFilters";
 
+// FR-C-004: the only facets reflected in this page's own URL — see the matching whitelist in
+// app/(cars)/listing-grid/page.tsx's canonical-URL logic. Every other filter stays
+// client-state-only so it can never produce an indexable URL combination.
+const URL_WHITELISTED_FACETS = ["make", "model", "bodyType"] as const;
+const URL_PARAM_NAMES: Record<(typeof URL_WHITELISTED_FACETS)[number], string> = {
+  make: "make",
+  model: "model",
+  bodyType: "body_type",
+};
+
+function initialParamsFromUrl(searchParams: URLSearchParams): ListingSearchParams {
+  const params = { ...DEFAULT_SEARCH_PARAMS };
+  for (const key of URL_WHITELISTED_FACETS) {
+    const value = searchParams.get(URL_PARAM_NAMES[key]);
+    if (value) params[key] = value;
+  }
+  return params;
+}
+
 export default function ListingGridContent() {
-  const [params, setParams] = useState(DEFAULT_SEARCH_PARAMS);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [params, setParams] = useState<ListingSearchParams>(() => initialParamsFromUrl(searchParams));
+  const hasMounted = useRef(false);
+
+  // Keeps the URL in sync with the whitelisted facets only — every other filter change never
+  // touches the URL at all, by construction (it's simply not in this dependency list).
+  useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
+
+    const next = new URLSearchParams();
+    for (const key of URL_WHITELISTED_FACETS) {
+      if (params[key]) next.set(URL_PARAM_NAMES[key], params[key]);
+    }
+    const query = next.toString();
+    router.replace(query ? `/listing-grid?${query}` : "/listing-grid", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.make, params.model, params.bodyType]);
   const { cars, interpretation, locationArea, nationalFallback, facets, meta, loading, error, searchError } = useSearchListings(params, 60);
 
   // FR-B-008/FR-C-021: sponsored placements — always a separate, labelled, capped list, never
