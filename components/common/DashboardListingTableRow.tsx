@@ -8,7 +8,7 @@ import { DASHBOARD_LISTING_STATUS_META } from "@/data/dashboardListings";
 import { ADD_LISTING_PRICE_TYPE_OPTIONS } from "@/data/niceSelectOptions";
 import { formatCarPrice, getCarHref } from "@/data/cars";
 import { describeApiError } from "@/lib/api-client";
-import { usePricingSuggestion } from "@/hooks/useListingTools";
+import { usePricingSuggestion, useListingQuality } from "@/hooks/useListingTools";
 import type { DashboardCar } from "@/types/cars";
 
 export type ListingEditableFields = {
@@ -76,6 +76,40 @@ function PricingSuggestionHint({ vehiclePublicId }: { vehiclePublicId: string })
       Similar cars suggest around <b>£{suggestion.suggestedPrice.toLocaleString()}</b> (£
       {suggestion.rangeLow?.toLocaleString()}–£{suggestion.rangeHigh?.toLocaleString()}), based on{" "}
       {suggestion.comparables} comparable listing{suggestion.comparables === 1 ? "" : "s"}.
+    </div>
+  );
+}
+
+/** FR-C-014: the listing-quality score + remediation prompts, shown while editing a listing. */
+function ListingQualityHint({ listingPublicId }: { listingPublicId: string }) {
+  const { quality, loading, error, fetchQuality } = useListingQuality();
+
+  if (!quality && !loading && !error) {
+    return (
+      <button
+        type="button"
+        className="btn-action tfcl-dashboard-action-edit mb-2"
+        onClick={() => fetchQuality(listingPublicId)}
+      >
+        Check listing quality
+      </button>
+    );
+  }
+
+  if (loading) return <p className="mb-2">Scoring this listing...</p>;
+  if (error) return <div className="alert alert-danger mb-2">{error}</div>;
+  if (!quality) return null;
+
+  return (
+    <div className="alert alert-info mb-2">
+      <b>Quality score: {quality.score}/100</b>
+      {quality.remediationPrompts.length > 0 && (
+        <ul className="mb-0 mt-1">
+          {quality.remediationPrompts.map((prompt) => (
+            <li key={prompt}>{prompt}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -172,6 +206,7 @@ export default function DashboardListingTableRow({
         <td colSpan={4}>
           <div className="tfcl-listing-edit-inline p-3">
             {listing.vehiclePublicId && <PricingSuggestionHint vehiclePublicId={listing.vehiclePublicId} />}
+            {listing.publicId && <ListingQualityHint listingPublicId={listing.publicId} />}
             <div className="grid-2 gap-30 mb-2">
               <div className="form-group mb-0">
                 <label>Price</label>

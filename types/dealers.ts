@@ -1,3 +1,11 @@
+// FR-C-002: one open/close pair per weekday, or null when closed that day. Keyed by the same
+// lowercase 3-letter day abbreviation the backend's AppointmentService already reads
+// (mon/tue/wed/thu/fri/sat/sun), not full day names.
+export type DealerOpeningHours = Partial<Record<
+  "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun",
+  { open: string; close: string } | null
+>>;
+
 export type Dealer = {
   id: number;
   name: string;
@@ -16,6 +24,11 @@ export type Dealer = {
   // from a mock one, and to call GET /dealers/{slug} again.
   slug?: string;
   organizationId?: number;
+  // FR-C-002: real dealers only — opening hours and the FCA/regulatory disclosures block,
+  // both already stored and editable server-side (DealerStorefrontProfileController) but
+  // never rendered on the public storefront page until now.
+  openingHours?: DealerOpeningHours | null;
+  disclosures?: string | null;
 };
 
 export type DealerSortOption = "date" | "name" | "rating" | "reviews";

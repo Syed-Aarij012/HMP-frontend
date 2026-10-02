@@ -1,4 +1,4 @@
-import type { Dealer } from "@/types/dealers";
+import type { Dealer, DealerOpeningHours } from "@/types/dealers";
 
 // A real dealer routes by its slug (see lib/dealer-detail-page.tsx's numeric-mock vs
 // non-numeric-real split); a mock dealer keeps routing by its plain numeric id.
@@ -13,6 +13,8 @@ export type ApiDealer = {
   description?: string | null;
   logo_url?: string | null;
   tracked_phone_number?: string | null;
+  opening_hours?: DealerOpeningHours | null;
+  disclosures?: string | null;
   created_at?: string | null;
   organization: { id: number; name: string } | null;
   rooftop: {
@@ -53,12 +55,16 @@ export function mapApiDealerToDealer(dealer: ApiDealer): Dealer {
     description: dealer.description ?? null,
     reviewCount: dealer.review_count ?? 0,
     rating: dealer.average_rating ?? 0,
-    phone: rooftop?.phone ?? dealer.tracked_phone_number ?? "",
+    // FR-C-002: a tracked number (the whole point of "click-to-call with tracked numbers")
+    // takes priority over the rooftop's own untracked line.
+    phone: dealer.tracked_phone_number ?? rooftop?.phone ?? "",
     address: address || "Address not available",
     state: rooftop?.city ?? "",
     brand: "Multi-Brand",
     dateAdded: dealer.created_at ?? new Date().toISOString(),
     slug: dealer.slug,
     organizationId: dealer.organization?.id,
+    openingHours: dealer.opening_hours ?? null,
+    disclosures: dealer.disclosures ?? null,
   };
 }
