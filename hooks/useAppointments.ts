@@ -7,7 +7,11 @@ import type { Appointment } from "@/types/marketplaceTools";
 
 type ApiListResponse<T> = { data: T[] };
 
-/** FR-C-033: the buyer's own booked test drives / dealer appointments. */
+/**
+ * FR-C-033: the user's test drives / dealer appointments — the ones they booked as a buyer,
+ * and on the dealer side, the ones booked on their (org's) listings, which they can mark
+ * completed or a no-show once the time has passed.
+ */
 export function useMyAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +49,23 @@ export function useMyAppointments() {
     [load],
   );
 
-  return { appointments, loading, error, actionError, busyId, cancel };
+  const markOutcome = useCallback(
+    async (appointmentId: number, outcome: "complete" | "no-show") => {
+      setActionError(null);
+      setBusyId(appointmentId);
+      try {
+        await apiFetch(`/appointments/${appointmentId}/${outcome}`, { method: "POST" });
+        load();
+      } catch (err) {
+        setActionError(describeApiError(err, "Could not update this appointment."));
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load],
+  );
+
+  return { appointments, loading, error, actionError, busyId, cancel, markOutcome };
 }
 
 /** FR-C-033: booking a test drive on a specific listing. */

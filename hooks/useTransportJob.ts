@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, describeApiError } from "@/lib/api-client";
-import type { TransportJob } from "@/types/postSale";
+import { postSaleOrderPath, type PostSaleOrderRef, type TransportJob } from "@/types/postSale";
 
 type QuoteInput = {
   pickupPostcode: string;
@@ -13,11 +13,13 @@ type QuoteInput = {
 };
 
 /**
- * FR-F-001/002: the buyer's transport job for a trade order — request a distance-based quote
+ * FR-F-001/002: the buyer's transport job for a trade order, or a paid retail (direct-buy)
+ * order (FR-C-030's handoff to Module F) — request a distance-based quote
  * (a panel of carriers), pick one and book it, then follow it. While a vehicle is in transit
  * the job is re-read every 30 seconds so position and ETA stay fresh.
  */
-export function useTransportJob(jobId: number | null, tradeOrderId: number, onChanged?: () => void) {
+export function useTransportJob(jobId: number | null, order: PostSaleOrderRef, onChanged?: () => void) {
+  const orderPath = postSaleOrderPath(order);
   const [job, setJob] = useState<TransportJob | null>(null);
   const [loading, setLoading] = useState(Boolean(jobId));
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export function useTransportJob(jobId: number | null, tradeOrderId: number, onCh
   const requestQuote = useCallback(
     (input: QuoteInput) =>
       run(async () => {
-        const response = await apiFetch<{ data: TransportJob }>(`/trade-orders/${tradeOrderId}/transport-jobs`, {
+        const response = await apiFetch<{ data: TransportJob }>(`${orderPath}/transport-jobs`, {
           method: "POST",
           body: {
             pickup_address: { postcode: input.pickupPostcode },
@@ -86,7 +88,7 @@ export function useTransportJob(jobId: number | null, tradeOrderId: number, onCh
         setCurrentId(response.data.id);
         onChanged?.();
       }),
-    [run, tradeOrderId, onChanged],
+    [run, orderPath, onChanged],
   );
 
   const book = useCallback(

@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
+import Link from "next/link";
+import { useMediaEntitlements } from "@/hooks/useOrganizationSubscription";
 
 // FR-A-010 (M): mirrors the backend's config('media.max_video_duration_seconds') /
 // min_spin_set_frames — this is only the UI's own pre-submit guardrail so a seller isn't
@@ -15,6 +17,16 @@ type UploadVideoSpinSectionProps = {
   onSpinFramesChange?: (files: File[]) => void;
 };
 
+// FR-C-020: video and 360° are package entitlements for dealer orgs — shown locked up front
+// instead of letting a large file upload only to be rejected by the server.
+function NotInPlan({ what }: { what: string }) {
+  return (
+    <p className="text-color-1 mt-2">
+      {what} aren&apos;t included in your plan. <Link href="/subscription">Upgrade your subscription</Link> to add them.
+    </p>
+  );
+}
+
 export default function UploadVideoSpinSection({
   onVideoChange,
   onSpinFramesChange,
@@ -26,6 +38,7 @@ export default function UploadVideoSpinSection({
   const [videoError, setVideoError] = useState<string | null>(null);
   const [spinCount, setSpinCount] = useState(0);
   const [spinError, setSpinError] = useState<string | null>(null);
+  const { loading: entitlementsLoading, canUploadVideo, canUpload360 } = useMediaEntitlements();
 
   const handleVideoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -77,10 +90,19 @@ export default function UploadVideoSpinSection({
         <div className="form-group mb-0">
           <label>Walk-around video</label>
           <input ref={videoInputRef} type="file" accept="video/*" hidden onChange={handleVideoChange} />
-          <button type="button" className="sc-button style-2" onClick={() => videoInputRef.current?.click()}>
+          <button
+            type="button"
+            className="sc-button style-2"
+            onClick={() => videoInputRef.current?.click()}
+            disabled={entitlementsLoading || !canUploadVideo}
+          >
             <span>{videoName ?? "Select video"}</span>
           </button>
-          <p className="text-color-1 mt-2">Up to {MAX_VIDEO_DURATION_SECONDS / 60} minutes.</p>
+          {!entitlementsLoading && !canUploadVideo ? (
+            <NotInPlan what="Video uploads" />
+          ) : (
+            <p className="text-color-1 mt-2">Up to {MAX_VIDEO_DURATION_SECONDS / 60} minutes.</p>
+          )}
           {videoError && <div className="alert alert-danger mt-2">{videoError}</div>}
         </div>
         <div className="form-group mb-0">
@@ -93,10 +115,19 @@ export default function UploadVideoSpinSection({
             hidden
             onChange={handleSpinFramesChange}
           />
-          <button type="button" className="sc-button style-2" onClick={() => spinInputRef.current?.click()}>
+          <button
+            type="button"
+            className="sc-button style-2"
+            onClick={() => spinInputRef.current?.click()}
+            disabled={entitlementsLoading || !canUpload360}
+          >
             <span>{spinCount > 0 ? `${spinCount} frames selected` : "Select turntable frames"}</span>
           </button>
-          <p className="text-color-1 mt-2">At least {MIN_SPIN_SET_FRAMES} frames, one set per vehicle.</p>
+          {!entitlementsLoading && !canUpload360 ? (
+            <NotInPlan what="360° spin sets" />
+          ) : (
+            <p className="text-color-1 mt-2">At least {MIN_SPIN_SET_FRAMES} frames, one set per vehicle.</p>
+          )}
           {spinError && <div className="alert alert-danger mt-2">{spinError}</div>}
         </div>
       </div>

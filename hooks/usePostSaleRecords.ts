@@ -2,14 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, describeApiError } from "@/lib/api-client";
-import type { AssuranceClaim, DocumentManifest, ReleaseNote } from "@/types/postSale";
+import { postSaleOrderPath, type AssuranceClaim, type DocumentManifest, type PostSaleOrderRef, type ReleaseNote } from "@/types/postSale";
 
 /**
- * FR-F-010/012/020: the buyer's release note (code + QR), document vault manifest and
- * assurance claims for one trade order. Each piece loads independently so one missing record
- * (no release note yet) never blanks the rest.
+ * FR-F-010/012/020: the buyer's release note (code + QR), document vault manifest and — for a
+ * trade order, the only kind HMP Assured covers — assurance claims. Each piece loads
+ * independently so one missing record (no release note yet) never blanks the rest.
  */
-export function usePostSaleRecords(tradeOrderId: number, releaseNoteId: number | null) {
+export function usePostSaleRecords(order: PostSaleOrderRef, releaseNoteId: number | null) {
+  const orderPath = postSaleOrderPath(order);
+  const tradeOrderId = order.kind === "trade" ? order.id : null;
   const [release, setRelease] = useState<ReleaseNote | null>(null);
   const [documents, setDocuments] = useState<DocumentManifest | null>(null);
   const [claims, setClaims] = useState<AssuranceClaim[]>([]);
@@ -25,9 +27,15 @@ export function usePostSaleRecords(tradeOrderId: number, releaseNoteId: number |
         .catch(() => undefined);
     }
 
-    apiFetch<DocumentManifest>(`/trade-orders/${tradeOrderId}/documents`)
+    apiFetch<DocumentManifest>(`${orderPath}/documents`)
       .then((d) => !cancelled && setDocuments(d))
       .catch(() => undefined);
+
+    if (tradeOrderId === null) {
+      return () => {
+        cancelled = true;
+      };
+    }
 
     apiFetch<{ data: { data: (AssuranceClaim & { trade_order_id: number })[] } }>("/assurance-claims")
       .then((r) => !cancelled && setClaims(r.data.data.filter((claim) => claim.trade_order_id === tradeOrderId)))
@@ -36,7 +44,7 @@ export function usePostSaleRecords(tradeOrderId: number, releaseNoteId: number |
     return () => {
       cancelled = true;
     };
-  }, [tradeOrderId, releaseNoteId]);
+  }, [orderPath, tradeOrderId, releaseNoteId]);
 
   useEffect(() => load(), [load]);
 
@@ -45,6 +53,7 @@ export function usePostSaleRecords(tradeOrderId: number, releaseNoteId: number |
       setClaimError(null);
       setSubmitting(true);
       try {
+        if (tradeOrderId === null) return false;
         await apiFetch(`/trade-orders/${tradeOrderId}/assurance-claims`, {
           method: "POST",
           body: { claim_type: claimType, description },

@@ -204,6 +204,20 @@ export default function Dashboard() {
                         </p>
                       </div>
 
+                      {/* FR-C-033 no-show tracking. */}
+                      <div className="tfcl-card p-3 mb-4">
+                        <h4 className="mb-2">Test drives, last {analytics.periodDays} days</h4>
+                        <p className="mb-1">
+                          {analytics.appointments.noShowRate !== null
+                            ? `${(analytics.appointments.noShowRate * 100).toFixed(1)}% no-show rate`
+                            : "No completed or missed test drives yet"}
+                        </p>
+                        <p className="text-color-1 mb-0">
+                          Booked {analytics.appointments.booked} · Completed {analytics.appointments.completed} · No-show{" "}
+                          {analytics.appointments.noShow} · Cancelled {analytics.appointments.cancelled}
+                        </p>
+                      </div>
+
                       <AdCampaignsPanel />
                     </>
                   )}
