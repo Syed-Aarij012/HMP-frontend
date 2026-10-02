@@ -9,6 +9,7 @@ import DealerSaleAgentSlider from "@/components/sections/dealer-detail/DealerSal
 import DealerInventorySlider from "@/components/sections/dealer-detail/DealerInventorySlider";
 import { useFilteredListings } from "@/hooks/useFilteredListings";
 import { useAgents } from "@/hooks/useAgents";
+import { useContactDealer } from "@/components/common/ContactDealerContext";
 import type { Dealer, DealerOpeningHours } from "@/types/dealers";
 
 type DealerDetailProps = {
@@ -28,9 +29,14 @@ const OPENING_HOURS_DAYS: [keyof DealerOpeningHours, string][] = [
 function DealerDetail({ dealer }: DealerDetailProps) {
   const { cars: inventoryCars } = useFilteredListings({ organizationId: dealer.organizationId });
   const { agents: allAgents } = useAgents();
+  const { setContactDealerTarget } = useContactDealer();
   const dealerAgents = dealer.organizationId
     ? allAgents.filter((agent) => agent.organizationId === dealer.organizationId)
     : [];
+  // FR-C-002 lead form: a Lead is always routed against a specific listing (LeadRoutingService),
+  // so a general storefront enquiry attaches to the dealer's first live listing — same
+  // conversation -> routeEnquiry() path the listing-detail "Send message" button already uses.
+  const leadFormCar = inventoryCars[0] ?? null;
 
   return (
     <>
@@ -243,13 +249,20 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                   <a href="#" className="button-form-2">
                     Chat via Whatsapp
                   </a>
-                  <a
-                    data-bs-target="#ModalTogglemess"
-                    data-bs-toggle="modal"
-                    className="button-form-3"
-                  >
-                    Send mesage
-                  </a>
+                  {leadFormCar ? (
+                    <a
+                      data-bs-target="#ModalTogglemess"
+                      data-bs-toggle="modal"
+                      className="button-form-3"
+                      onClick={() => setContactDealerTarget(leadFormCar)}
+                    >
+                      Send mesage
+                    </a>
+                  ) : (
+                    <span className="button-form-3 disabled" aria-disabled="true">
+                      Send mesage
+                    </span>
+                  )}
                 </div>
                 <div className="map-contact">
                   <div
