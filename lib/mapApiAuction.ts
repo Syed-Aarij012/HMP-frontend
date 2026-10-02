@@ -108,7 +108,38 @@ export type ApiBiddingDeposit = {
   status: string;
 };
 
-export type ApiListResponse<T> = { data: T[] };
+export type ApiAuctionFacetBucket = { value: string; count: number };
+export type ApiAuctionNumericFacetBucket = { value: number; count: number };
+export type ApiAuctionFacetRange = { min: number | null; max: number | null };
+
+export type ApiAuctionFacets = {
+  make?: ApiAuctionFacetBucket[];
+  model?: ApiAuctionFacetBucket[];
+  derivative?: ApiAuctionFacetBucket[];
+  body_type?: ApiAuctionFacetBucket[];
+  fuel_type?: ApiAuctionFacetBucket[];
+  transmission?: ApiAuctionFacetBucket[];
+  colour?: ApiAuctionFacetBucket[];
+  doors?: ApiAuctionNumericFacetBucket[];
+  seats?: ApiAuctionNumericFacetBucket[];
+  current_price?: ApiAuctionFacetRange;
+  year?: ApiAuctionFacetRange;
+  mileage?: ApiAuctionFacetRange;
+  condition_grade?: ApiAuctionNumericFacetBucket[];
+  tax_band?: ApiAuctionFacetBucket[];
+  auction_date?: { value: number; count: number; label: string; scheduled_start_at: string | null }[];
+  [key: string]: unknown;
+};
+
+export type ApiListResponse<T> = { data: T[]; facets?: ApiAuctionFacets };
+
+// FR-B-007(c): present only for a trade buyer with an organization, and only once there's a
+// real peer sample behind it — see TradeRecommendationService.
+export type ApiPeerBenchmark = {
+  sample_size: number;
+  avg_days_to_retail?: number;
+  avg_margin?: number;
+};
 
 export function mapApiSale(sale: ApiAuctionSale): AuctionSale {
   return {

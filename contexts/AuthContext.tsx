@@ -19,6 +19,8 @@ export type AuthUser = {
   // and GET /user — the only way to tell apart a persona like quality_supervisor that isn't
   // its own user_type, just an additional role granted on top of another one.
   roles?: { name: string }[];
+  // FR-B-007(b): null means never consented to behavioral tracking/personalization.
+  personalization_consent_at?: string | null;
   [key: string]: unknown;
 };
 

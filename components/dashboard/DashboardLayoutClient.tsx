@@ -19,8 +19,11 @@ export default function DashboardLayoutClient({
   const router = useRouter();
 
   useEffect(() => {
+    // Sending a signed-out visitor to the public landing page (not /login) applies whether
+    // they just logged out from here or landed on a dashboard URL without ever being signed
+    // in — either way "/" is where they can sign back in from the header.
     if (!loading && !user) {
-      router.replace("/login");
+      router.replace("/");
     }
   }, [loading, user, router]);
 

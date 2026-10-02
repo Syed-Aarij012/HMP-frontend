@@ -130,7 +130,7 @@ function StepUpPrompt({
 }
 
 export default function LotDetail({ publicId }: { publicId: string }) {
-  const { lot, bids, snapshot, loading, error, actionError, submitting, live, connectionDropped, latencyDegraded, placeBid, placeProxyBid, retractBid } =
+  const { lot, peerBenchmark, bids, snapshot, loading, error, actionError, submitting, live, connectionDropped, latencyDegraded, placeBid, placeProxyBid, retractBid } =
     useAuctionLot(publicId);
   const { offsetMs } = useServerClock();
   const [bidAmount, setBidAmount] = useState("");
@@ -309,6 +309,15 @@ export default function LotDetail({ publicId }: { publicId: string }) {
                           </div>
                         )}
                       </div>
+
+                      {peerBenchmark && peerBenchmark.sample_size >= 2 && (
+                        <div className="alert alert-info mb-3">
+                          Dealers like you retail this derivative in {peerBenchmark.avg_days_to_retail} days at{" "}
+                          {peerBenchmark.avg_margin !== undefined && peerBenchmark.avg_margin >= 0 ? "+" : ""}
+                          £{peerBenchmark.avg_margin?.toLocaleString()} margin, on average (based on{" "}
+                          {peerBenchmark.sample_size} comparable deals).
+                        </div>
+                      )}
 
                       <MediaGallery vehicle={lot.vehicle} />
 

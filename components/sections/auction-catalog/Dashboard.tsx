@@ -1,10 +1,110 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
-import { useAuctionLots } from "@/hooks/useAuctionLots";
+import NiceSelect, { type NiceSelectOption } from "@/components/common/NiceSelect";
+import { DEFAULT_AUCTION_LOT_FILTERS, useAuctionLots, type AuctionLotFilters } from "@/hooks/useAuctionLots";
+import type { ApiAuctionFacets } from "@/lib/mapApiAuction";
 import type { AuctionLot } from "@/types/auction";
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function facetOptions<V extends string | number>(
+  bucket: { value: V; count: number }[] | undefined,
+  allLabel: string,
+  labelFor: (value: V) => string = (v) => capitalize(String(v)),
+): NiceSelectOption[] {
+  return [
+    { label: allLabel, value: "" },
+    ...(bucket ?? []).map((entry) => ({ label: `${labelFor(entry.value)} (${entry.count})`, value: String(entry.value) })),
+  ];
+}
+
+/**
+ * FR-B-001: faceted browse for the trade catalog — live options + counts from the facets
+ * GET /auction/lots already computes against the current filter set, mirroring the retail
+ * catalog's LiveFilters. This control was previously just a 3-way status toggle with no
+ * facet dimension exposed at all, despite the backend supporting the same filters as retail.
+ */
+function AuctionFacetFilters({
+  filters,
+  facets,
+  onChange,
+}: {
+  filters: AuctionLotFilters;
+  facets: ApiAuctionFacets | null;
+  onChange: (filters: AuctionLotFilters) => void;
+}) {
+  const set = <K extends keyof AuctionLotFilters>(key: K, value: AuctionLotFilters[K]) =>
+    onChange({ ...filters, [key]: value });
+
+  const makeOptions = useMemo(() => facetOptions(facets?.make, "All makes"), [facets?.make]);
+  const modelOptions = useMemo(() => facetOptions(facets?.model, "All models"), [facets?.model]);
+  const bodyTypeOptions = useMemo(() => facetOptions(facets?.body_type, "All body types"), [facets?.body_type]);
+  const fuelTypeOptions = useMemo(() => facetOptions(facets?.fuel_type, "All fuel types"), [facets?.fuel_type]);
+  const transmissionOptions = useMemo(() => facetOptions(facets?.transmission, "All transmissions"), [facets?.transmission]);
+  const colourOptions = useMemo(() => facetOptions(facets?.colour, "All colours"), [facets?.colour]);
+  const doorsOptions = useMemo(() => facetOptions(facets?.doors, "Any doors", (v) => `${v} doors`), [facets?.doors]);
+  const seatsOptions = useMemo(() => facetOptions(facets?.seats, "Any seats", (v) => `${v} seats`), [facets?.seats]);
+  const conditionGradeOptions = useMemo(
+    () => facetOptions(facets?.condition_grade, "Any condition grade", (v) => `Grade ${v}`),
+    [facets?.condition_grade],
+  );
+  const taxBandOptions = useMemo(
+    () => facetOptions(facets?.tax_band, "Any tax band", (v) => `Band ${v}`),
+    [facets?.tax_band],
+  );
+  const auctionDateOptions = useMemo((): NiceSelectOption[] => [
+    { label: "Any sale date", value: "" },
+    ...(facets?.auction_date ?? []).map((entry) => ({
+      label: `${entry.label} (${entry.count})`,
+      value: String(entry.value),
+    })),
+  ], [facets?.auction_date]);
+
+  return (
+    <div className="mb-3">
+      <div className="row g-2">
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={makeOptions} value={filters.make} onChange={(v) => set("make", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={modelOptions} value={filters.model} onChange={(v) => set("model", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={bodyTypeOptions} value={filters.bodyType} onChange={(v) => set("bodyType", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={fuelTypeOptions} value={filters.fuelType} onChange={(v) => set("fuelType", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={transmissionOptions} value={filters.transmission} onChange={(v) => set("transmission", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={colourOptions} value={filters.colour} onChange={(v) => set("colour", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={doorsOptions} value={filters.doors} onChange={(v) => set("doors", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={seatsOptions} value={filters.seats} onChange={(v) => set("seats", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={conditionGradeOptions} value={filters.conditionGrade} onChange={(v) => set("conditionGrade", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={taxBandOptions} value={filters.taxBand} onChange={(v) => set("taxBand", String(v))} />
+        </div>
+        <div className="col-6 col-md-3 col-lg-2">
+          <NiceSelect options={auctionDateOptions} value={filters.saleId} onChange={(v) => set("saleId", String(v))} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const STATUS_FILTERS: { label: string; value: string }[] = [
   { label: "All", value: "" },
@@ -51,7 +151,8 @@ function LotRow({ lot }: { lot: AuctionLot }) {
 
 function Dashboard() {
   const [status, setStatus] = useState("");
-  const { lots, loading, error } = useAuctionLots(status || undefined);
+  const [filters, setFilters] = useState(DEFAULT_AUCTION_LOT_FILTERS);
+  const { lots, facets, loading, error } = useAuctionLots(status || undefined, filters);
 
   return (
     <div id="themesflat-content">
@@ -79,6 +180,8 @@ function Dashboard() {
                       </button>
                     ))}
                   </div>
+
+                  <AuctionFacetFilters filters={filters} facets={facets} onChange={setFilters} />
 
                   {loading && <p>Loading the auction catalog...</p>}
                   {error && <div className="alert alert-danger">{error}</div>}

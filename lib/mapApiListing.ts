@@ -30,11 +30,31 @@ export type ApiListing = {
   } | null;
 };
 
+export type ApiFacetBucket = { value: string; count: number };
+export type ApiNumericFacetBucket = { value: number; count: number };
+export type ApiFacetRange = { min: number | null; max: number | null };
+
 export type ApiListingsResponse = {
   data: ApiListing[];
+  meta?: { current_page: number; last_page: number; per_page: number; total: number };
   facets?: {
-    make?: { value: string; count: number }[];
-    body_type?: { value: string; count: number }[];
+    make?: ApiFacetBucket[];
+    model?: ApiFacetBucket[];
+    derivative?: ApiFacetBucket[];
+    body_type?: ApiFacetBucket[];
+    fuel_type?: ApiFacetBucket[];
+    transmission?: ApiFacetBucket[];
+    colour?: ApiFacetBucket[];
+    doors?: ApiNumericFacetBucket[];
+    seats?: ApiNumericFacetBucket[];
+    seller_type?: ApiFacetBucket[];
+    price?: ApiFacetRange;
+    year?: ApiFacetRange;
+    mileage?: ApiFacetRange;
+    tax_band?: ApiFacetBucket[];
+    condition_grade?: ApiNumericFacetBucket[];
+    // Only present when a postcode narrowed/broadened the search (see `location` below).
+    distance_band?: ApiFacetBucket[];
     [key: string]: unknown;
   };
   // FR-B-006: what the server understood from the free-text query.
@@ -42,7 +62,10 @@ export type ApiListingsResponse = {
   location?: {
     postcode: string;
     area: string | null;
-    radius_miles: number;
+    radius_miles: number | null;
+    // FR-B-003: true when nothing was within the requested radius and the server broadened
+    // to every other-filter match nationwide instead of returning an empty page.
+    national_fallback: boolean;
     results: Record<string, { distance_miles: number | null; drive_time_band: string | null; delivery_eligible: boolean }>;
   };
   // FR-B-004: per-listing representative finance example, keyed by listing id.

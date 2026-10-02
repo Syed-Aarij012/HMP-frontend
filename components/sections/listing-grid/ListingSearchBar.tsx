@@ -13,6 +13,7 @@ type Props = {
   params: ListingSearchParams;
   interpretation: SearchInterpretation | null;
   locationArea: string | null;
+  nationalFallback?: boolean;
   searchError: string | null;
   onChange: (params: ListingSearchParams) => void;
 };
@@ -22,15 +23,40 @@ type Props = {
  * radius (FR-B-003), monthly budget (FR-B-004) and sort — plus a line showing how the server
  * read the query, with any typo/synonym corrections it applied (FR-B-006).
  */
-export default function ListingSearchBar({ params, interpretation, locationArea, searchError, onChange }: Props) {
+export default function ListingSearchBar({ params, interpretation, locationArea, nationalFallback, searchError, onChange }: Props) {
   const [draft, setDraft] = useState(params);
   const { user } = useAuth();
   const { save } = useSavedSearches();
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   async function saveSearch() {
+    // FR-B-005: saved search criteria must match what filterByVehicleAttributes() reads back
+    // server-side (SavedSearchAlertService::check) — previously only `q` was ever sent, so
+    // picking "BMW, automatic, 2020+" and saving the search silently saved "everything", and
+    // the recurring alert would fire for every new listing rather than just matching ones.
+    // `params` (not the search box's own local `draft`) is used because it is the one state
+    // shared with the facet filters above — draft only tracks this box's own text/sort fields.
     const query: Record<string, unknown> = {};
-    if (draft.query.trim()) query.q = draft.query.trim();
+    if (params.query.trim()) query.q = params.query.trim();
+    // seller_type is deliberately excluded: SavedSearchAlertService.check() only re-applies
+    // filterByVehicleAttributes() + price_min/max, which never reads seller_type — saving it
+    // here would silently promise a filter the recurring alert can't actually honour.
+    const stringFields = [
+      "make", "model", "bodyType", "fuelType", "transmission", "colour",
+      "doors", "seats", "yearMin", "yearMax",
+      "mileageMin", "mileageMax", "priceMin", "priceMax",
+    ] as const;
+    const fieldToFilterKey: Record<(typeof stringFields)[number], string> = {
+      make: "make", model: "model", bodyType: "body_type", fuelType: "fuel_type",
+      transmission: "transmission", colour: "colour", doors: "doors", seats: "seats",
+      yearMin: "year_min", yearMax: "year_max",
+      mileageMin: "mileage_min", mileageMax: "mileage_max",
+      priceMin: "price_min", priceMax: "price_max",
+    };
+    for (const field of stringFields) {
+      const value = params[field];
+      if (value) query[fieldToFilterKey[field]] = value;
+    }
     const failure = await save(query);
     setSaveMessage(failure ?? "Saved. Manage alerts under Saved searches.");
   }
@@ -169,12 +195,18 @@ export default function ListingSearchBar({ params, interpretation, locationArea,
               Showing results for <b>{to}</b> (searched: {from}).{" "}
             </span>
           ))}
-          {locationArea && (
+          {locationArea && !nationalFallback && (
             <>
               Near <b>{locationArea}</b> (approximate, by postcode area).
             </>
           )}
         </p>
+      )}
+      {nationalFallback && (
+        <div className="alert alert-info mt-2">
+          Nothing matched near <b>{locationArea}</b>, so we&apos;re showing results from across the
+          country instead — check each listing&apos;s delivery eligibility.
+        </div>
       )}
     </div>
   );

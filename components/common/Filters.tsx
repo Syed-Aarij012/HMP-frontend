@@ -264,7 +264,10 @@ export default function Filters({
                   </a>
                 </div>
                 <div className="button-search sc-btn-top">
-                  <button type="submit" className="sc-button">
+                  {/* suppressHydrationWarning: a form-autofill browser extension (LastPass and
+                      similar tag every form control with fdprocessedid, not just inputs) —
+                      same harmless mismatch as the email inputs elsewhere in this app. */}
+                  <button type="submit" className="sc-button" suppressHydrationWarning>
                     <i className="icon-carus-search text-color-1" />
                     <span>Search</span>
                   </button>

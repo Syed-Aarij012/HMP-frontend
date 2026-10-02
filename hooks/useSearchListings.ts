@@ -26,6 +26,25 @@ export type ListingSearchParams = {
   deposit: string;
   term: number;
   product: "pcp" | "hp";
+  // FR-B-001: the real faceted-browse dimensions — each is sent straight through to
+  // GET /listings, which already supports every one of these as a filter.
+  make: string;
+  model: string;
+  bodyType: string;
+  fuelType: string;
+  transmission: string;
+  colour: string;
+  doors: string;
+  seats: string;
+  sellerType: string;
+  yearMin: string;
+  yearMax: string;
+  mileageMin: string;
+  mileageMax: string;
+  priceMin: string;
+  priceMax: string;
+  taxBand: string;
+  conditionGrade: string;
 };
 
 export const DEFAULT_SEARCH_PARAMS: ListingSearchParams = {
@@ -37,6 +56,23 @@ export const DEFAULT_SEARCH_PARAMS: ListingSearchParams = {
   deposit: "1000",
   term: 48,
   product: "pcp",
+  make: "",
+  model: "",
+  bodyType: "",
+  fuelType: "",
+  transmission: "",
+  colour: "",
+  doors: "",
+  seats: "",
+  sellerType: "",
+  yearMin: "",
+  yearMax: "",
+  mileageMin: "",
+  mileageMax: "",
+  priceMin: "",
+  priceMax: "",
+  taxBand: "",
+  conditionGrade: "",
 };
 
 /**
@@ -48,11 +84,20 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
   const [cars, setCars] = useState<Car[]>([]);
   const [interpretation, setInterpretation] = useState<SearchInterpretation | null>(null);
   const [locationArea, setLocationArea] = useState<string | null>(null);
+  const [nationalFallback, setNationalFallback] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  const { query, sort, postcode, radius, monthlyMax, deposit, term, product } = params;
+  const [facets, setFacets] = useState<ApiListingsResponse["facets"] | null>(null);
+  const [meta, setMeta] = useState<ApiListingsResponse["meta"] | null>(null);
+
+  const {
+    query, sort, postcode, radius, monthlyMax, deposit, term, product,
+    make, model, bodyType, fuelType, transmission, colour, doors, seats,
+    sellerType, yearMin, yearMax, mileageMin, mileageMax, priceMin, priceMax,
+    taxBand, conditionGrade,
+  } = params;
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +117,23 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
       qs.set("term", String(term));
       qs.set("product", product);
     }
+    if (make) qs.set("make", make);
+    if (model) qs.set("model", model);
+    if (bodyType) qs.set("body_type", bodyType);
+    if (fuelType) qs.set("fuel_type", fuelType);
+    if (transmission) qs.set("transmission", transmission);
+    if (colour) qs.set("colour", colour);
+    if (doors) qs.set("doors", doors);
+    if (seats) qs.set("seats", seats);
+    if (sellerType) qs.set("seller_type", sellerType);
+    if (yearMin) qs.set("year_min", yearMin);
+    if (yearMax) qs.set("year_max", yearMax);
+    if (mileageMin) qs.set("mileage_min", mileageMin);
+    if (mileageMax) qs.set("mileage_max", mileageMax);
+    if (priceMin) qs.set("price_min", priceMin);
+    if (priceMax) qs.set("price_max", priceMax);
+    if (taxBand) qs.set("tax_band", taxBand);
+    if (conditionGrade) qs.set("condition_grade", conditionGrade);
 
     apiFetch<ApiListingsResponse>(`/listings?${qs.toString()}`, { auth: false })
       .then((response) => {
@@ -99,6 +161,9 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
         setCars(mapped);
         setInterpretation(response.search ?? null);
         setLocationArea(response.location?.area ?? null);
+        setNationalFallback(response.location?.national_fallback ?? false);
+        setFacets(response.facets ?? null);
+        setMeta(response.meta ?? null);
         setSearchError(null);
         setError(null);
       })
@@ -120,7 +185,12 @@ export function useSearchListings(params: ListingSearchParams, perPage = 60) {
     return () => {
       cancelled = true;
     };
-  }, [query, sort, postcode, radius, monthlyMax, deposit, term, product, perPage]);
+  }, [
+    query, sort, postcode, radius, monthlyMax, deposit, term, product, perPage,
+    make, model, bodyType, fuelType, transmission, colour, doors, seats,
+    sellerType, yearMin, yearMax, mileageMin, mileageMax, priceMin, priceMax,
+    taxBand, conditionGrade,
+  ]);
 
-  return { cars, interpretation, locationArea, loading, error, searchError };
+  return { cars, interpretation, locationArea, nationalFallback, facets, meta, loading, error, searchError };
 }
