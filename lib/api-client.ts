@@ -133,3 +133,53 @@ export async function downloadFile(url: string, filename: string): Promise<void>
   link.remove();
   URL.revokeObjectURL(objectUrl);
 }
+
+/**
+ * Opens a GET SSE stream with the bearer token attached — native EventSource can't carry
+ * custom headers, and this API has no cookie-session fallback (api-client's own docblock:
+ * stateless Sanctum bearer tokens), so a plain `fetch` + manual frame parsing stands in for
+ * it. Calls `onEvent` for every `data: ...` frame until the stream ends or `signal` aborts it.
+ */
+export async function openEventStream<T>(
+  path: string,
+  onEvent: (data: T) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const token = getStoredToken();
+
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: {
+      Accept: "text/event-stream",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    signal,
+  });
+
+  if (!response.ok || !response.body) {
+    throw new ApiError(`Stream failed with status ${response.status}`, response.status, null);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split("\n\n");
+    buffer = frames.pop() ?? "";
+
+    for (const frame of frames) {
+      const dataLine = frame.split("\n").find((line) => line.startsWith("data: "));
+      if (!dataLine) continue;
+
+      try {
+        onEvent(JSON.parse(dataLine.slice("data: ".length)) as T);
+      } catch {
+        // A malformed frame is skipped — the next poll tick repairs the view either way.
+      }
+    }
+  }
+}

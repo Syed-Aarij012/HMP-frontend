@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import LiveStreamPlayer from "@/components/common/LiveStreamPlayer";
 import { useLiveLanes } from "@/hooks/useLiveLanes";
 import { useRostrum } from "@/hooks/useRostrum";
 import type { ReserveIndicator } from "@/types/liveAuction";
@@ -131,6 +132,8 @@ export default function Console() {
                           </button>
                         )}
                       </div>
+
+                      <LiveStreamPlayer laneId={laneId ?? undefined} />
 
                       {!lot && <p className="tfcl-empty-data">No lot is queued in this lane.</p>}
 

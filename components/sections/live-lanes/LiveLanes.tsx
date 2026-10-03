@@ -3,16 +3,68 @@
 import Link from "next/link";
 import { useState } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import LiveStreamPlayer from "@/components/common/LiveStreamPlayer";
 import LotCountdown from "@/components/sections/auction-lot/LotCountdown";
 import { useLiveLanes } from "@/hooks/useLiveLanes";
+import { useLotSpectatorStream } from "@/hooks/useLotSpectatorStream";
 import { useServerClock } from "@/hooks/useServerClock";
 
 /**
- * FR-D-033: multi-lane viewing. A trade buyer can follow up to the platform's concurrent-lane
- * limit at once and pick one as the bidding focus to open its lot. Video is not part of this
- * build; the data channel here is independent of it, which is also how FR-D-035 expects
- * bidding to survive a video failure.
+ * FR-D-033/036: multi-lane viewing. A trade buyer can follow up to the platform's
+ * concurrent-lane limit at once, watch each one's video feed and live price (over the
+ * FR-D-036 spectator SSE tier, never the bidder-priority Reverb channel — that only opens
+ * once a lot is a buyer's actual bidding focus), and pick one as that focus to open its lot
+ * and bid. The video feed is independent of the bid data channel by construction (FR-D-035),
+ * so a missing or failed stream here never affects bidding on LotDetail.
  */
+function FollowedLaneCard({
+  lane,
+  isFocus,
+  offsetMs,
+  onMakeFocus,
+}: {
+  lane: ReturnType<typeof useLiveLanes>["lanes"][number];
+  isFocus: boolean;
+  offsetMs: number;
+  onMakeFocus: () => void;
+}) {
+  const { state: spectatorState } = useLotSpectatorStream(lane.currentLot?.id);
+  const currentPrice = spectatorState?.currentPrice ?? lane.currentLot?.currentPrice ?? null;
+  const closesAt = spectatorState?.closesAt ?? lane.currentLot?.closesAt ?? null;
+
+  return (
+    <div className="col-md-6 mb-3">
+      <div className="tfcl-card p-3" style={isFocus ? { outline: "2px solid #2ecc71" } : undefined}>
+        <h4 className="mb-1">
+          {lane.name} <span className="text-color-1 text-capitalize">({lane.status})</span>
+        </h4>
+        {lane.status === "paused" && <p style={{ color: "#e67e22" }}>Paused by the auctioneer.</p>}
+        {!lane.currentLot && <p className="tfcl-empty-data">No lot on this lane.</p>}
+        {lane.currentLot && (
+          <>
+            <LiveStreamPlayer laneId={lane.id} compact />
+            <p className="mb-1">{lane.currentLot.vehicle ?? "Current lot"}</p>
+            <p style={{ fontSize: 24 }} className="mb-1">
+              <b>{currentPrice !== null ? `£${currentPrice.toLocaleString()}` : "No bids yet"}</b>
+            </p>
+            <LotCountdown closesAt={closesAt} offsetMs={offsetMs} />
+            <div className="flex gap-10 mt-2">
+              <button type="button" className="sc-button" onClick={onMakeFocus}>
+                <span>{isFocus ? "Bidding focus" : "Make bidding focus"}</span>
+              </button>
+              {isFocus && (
+                <Link href={`/auction/${lane.currentLot.id}`} className="sc-button">
+                  <span>Open lot to bid</span>
+                </Link>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function LiveLanes() {
   const [selected, setSelected] = useState<number[]>([]);
   const { lanes, maxLanes, loading, error } = useLiveLanes(selected);
@@ -72,41 +124,13 @@ export default function LiveLanes() {
 
                   <div className="row">
                     {followed.map((lane) => (
-                      <div className="col-md-6 mb-3" key={lane.id}>
-                        <div
-                          className="tfcl-card p-3"
-                          style={focusId === lane.id ? { outline: "2px solid #2ecc71" } : undefined}
-                        >
-                          <h4 className="mb-1">
-                            {lane.name} <span className="text-color-1 text-capitalize">({lane.status})</span>
-                          </h4>
-                          {lane.status === "paused" && <p style={{ color: "#e67e22" }}>Paused by the auctioneer.</p>}
-                          {!lane.currentLot && <p className="tfcl-empty-data">No lot on this lane.</p>}
-                          {lane.currentLot && (
-                            <>
-                              <p className="mb-1">{lane.currentLot.vehicle ?? "Current lot"}</p>
-                              <p style={{ fontSize: 24 }} className="mb-1">
-                                <b>
-                                  {lane.currentLot.currentPrice !== null
-                                    ? `£${lane.currentLot.currentPrice.toLocaleString()}`
-                                    : "No bids yet"}
-                                </b>
-                              </p>
-                              <LotCountdown closesAt={lane.currentLot.closesAt} offsetMs={offsetMs} />
-                              <div className="flex gap-10 mt-2">
-                                <button type="button" className="sc-button" onClick={() => setFocusId(lane.id)}>
-                                  <span>{focusId === lane.id ? "Bidding focus" : "Make bidding focus"}</span>
-                                </button>
-                                {focusId === lane.id && (
-                                  <Link href={`/auction/${lane.currentLot.id}`} className="sc-button">
-                                    <span>Open lot to bid</span>
-                                  </Link>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
+                      <FollowedLaneCard
+                        key={lane.id}
+                        lane={lane}
+                        isFocus={focusId === lane.id}
+                        offsetMs={offsetMs}
+                        onMakeFocus={() => setFocusId(lane.id)}
+                      />
                     ))}
                   </div>
                 </div>
