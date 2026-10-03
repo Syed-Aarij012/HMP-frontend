@@ -64,3 +64,21 @@ export type RostrumConsole = {
   currentLot: ConsoleLot | null;
   nextLots: { id: string; runOrder: number; vehicle: string | null }[];
 };
+
+// FR-D-036: the thinner spectator-tier read model — no "you" section, no bid-by-bid feed.
+export type SpectatorLotState = {
+  serverTime: number;
+  status: string;
+  currentPrice: number | null;
+  closesAt: string | null;
+  reserveMet: boolean | null;
+  laneStatus: string | null;
+};
+
+// FR-D-033: a lane's audio/video stream descriptor.
+export type LaneVideoStream = {
+  protocol: "webrtc" | "ll-hls";
+  url: string;
+  glassToGlassTargetMs: number;
+  available: boolean;
+};

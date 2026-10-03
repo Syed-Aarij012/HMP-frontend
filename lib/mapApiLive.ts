@@ -1,10 +1,12 @@
 import type {
   ConsoleLot,
+  LaneVideoStream,
   LiveLane,
   LotSnapshot,
   NextBid,
   ReserveIndicator,
   RostrumConsole,
+  SpectatorLotState,
 } from "@/types/liveAuction";
 
 type ApiNextBid = { minimum: string; increment: string } | null;
@@ -138,6 +140,45 @@ export function mapApiConsole(api: ApiConsole): RostrumConsole {
     lane: { id: api.lane.id, name: api.lane.name, status: api.lane.status, saleType: api.lane.sale_type },
     currentLot: api.current_lot ? mapConsoleLot(api.current_lot) : null,
     nextLots: api.next_lots.map((lot) => ({ id: lot.id, runOrder: lot.run_order, vehicle: lot.vehicle })),
+  };
+}
+
+export type ApiSpectatorEvent = {
+  server_time: number;
+  lot: {
+    id: string;
+    status: string;
+    current_price: string | null;
+    closes_at: string | null;
+    reserve_met: boolean | null;
+    lane_status: string | null;
+  };
+};
+
+export function mapApiSpectatorEvent(api: ApiSpectatorEvent): SpectatorLotState {
+  return {
+    serverTime: api.server_time,
+    status: api.lot.status,
+    currentPrice: api.lot.current_price !== null ? Number(api.lot.current_price) : null,
+    closesAt: api.lot.closes_at,
+    reserveMet: api.lot.reserve_met,
+    laneStatus: api.lot.lane_status,
+  };
+}
+
+export type ApiLaneVideoStream = {
+  protocol: "webrtc" | "ll-hls";
+  url: string;
+  glass_to_glass_target_ms: number;
+  available: boolean;
+};
+
+export function mapApiLaneVideoStream(api: ApiLaneVideoStream): LaneVideoStream {
+  return {
+    protocol: api.protocol,
+    url: api.url,
+    glassToGlassTargetMs: api.glass_to_glass_target_ms,
+    available: api.available,
   };
 }
 
