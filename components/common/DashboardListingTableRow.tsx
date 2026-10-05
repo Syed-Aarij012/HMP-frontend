@@ -141,6 +141,8 @@ export default function DashboardListingTableRow({
   const [renewing, setRenewing] = useState(false);
   const [renewError, setRenewError] = useState<string | null>(null);
   const canPublish = Boolean(listing.publicId && onPublish && ["draft", "withdrawn"].includes(listing.rawStatus ?? ""));
+  // FR-C-001: a listing that's never been approved goes to review; an approved one is relisted.
+  const needsReview = listing.rawStatus === "draft" || !listing.publishedAt;
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
 
@@ -184,7 +186,7 @@ export default function DashboardListingTableRow({
     try {
       await onPublish(listing.id);
     } catch (err) {
-      setPublishError(describeApiError(err, "Could not publish this listing."));
+      setPublishError(describeApiError(err, "Could not submit this listing."));
     } finally {
       setPublishing(false);
     }
@@ -334,6 +336,12 @@ export default function DashboardListingTableRow({
         >
           {statusMeta.label}
         </span>
+        {/* FR-C-001: a declined listing comes back as a draft with the reviewer's reason. */}
+        {listing.rawStatus === "draft" && listing.reviewNote && (
+          <div className="text-danger fs-13 mt-1" style={{ maxWidth: 220 }}>
+            Not approved: {listing.reviewNote}
+          </div>
+        )}
       </td>
       <td className="column-date">
         <div className="tfcl-listing-date">{formatListingDate(listing.postingDate)}</div>
@@ -391,7 +399,7 @@ export default function DashboardListingTableRow({
               onClick={handlePublish}
               disabled={publishing}
             >
-              {publishing ? "Publishing..." : listing.rawStatus === "withdrawn" ? "Relist" : "Publish"}
+              {publishing ? "Sending..." : needsReview ? "Submit for review" : "Relist"}
             </button>
           </div>
         )}

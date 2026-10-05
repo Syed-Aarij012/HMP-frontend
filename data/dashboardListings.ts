@@ -16,7 +16,7 @@ export const DASHBOARD_LISTING_STATUS_META: Record<
   { label: string; className: string }
 > = {
   approved: { label: "Live", className: "status-publish" },
-  pending: { label: "Pending checks", className: "status-pending" },
+  pending: { label: "Awaiting review", className: "status-pending" },
   draft: { label: "Draft", className: "status-draft" },
   under_offer: { label: "Under offer", className: "status-under-offer" },
   reserved: { label: "Reserved", className: "status-reserved" },

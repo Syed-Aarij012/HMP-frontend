@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import { can, useAuth } from "@/contexts/AuthContext";
 import { useBuyTradeFixedPriceListing } from "@/hooks/useBuyTradeFixedPriceListing";
 import { useTradeFixedPriceListings } from "@/hooks/useTradeFixedPriceListings";
 
@@ -11,6 +12,9 @@ import { useTradeFixedPriceListings } from "@/hooks/useTradeFixedPriceListings";
  */
 function TradeMarketplace() {
   const { listings, loading, error, reload } = useTradeFixedPriceListings();
+  // §2.2 P3/P4: buying trade stock is for funded trade buyers; other catalog viewers only browse.
+  const { user } = useAuth();
+  const canBuy = can(user, "place-bid");
   const { buy, submitting, error: buyError } = useBuyTradeFixedPriceListing();
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
@@ -79,14 +83,18 @@ function TradeMarketplace() {
                               <td>{listing.conditionReport?.conditionGrade ?? "-"}</td>
                               <td>£{listing.askingPrice.toLocaleString()}</td>
                               <td>
-                                <button
-                                  type="button"
-                                  className="sc-button"
-                                  disabled={submitting && buyingId === listing.id}
-                                  onClick={() => handleBuy(listing.id)}
-                                >
-                                  <span>{submitting && buyingId === listing.id ? "Buying..." : "Buy now"}</span>
-                                </button>
+                                {canBuy ? (
+                                  <button
+                                    type="button"
+                                    className="sc-button"
+                                    disabled={submitting && buyingId === listing.id}
+                                    onClick={() => handleBuy(listing.id)}
+                                  >
+                                    <span>{submitting && buyingId === listing.id ? "Buying..." : "Buy now"}</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-color-1">View only</span>
+                                )}
                               </td>
                             </tr>
                           ))}

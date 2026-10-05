@@ -23,6 +23,7 @@ export default function ListingCardActions({
     isFavorite,
     addToCompare,
     toggleFavorite,
+    canFavorite,
     removeFromCompare,
   } = useListingActions();
 
@@ -65,7 +66,7 @@ export default function ListingCardActions({
     </li>
   );
 
-  const favoriteButton = (
+  const favoriteButton = canFavorite && (
     <li
       className={`box-icon ${iconClassName}${favoriteActive ? " active" : ""}`}
     >

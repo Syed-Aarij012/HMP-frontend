@@ -34,24 +34,33 @@ function getActiveTab(categoryTab: ListingCategoryTab): SaleAgentListingTab {
 }
 
 type SaleAgentListingsPanelProps = {
-  agent: Agent;
+  // A seller/agent's own ads...
+  agent?: Agent;
+  // ...or a dealership's: the same ads grid, scoped to one organization (FR-C-002 dealer profile).
+  organizationId?: number;
+  title?: string;
 };
 
-export default function SaleAgentListingsPanel({ agent }: SaleAgentListingsPanelProps) {
+export default function SaleAgentListingsPanel({ agent, organizationId, title = "All Listing" }: SaleAgentListingsPanelProps) {
   const [view, setView] = useState<ListingView>("grid");
+  const forDealer = organizationId !== undefined;
 
   // A real agent's own live listings — a mock agent (no real seller_user_id to filter by)
-  // keeps showing the template's sample cars instead.
+  // keeps showing the template's sample cars instead. A dealer's panel only ever shows that
+  // dealer's own ads, however many.
+  const isReal = forDealer || Boolean(agent?.isReal);
   const { cars: realCars, loading, error } = useFilteredListings({
-    sellerUserId: agent.isReal ? agent.id : undefined,
+    sellerUserId: !forDealer && agent?.isReal ? agent.id : undefined,
+    organizationId,
   });
-  const listings = agent.isReal ? realCars : saleAgentListingCars;
+  const listings = isReal ? realCars : saleAgentListingCars;
 
   const { state, dispatch, visibleListings, totalPages } =
     useListingFilterState({
       listings,
       itemPerPage: 6,
-      categoryTab: "used",
+      // A dealer's page shows every ad; the used/new tabs are the seller page's.
+      categoryTab: forDealer ? "all" : "used",
     });
 
   const activeTab = getActiveTab(state.categoryTab);
@@ -69,7 +78,7 @@ export default function SaleAgentListingsPanel({ agent }: SaleAgentListingsPanel
   return (
     <div className="listing-list-car-wrap">
       <div className="category-filter flex justify-space align-center mb-40 flex-wrap gap-8">
-        <h2 className="title">All Listing</h2>
+        <h2 className="title">{title}</h2>
         <div className="box-2 flex flex-wrap gap-8">
           <ListingViewToggle view={view} onViewChange={setView} />
           <ListingToolbarSelects
@@ -83,6 +92,7 @@ export default function SaleAgentListingsPanel({ agent }: SaleAgentListingsPanel
         </div>
       </div>
       <div className="flat-tabs themesflat-tabs">
+        {!forDealer && (
         <div className="box-tab center">
           <ul className="menu-tab tab-title style flex">
             {saleAgentListingTabs.map((tab) => (
@@ -105,14 +115,15 @@ export default function SaleAgentListingsPanel({ agent }: SaleAgentListingsPanel
             ))}
           </ul>
         </div>
+        )}
         <div className="content-tab">
           <div className="content-inner tab-content">
             <div className={listClassName}>
-              {agent.isReal && loading ? (
+              {isReal && loading ? (
                 <div className="no-results">
                   <p>Loading listings...</p>
                 </div>
-              ) : agent.isReal && error ? (
+              ) : isReal && error ? (
                 <div className="no-results">
                   <p>{error}</p>
                 </div>

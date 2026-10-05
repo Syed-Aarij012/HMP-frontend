@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { hasRole, useAuth } from "@/contexts/AuthContext";
+import { can, useAuth } from "@/contexts/AuthContext";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import NiceSelect, { type NiceSelectOption } from "@/components/common/NiceSelect";
 import { DEFAULT_AUCTION_LOT_FILTERS, useAuctionLots, type AuctionLotFilters } from "@/hooks/useAuctionLots";
@@ -180,7 +180,7 @@ function Dashboard() {
   const [filters, setFilters] = useState(DEFAULT_AUCTION_LOT_FILTERS);
   const { lots, facets, loading, error, publish } = useAuctionLots(status || undefined, filters);
   const { user } = useAuth();
-  const canPublish = hasRole(user, "auctioneer") || hasRole(user, "super_admin");
+  const canPublish = can(user, "manage-run-list");
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
 

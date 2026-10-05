@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { can, useAuth } from "@/contexts/AuthContext";
 import { useMakeOffer } from "@/hooks/useOffers";
 import { useBookAppointment } from "@/hooks/useAppointments";
 import { useInitiateDirectBuy } from "@/hooks/useDirectBuy";
@@ -39,7 +39,11 @@ export default function ListingDetailActionsSection({ car }: { car: Car }) {
 
   if (!listingId) return null;
 
-  const canBuyNow = car.rawStatus === "live";
+  // SRS §2.2 P1: buying, offers and test drives are buyer capabilities — only offered to an
+  // account that holds them (the API refuses everyone else anyway).
+  const canBuyNow = car.rawStatus === "live" && can(user, "purchase-vehicles");
+  const canOffer = can(user, "make-offers");
+  const canBookTestDrive = can(user, "book-test-drives");
 
   async function handleBuyNowConfirm() {
     const order = await initiateDirectBuy();
@@ -75,6 +79,24 @@ export default function ListingDetailActionsSection({ car }: { car: Car }) {
     );
   }
 
+  if (!canBuyNow && !canOffer && !canBookTestDrive) {
+    const isSeller = can(user, "manage-own-listings") || can(user, "manage-org-listings");
+    return (
+      <div className="tfcl-card p-3 mb-4">
+        <p className="mb-0">
+          {isSeller ? (
+            <>
+              You&apos;re signed in with a selling account — buying, offers and test drives are for buyer accounts.
+              Manage your own cars from <Link href="/my-listing">My listings</Link>.
+            </>
+          ) : (
+            <>Buying, offers and test drives are available to private buyer accounts.</>
+          )}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="tfcl-card p-3 mb-4">
       <div className="flex gap-10 mb-2" style={{ flexWrap: "wrap" }}>
@@ -87,20 +109,24 @@ export default function ListingDetailActionsSection({ car }: { car: Car }) {
             <span>Buy now</span>
           </button>
         )}
-        <button
-          type="button"
-          className="sc-button"
-          onClick={() => setActiveForm(activeForm === "offer" ? null : "offer")}
-        >
-          <span>Make an offer</span>
-        </button>
-        <button
-          type="button"
-          className="sc-button"
-          onClick={() => setActiveForm(activeForm === "test-drive" ? null : "test-drive")}
-        >
-          <span>Book a test drive</span>
-        </button>
+        {canOffer && (
+          <button
+            type="button"
+            className="sc-button"
+            onClick={() => setActiveForm(activeForm === "offer" ? null : "offer")}
+          >
+            <span>Make an offer</span>
+          </button>
+        )}
+        {canBookTestDrive && (
+          <button
+            type="button"
+            className="sc-button"
+            onClick={() => setActiveForm(activeForm === "test-drive" ? null : "test-drive")}
+          >
+            <span>Book a test drive</span>
+          </button>
+        )}
         <Link href="/valuation-tool" className="sc-button">
           <span>Free valuation</span>
         </Link>

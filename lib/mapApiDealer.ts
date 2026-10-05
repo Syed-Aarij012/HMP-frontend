@@ -64,6 +64,7 @@ export function mapApiDealerToDealer(dealer: ApiDealer): Dealer {
     dateAdded: dealer.created_at ?? new Date().toISOString(),
     slug: dealer.slug,
     organizationId: dealer.organization?.id,
+    listingsCount: dealer.listings_count ?? 0,
     openingHours: dealer.opening_hours ?? null,
     disclosures: dealer.disclosures ?? null,
   };

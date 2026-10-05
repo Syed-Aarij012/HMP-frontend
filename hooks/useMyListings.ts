@@ -11,6 +11,7 @@ type ApiListing = {
   price: string | number;
   price_type?: string;
   published_at: string | null;
+  review_note?: string | null;
   vehicle: {
     id?: string;
     make?: string;
@@ -84,6 +85,8 @@ function mapListing(listing: ApiListing): DashboardCar {
     priceType: listing.price_type,
     vehiclePublicId: vehicle?.id,
     postingDate: listing.published_at ?? new Date().toISOString(),
+    publishedAt: listing.published_at,
+    reviewNote: listing.review_note ?? null,
   };
 }
 

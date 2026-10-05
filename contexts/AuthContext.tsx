@@ -19,6 +19,12 @@ export type AuthUser = {
   // and GET /user — the only way to tell apart a persona like quality_supervisor that isn't
   // its own user_type, just an additional role granted on top of another one.
   roles?: { name: string }[];
+  // The effective permission names (SRS §2 RBAC, config/rbac.php on the backend). The UI uses
+  // these to decide what to show; the API enforces every one of them regardless.
+  permissions?: string[];
+  // SRS §2.2 Customer Support impersonation-view: set when this session is a support agent's
+  // read-only view of the account — the whole UI is watermarked and nothing can be changed.
+  impersonation?: { session_id: number; support_agent: string | null; expires_at: string | null; read_only: true } | null;
   // FR-B-007(b): null means never consented to behavioral tracking/personalization.
   personalization_consent_at?: string | null;
   [key: string]: unknown;
@@ -26,6 +32,15 @@ export type AuthUser = {
 
 export function hasRole(user: AuthUser | null, roleName: string): boolean {
   return Boolean(user?.roles?.some((role) => role.name === roleName));
+}
+
+/** Whether the signed-in user holds a permission (display only — the backend enforces it). */
+export function can(user: AuthUser | null, permission: string): boolean {
+  return Boolean(user?.permissions?.includes(permission));
+}
+
+export function canAny(user: AuthUser | null, permissions: string[]): boolean {
+  return permissions.some((permission) => can(user, permission));
 }
 
 type LoginResult =

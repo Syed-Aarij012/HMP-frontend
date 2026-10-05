@@ -87,4 +87,7 @@ export type DashboardCar = Car & {
   priceType?: string;
   vehiclePublicId?: string;
   postingDate: string;
+  // FR-C-001: null until a moderator first approves it; a declined listing carries the reason.
+  publishedAt?: string | null;
+  reviewNote?: string | null;
 };

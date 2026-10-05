@@ -14,6 +14,8 @@ import {
 import type { NiceSelectOption } from "@/components/common/NiceSelect";
 import FeaturesSpecsFields, { extrasChanges, extrasFromVehicle, type ExtrasForm } from "@/components/sections/add-listing/FeaturesSpecsFields";
 import { useEditListing, type EditableMedia, type EditPayload } from "@/hooks/useEditListing";
+import ListingDocumentsSection from "./ListingDocumentsSection";
+import InstantOfferSection from "./InstantOfferSection";
 
 // Mirrors config('media.max_video_duration_seconds') — the server re-validates it.
 const MAX_VIDEO_SECONDS = 240;
@@ -444,6 +446,15 @@ export default function EditListing({ listingId }: { listingId: string }) {
                   <h1 className="admin-title mb-3">Edit listing</h1>
                   {loading && <p>Loading your listing...</p>}
                   {error && <div className="alert alert-danger">{error}</div>}
+                  {data && <ListingDocumentsSection vehiclePublicId={data.vehicle.id} />}
+                  {data && (
+                    <InstantOfferSection
+                      vehiclePublicId={data.vehicle.id}
+                      vrm={data.vehicle.current_vrm}
+                      mileage={data.vehicle.current_mileage}
+                      listingStatus={data.listing.status}
+                    />
+                  )}
                   {data && (
                     <EditForm
                       data={data}

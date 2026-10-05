@@ -42,21 +42,29 @@ export default function DealerListingCard({ dealer }: DealerListingCardProps) {
             </div>
             <span>{dealer.rating}/5</span>
           </div>
+          {dealer.listingsCount !== undefined && (
+            <div className="fs-14 mt-1">
+              <i className="icon-carus-car" aria-hidden="true" />{" "}
+              <b>{dealer.listingsCount}</b> {dealer.listingsCount === 1 ? "ad" : "ads"} listed
+            </div>
+          )}
         </div>
       </div>
       <div className="dealer-phone">
-        <h4>{dealer.phone}</h4>
-        <a href={`tel:${dealer.phone.replace(/[^\d+]/g, "")}`}>
-          <i className="icon-carus-phonecall" />
-          Show number
-        </a>
+        {dealer.phone && <h4>{dealer.phone}</h4>}
+        {dealer.phone && (
+          <a href={`tel:${dealer.phone.replace(/[^\d+]/g, "")}`}>
+            <i className="icon-carus-phonecall" />
+            Show number
+          </a>
+        )}
       </div>
       <div className="dealer-address">
         <i className="icon-carus-map" />
         {dealer.address}
       </div>
       <div className="dealder-button">
-        <Link href={getDealerHref(dealer)}>Dealer detail</Link>
+        <Link href={getDealerHref(dealer)}>View dealer &amp; ads</Link>
       </div>
     </div>
   );

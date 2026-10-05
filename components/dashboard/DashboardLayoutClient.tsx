@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import DashboardHeader from "@/components/headers/DashboardHeader";
 import DashboardSidebar from "@/components/headers/DashboardSidebar";
 import DashboardOverlay from "@/components/dashboard/DashboardOverlay";
 import { DashboardSidebarProvider } from "@/components/dashboard/DashboardSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { canAccessRoute } from "@/lib/routeAccess";
+import SupportAccessRequests from "@/components/dashboard/SupportAccessRequests";
 
 type DashboardLayoutClientProps = {
   children: ReactNode;
@@ -17,6 +20,7 @@ export default function DashboardLayoutClient({
 }: DashboardLayoutClientProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // Sending a signed-out visitor to the public landing page (not /login) applies whether
@@ -39,7 +43,22 @@ export default function DashboardLayoutClient({
         <div id="pagee" className="clearfix">
           <DashboardHeader />
         </div>
-        {children}
+        <SupportAccessRequests />
+        {/* SRS §2 RBAC route guard (UX only — the API refuses these regardless). */}
+        {canAccessRoute(user, pathname) ? (
+          children
+        ) : (
+          <div id="themesflat-content">
+            <div className="container">
+              <div className="tfcl-dashboard">
+                <h1 className="admin-title mb-3">Not available</h1>
+                <p className="tfcl-empty-data">
+                  Your account doesn&apos;t have access to this page. <Link href="/dashboard">Back to your dashboard</Link>.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardSidebarProvider>
   );

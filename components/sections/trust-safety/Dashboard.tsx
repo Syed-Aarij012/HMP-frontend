@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
-import { hasRole, useAuth } from "@/contexts/AuthContext";
+import { can, useAuth } from "@/contexts/AuthContext";
 import {
   useTrustSafetyCase,
   useTrustSafetyCases,
@@ -378,7 +378,7 @@ function Queue() {
 export default function Dashboard() {
   const { user } = useAuth();
   const isAnalyst =
-    hasRole(user, "trust_safety_analyst") || hasRole(user, "super_admin");
+    can(user, "admin-fraud-actions");
 
   return (
     <div id="themesflat-content">

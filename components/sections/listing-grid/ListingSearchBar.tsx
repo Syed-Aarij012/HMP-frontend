@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { can, useAuth } from "@/contexts/AuthContext";
 import { useSavedSearches } from "@/hooks/useSavedSearches";
 import {
   LISTING_SORTS,
@@ -26,7 +26,7 @@ type Props = {
 export default function ListingSearchBar({ params, interpretation, locationArea, nationalFallback, searchError, onChange }: Props) {
   const [draft, setDraft] = useState(params);
   const { user } = useAuth();
-  const { save } = useSavedSearches();
+  const { save } = useSavedSearches({ autoLoad: false });
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   async function saveSearch() {
@@ -91,7 +91,8 @@ export default function ListingSearchBar({ params, interpretation, locationArea,
           <button type="submit" className="sc-button">
             <span>Search</span>
           </button>
-          {user && (
+          {/* §2.2 P1 "save searches" is a buyer capability. */}
+          {can(user, "save-searches-and-vehicles") && (
             <button type="button" className="sc-button" onClick={saveSearch}>
               <span>Save this search</span>
             </button>

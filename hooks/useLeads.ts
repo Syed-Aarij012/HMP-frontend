@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { hasRole, useAuth } from "@/contexts/AuthContext";
+import { can, useAuth } from "@/contexts/AuthContext";
 import { apiFetch, describeApiError } from "@/lib/api-client";
 
 export type LeadStatus = "new" | "contacted" | "converted" | "lost";
@@ -42,7 +42,7 @@ export const NEXT_STATUSES: Record<LeadStatus, LeadStatus[]> = {
 export function useLeads(status: LeadStatus | "all", page: number) {
   const { user } = useAuth();
   const isDealer = typeof user?.organization_id === "number";
-  const isOrgAdmin = hasRole(user, "dealer_org_admin");
+  const isOrgAdmin = can(user, "manage-org-leads");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);

@@ -187,16 +187,18 @@ export default function DashboardListingsTable({
     );
   };
 
-  // Draft -> live (or withdrawn -> live). The backend refuses with a specific reason when the
-  // listing can't go live yet (V5C status missing, a photo failed its quality check, the
-  // seller not ID-verified...) — thrown through so the row shows it.
+  // FR-C-001 Draft → PendingChecks → Live: a listing that has never been approved is submitted
+  // for review (a moderator puts it live); a previously approved one that was withdrawn is
+  // relisted straight away. The backend refuses with a specific reason either way — thrown
+  // through so the row shows it.
   const handlePublish = async (id: number) => {
     const listing = listings.find((item) => item.id === id);
     if (!listing?.publicId) return;
 
+    const needsReview = listing.rawStatus === "draft" || !listing.publishedAt;
     const response = await apiFetch<{ data: { status: string } }>(`/listings/${listing.publicId}`, {
       method: "PATCH",
-      body: { status: "live" },
+      body: { status: needsReview ? "pending_checks" : "live" },
     });
 
     setListings((current) =>

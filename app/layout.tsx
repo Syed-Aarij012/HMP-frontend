@@ -12,6 +12,7 @@ import { MessagesProvider } from "@/components/common/MessagesContext";
 import { ContactDealerProvider } from "@/components/common/ContactDealerContext";
 import { MobileMenuPathListener } from "@/components/headers/MobileMenu";
 import AllModals from "@/components/modals/AllModals";
+import SupportViewWatermark from "@/components/common/SupportViewWatermark";
 import "./globals.scss";
 
 const figtree = Figtree({
@@ -58,6 +59,7 @@ export default function RootLayout({
               <WowClient />
               <FlatAccordionClient />
               <AllModals />
+              <SupportViewWatermark />
               {children}
               <ScrollTop />
               </StickyHeaderOffsetProvider>

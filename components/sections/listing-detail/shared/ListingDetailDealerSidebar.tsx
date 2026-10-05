@@ -16,7 +16,7 @@ export default function ListingDetailDealerSidebar({
   detailHref = "/listing-detail-v4",
   car,
 }: ListingDetailDealerSidebarProps) {
-  const { setContactDealerTarget } = useContactDealer();
+  const { setContactDealerTarget, canMessageSellers } = useContactDealer();
   return (
     <ListingDetailDealerSidebarShell>
         <div className="widget-dealer-contact widget">
@@ -45,14 +45,16 @@ export default function ListingDetailDealerSidebar({
             <a href="#" className="button-form-2">
               Chat via Whatsapp
             </a>
-            <a
-              data-bs-target="#ModalTogglemess"
-              data-bs-toggle="modal"
-              className="button-form-3"
-              onClick={() => setContactDealerTarget(car)}
-            >
-              Send mesage
-            </a>
+            {canMessageSellers && (
+              <a
+                data-bs-target="#ModalTogglemess"
+                data-bs-toggle="modal"
+                className="button-form-3"
+                onClick={() => setContactDealerTarget(car)}
+              >
+                Send message
+              </a>
+            )}
           </div>
           <div className="map-contact">
             <iframe
