@@ -4,7 +4,7 @@ import Image from "@/components/common/AppImage";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import { getCarDetailHref, similarCars } from "@/data/cars";
+import { similarCars, getCarHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { useSimilarListings } from "@/hooks/useSimilarListings";
 import type { Car } from "@/types/cars";
@@ -100,7 +100,7 @@ export default function SimilarCarsSlider({ currentCar }: SimilarCarsSliderProps
             </div>
             <div className="content">
               <h3 className="link-style-1">
-                <Link href={getCarDetailHref(car.id)}>{car.title}</Link>
+                <Link href={getCarHref(car)}>{car.title}</Link>
               </h3>
               <div className="icon-box flex flex-wrap">
                 <div className="icons flex-three">
@@ -128,7 +128,7 @@ export default function SimilarCarsSlider({ currentCar }: SimilarCarsSliderProps
                 <div className="money fs-24 fw-7 lh-30 text-color-2">
                   ${car.price.toLocaleString()}
                 </div>
-                <Link href={getCarDetailHref(car.id)} className="view-car">
+                <Link href={getCarHref(car)} className="view-car">
                   View <i className="icon-carus-arright" />
                 </Link>
               </div>

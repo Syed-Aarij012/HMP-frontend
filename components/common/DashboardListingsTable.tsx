@@ -187,6 +187,27 @@ export default function DashboardListingsTable({
     );
   };
 
+  // Draft -> live (or withdrawn -> live). The backend refuses with a specific reason when the
+  // listing can't go live yet (V5C status missing, a photo failed its quality check, the
+  // seller not ID-verified...) — thrown through so the row shows it.
+  const handlePublish = async (id: number) => {
+    const listing = listings.find((item) => item.id === id);
+    if (!listing?.publicId) return;
+
+    const response = await apiFetch<{ data: { status: string } }>(`/listings/${listing.publicId}`, {
+      method: "PATCH",
+      body: { status: "live" },
+    });
+
+    setListings((current) =>
+      current.map((item) =>
+        item.id === id
+          ? { ...item, dashboardStatus: mapStatus(response.data.status), rawStatus: response.data.status }
+          : item,
+      ),
+    );
+  };
+
   const handleRenew = async (id: number) => {
     const listing = listings.find((item) => item.id === id);
     if (!listing?.publicId) return;
@@ -334,6 +355,7 @@ export default function DashboardListingsTable({
               onSave={handleSave}
               onMarkSold={handleMarkSold}
               onRenew={handleRenew}
+              onPublish={handlePublish}
             />
           </table>
         </div>

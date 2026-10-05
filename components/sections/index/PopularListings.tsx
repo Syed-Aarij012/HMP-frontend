@@ -2,29 +2,17 @@
 import Link from "next/link";
 import Image from "@/components/common/AppImage";
 import { useMemo, useState } from "react";
-import { popularListingTabs, getCarDetailHref } from "@/data/cars";
+import { getCarHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import { useHomepageListings } from "@/hooks/useHomepageListings";
+import { carsForTab, HOME_LISTING_TABS, useHomepageListings, type HomeListingTab } from "@/hooks/useHomepageListings";
 
 function PopularListings() {
-  const [selectedTab, setSelectedTab] = useState<string | null>(null);
-  const { cars, loading, error } = useHomepageListings();
+  const [activeTab, setActiveTab] = useState<HomeListingTab>("All");
+  const { cars, loading, error } = useHomepageListings(24);
 
-  // Real listings are tagged "New car" only below a near-zero mileage threshold (see
-  // mapApiListingToCar) — almost every real listing is realistically "Used car", so
-  // defaulting to popularListingTabs[0] ("New car") would show an empty tab against real
-  // data. Default to whichever tab actually has something once the cars have loaded,
-  // rather than a fixed tab that may be empty.
-  const activeTab =
-    selectedTab ??
-    popularListingTabs.find((tab) => cars.some((car) => car.listingType?.includes(tab))) ??
-    popularListingTabs[0];
-
-  const filteredCars = useMemo(() => {
-    return cars.filter((car) => car.listingType?.includes(activeTab));
-  }, [cars, activeTab]);
+  const filteredCars = useMemo(() => carsForTab(cars, activeTab), [cars, activeTab]);
 
   return (
     <>
@@ -43,11 +31,11 @@ function PopularListings() {
           >
             <div className="box-tab center">
               <ul className="menu-tab tab-title style flex">
-                {popularListingTabs.map((tab) => (
+                {HOME_LISTING_TABS.map((tab) => (
                   <li
                     key={tab}
                     className={`item-title${activeTab === tab ? " active" : ""}`}
-                    onClick={() => setSelectedTab(tab)}
+                    onClick={() => setActiveTab(tab)}
                     role="tab"
                     aria-selected={activeTab === tab}
                   >
@@ -146,7 +134,7 @@ function PopularListings() {
                         </div>
                         <div className="content">
                           <h3 className="link-style-1">
-                            <Link href={getCarDetailHref(car.id)}>{car.title}</Link>
+                            <Link href={getCarHref(car)}>{car.title}</Link>
                           </h3>
                           <div className="icon-box flex flex-wrap">
                             <div className="icons flex-three">
@@ -178,7 +166,7 @@ function PopularListings() {
                               ${car.price.toLocaleString()}
                             </div>
                             <Link
-                              href={getCarDetailHref(car.id)}
+                              href={getCarHref(car)}
                               className="view-car"
                             >
                               View <i className="icon-carus-arright" />

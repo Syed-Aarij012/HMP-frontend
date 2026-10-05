@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api-client";
+import { useCallback, useEffect, useState } from "react";
+import { apiFetch, describeApiError } from "@/lib/api-client";
 import { mapApiLot, type ApiAuctionFacets, type ApiAuctionLot, type ApiListResponse } from "@/lib/mapApiAuction";
 import type { AuctionLot } from "@/types/auction";
 
@@ -104,5 +104,23 @@ export function useAuctionLots(statusFilter: string | undefined, filters: Auctio
     };
   }, [statusFilter, make, model, bodyType, fuelType, transmission, colour, doors, seats, conditionGrade, yearMin, yearMax, mileageMin, mileageMax, taxBand, saleId]);
 
-  return { lots, facets, loading, error };
+  /**
+   * FR-D-003: Cataloged → Published, for run-list staff (the backend refuses anyone else, and
+   * any lot still missing VAT/V5C/condition-report details). Returns the server's reason on
+   * failure; on success the row's status updates in place.
+   */
+  const publish = useCallback(async (lotId: string): Promise<string | null> => {
+    try {
+      const response = await apiFetch<{ data: ApiAuctionLot }>(`/auction/lots/${lotId}/publish`, { method: "POST" });
+      const updated = mapApiLot(response.data);
+      setLots((current) =>
+        current.map((lot) => (lot.id === lotId ? { ...lot, status: updated.status, publishBlockers: null } : lot)),
+      );
+      return null;
+    } catch (err) {
+      return describeApiError(err, "Could not publish this lot.");
+    }
+  }, []);
+
+  return { lots, facets, loading, error, publish };
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "@/components/common/AppImage";
-import { home05PopularListings, getCarDetailHref } from "@/data/cars";
+import { home05PopularListings, getCarHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -99,7 +99,7 @@ function PopularListings() {
                   </div>
                   <div className="content">
                     <h3 className="link-style-1">
-                      <Link href={getCarDetailHref(car.id)}>{car.title}</Link>
+                      <Link href={getCarHref(car)}>{car.title}</Link>
                     </h3>
                     <div className="icon-box flex flex-wrap">
                       <div className="icons flex-three">
@@ -131,7 +131,7 @@ function PopularListings() {
                         ${car.price.toLocaleString()}
                       </div>
                       <Link
-                        href={getCarDetailHref(car.id)}
+                        href={getCarHref(car)}
                         className="view-car"
                       >
                         View <i className="icon-carus-arright" />

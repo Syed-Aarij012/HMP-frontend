@@ -1,7 +1,7 @@
 import Image from "@/components/common/AppImage";
 import Link from "next/link";
 import ListingCardActions from "@/components/common/ListingCardActions";
-import { formatCarPrice, getCarDetailHref } from "@/data/cars";
+import { formatCarPrice, getCarHref } from "@/data/cars";
 import type { Car } from "@/types/cars";
 
 type CompareVehicleCardProps = {
@@ -29,7 +29,7 @@ function PhotoCountIcon() {
 }
 
 export default function CompareVehicleCard({ car }: CompareVehicleCardProps) {
-  const detailHref = getCarDetailHref(car.id);
+  const detailHref = getCarHref(car);
 
   return (
     <div className="box-car-list hv-one style-1">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { getCarHref } from "@/data/cars";
 import type { Car } from "@/types/cars";
 
 const mileageIconPath =
@@ -89,7 +90,7 @@ export default function DealerInventorySlider({ cars }: DealerInventorySliderPro
             </div>
             <div className="content">
               <h3 className="link-style-1">
-                <Link href="/listing-detail-v1">{car.title}</Link>
+                <Link href={getCarHref(car)}>{car.title}</Link>
               </h3>
               <div className="icon-box flex flex-wrap">
                 <div className="icons flex-three">
@@ -117,7 +118,7 @@ export default function DealerInventorySlider({ cars }: DealerInventorySliderPro
                 <div className="money fs-24 fw-7 lh-30 text-color-2">
                   ${car.price.toLocaleString()}
                 </div>
-                <Link href="/listing-detail-v1" className="view-car">
+                <Link href={getCarHref(car)} className="view-car">
                   View <i className="icon-carus-arright" />
                 </Link>
               </div>

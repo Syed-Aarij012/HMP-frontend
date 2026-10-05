@@ -9,6 +9,7 @@ type DashboardListingTableBodyProps = {
   onSave?: (id: number, updates: ListingEditableFields) => Promise<void>;
   onMarkSold?: (id: number) => Promise<void>;
   onRenew?: (id: number) => Promise<void>;
+  onPublish?: (id: number) => Promise<void>;
 };
 
 export default function DashboardListingTableBody({
@@ -17,6 +18,7 @@ export default function DashboardListingTableBody({
   onSave,
   onMarkSold,
   onRenew,
+  onPublish,
 }: DashboardListingTableBodyProps) {
   return (
     <tbody className="tfcl-table-content">
@@ -28,6 +30,7 @@ export default function DashboardListingTableBody({
           onSave={onSave}
           onMarkSold={onMarkSold}
           onRenew={onRenew}
+          onPublish={onPublish}
         />
       ))}
     </tbody>

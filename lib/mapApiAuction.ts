@@ -71,6 +71,7 @@ export type ApiAuctionLot = {
   closed_at: string | null;
   sale: { id: number | null; name: string | null; sale_type: string | null; status: string | null } | null;
   lane: { id: number; name: string; status: string } | null;
+  publish_blockers?: string[];
   vehicle: ApiAuctionLotVehicle | null;
   condition_report?: ApiConditionReport | null;
 };
@@ -191,6 +192,7 @@ export function mapApiLot(lot: ApiAuctionLot): AuctionLot {
         }
       : null,
     conditionReport: lot.condition_report ? mapApiConditionReport(lot.condition_report) : null,
+    publishBlockers: lot.publish_blockers ?? null,
   };
 }
 

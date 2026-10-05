@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { apiFetch, describeApiError } from "@/lib/api-client";
+import { ApiError, apiFetch, describeApiError } from "@/lib/api-client";
+import { useResumableUpload } from "@/hooks/useResumableUpload";
 import { mapApiTradeFixedPriceListing, type ApiTradeFixedPriceListing } from "@/lib/mapApiTradeFixedPrice";
 import type { TradeFixedPriceListing } from "@/types/tradeFixedPrice";
 
@@ -31,6 +32,7 @@ type ApiVehicle = { data: { id: string } };
  * report) won't be purchasable until one exists — same gate the auction channel has.
  */
 export function useCreateTradeFixedPriceListing() {
+  const { upload, clearSession } = useResumableUpload();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,17 +56,28 @@ export function useCreateTradeFixedPriceListing() {
         },
       });
 
+      // FR-A-010: photos and video go through the resumable chunked sessions — PHP rejects any
+      // single uploaded file over upload_max_filesize (2 MB by default) before Laravel runs,
+      // which a phone photo or any video exceeds.
+      const uploadFile = async (file: File, what: string): Promise<string> => {
+        const sessionId = await upload(file);
+        if (!sessionId) throw new ApiError(`${what} could not be uploaded. Please try again.`, 0, null);
+        return sessionId;
+      };
+
       for (const file of input.photoFiles ?? []) {
-        const formData = new FormData();
-        formData.append("photo", file);
-        await apiFetch(`/vehicles/${vehicleResponse.data.id}/photos`, { method: "POST", body: formData });
+        const uploadSessionId = await uploadFile(file, `Photo ${file.name}`);
+        await apiFetch(`/vehicles/${vehicleResponse.data.id}/photos/from-upload`, { method: "POST", body: { upload_session_id: uploadSessionId } });
+        clearSession(file);
       }
 
       if (input.video) {
-        const formData = new FormData();
-        formData.append("video", input.video.file);
-        formData.append("duration_seconds", String(input.video.durationSeconds));
-        await apiFetch(`/vehicles/${vehicleResponse.data.id}/videos`, { method: "POST", body: formData });
+        const uploadSessionId = await uploadFile(input.video.file, "The video");
+        await apiFetch(`/vehicles/${vehicleResponse.data.id}/videos/from-upload`, {
+          method: "POST",
+          body: { upload_session_id: uploadSessionId, duration_seconds: input.video.durationSeconds },
+        });
+        clearSession(input.video.file);
       }
 
       if (input.spinFrames?.length) {
@@ -88,7 +101,7 @@ export function useCreateTradeFixedPriceListing() {
     } finally {
       setSubmitting(false);
     }
-  }, []);
+  }, [upload, clearSession]);
 
   return { create, submitting, error };
 }

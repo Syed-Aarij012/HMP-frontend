@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import NiceSelect from "@/components/common/NiceSelect";
 import AttachmentsSection from "@/components/sections/add-listing/AttachmentsSection";
+import FeaturesSpecsFields, {
+  EMPTY_EXTRAS,
+  extrasToCreatePayload,
+  type ExtrasForm,
+} from "@/components/sections/add-listing/FeaturesSpecsFields";
 import PhotoGuidanceChecklist from "@/components/sections/add-listing/PhotoGuidanceChecklist";
 import UploadPhotoSection from "@/components/sections/add-listing/UploadPhotoSection";
 import UploadVideoSpinSection, {
@@ -20,6 +25,7 @@ import {
   ADD_LISTING_FUEL_TYPE_OPTIONS,
   ADD_LISTING_PRICE_TYPE_OPTIONS,
   ADD_LISTING_TRANSMISSION_OPTIONS,
+  ADD_LISTING_V5C_STATUS_OPTIONS,
   ADD_LISTING_YEAR_OPTIONS,
   COLOR_OPTIONS,
   DOOR_OPTIONS,
@@ -138,6 +144,8 @@ function AddListing() {
   const [mileage, setMileage] = useState("");
   const [transmission, setTransmission] = useState("");
   const [fuelType, setFuelType] = useState("");
+  const [v5cStatus, setV5cStatus] = useState("");
+  const [extras, setExtras] = useState<ExtrasForm>(EMPTY_EXTRAS);
   const [doors, setDoors] = useState<number | "">("");
   const [seats, setSeats] = useState<number | "">("");
   const [colour, setColour] = useState("");
@@ -183,6 +191,13 @@ function AddListing() {
       return;
     }
 
+    // FR-F-011: a listing can't go live without the V5C status, so ask before creating anything
+    // rather than leaving a draft car behind when publishing is refused.
+    if (!v5cStatus) {
+      setError("Please say whether you have the V5C (logbook) or have applied for one.");
+      return;
+    }
+
     setCreatingVehicle(true);
     try {
       const vehicleResponse = await apiFetch<ApiVehicle>("/vehicles", {
@@ -196,6 +211,9 @@ function AddListing() {
           body_type: bodyType,
           fuel_type: fuelType,
           transmission,
+          v5c_status: v5cStatus,
+          // Additional specs + features checklist (only what the seller filled in).
+          ...extrasToCreatePayload(extras),
           colour: colour || undefined,
           doors: doors === "" ? undefined : doors,
           seats: seats === "" ? undefined : seats,
@@ -474,6 +492,16 @@ function AddListing() {
                             />
                           </div>
                           <div className="form-group">
+                            <label htmlFor="add_listing_v5c">V5C (logbook) *</label>
+                            <NiceSelect
+                              options={ADD_LISTING_V5C_STATUS_OPTIONS}
+                              value={v5cStatus}
+                              defaultValue=""
+                              className="form-control"
+                              onChange={(value) => setV5cStatus(String(value))}
+                            />
+                          </div>
+                          <div className="form-group">
                             <label htmlFor="add_listing_doors">Doors</label>
                             <NiceSelect
                               options={DOOR_OPTIONS}
@@ -513,6 +541,9 @@ function AddListing() {
                           />
                         </div>
                       </div>
+
+                      {/* Optional: buyers see these under Specifications / Features on the listing. */}
+                      <FeaturesSpecsFields value={extras} onChange={setExtras} />
 
                       {error && <div className="alert alert-danger">{error}</div>}
 

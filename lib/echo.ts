@@ -14,6 +14,7 @@ declare global {
 }
 
 let echoInstance: Echo<"reverb"> | null = null;
+let missingKeyWarned = false;
 
 /**
  * FR-D-030..036: the live auction state channel — this app is a stateless bearer-token SPA
@@ -25,6 +26,17 @@ let echoInstance: Echo<"reverb"> | null = null;
 export function getEcho(): Echo<"reverb"> | null {
   if (typeof window === "undefined") return null;
   if (echoInstance) return echoInstance;
+
+  // Without the Reverb app key Pusher throws on construction, which would take the whole
+  // auction page down with it. Live updates are an enhancement over the REST data every
+  // caller already loads, so degrade to "not live" (callers treat null as that) and say why.
+  if (!process.env.NEXT_PUBLIC_REVERB_APP_KEY) {
+    if (!missingKeyWarned) {
+      missingKeyWarned = true;
+      console.warn("Live auction updates are off: NEXT_PUBLIC_REVERB_APP_KEY is not set (see .env.example).");
+    }
+    return null;
+  }
 
   window.Pusher = Pusher;
 
