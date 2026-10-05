@@ -7,6 +7,16 @@ import type { Car } from "@/types/cars";
 
 type FacetCounts = Record<string, number>;
 
+// "All" comes first and is the default: real listings are tagged "New car" only under a
+// near-zero mileage, so splitting the live listings into New/Used tabs and defaulting to
+// whichever has cars hid every other car behind a tab nobody had clicked.
+export const HOME_LISTING_TABS = ["All", "New car", "Used car"] as const;
+export type HomeListingTab = (typeof HOME_LISTING_TABS)[number];
+
+export function carsForTab(cars: Car[], tab: HomeListingTab): Car[] {
+  return tab === "All" ? cars : cars.filter((car) => car.listingType?.includes(tab));
+}
+
 export type HomepageListingsResult = {
   cars: Car[];
   makeCounts: FacetCounts;

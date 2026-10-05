@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "@/components/common/AppImage";
-import { recommendedCars, getCarDetailHref } from "@/data/cars";
+import { recommendedCars, getCarHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -99,7 +99,7 @@ function RecommendedCars() {
                   </div>
                   <div className="content">
                     <h3 className="link-style-1">
-                      <Link href={getCarDetailHref(car.id)}>{car.title}</Link>
+                      <Link href={getCarHref(car)}>{car.title}</Link>
                     </h3>
                     <div className="icon-box flex flex-wrap">
                       <div className="icons flex-three">
@@ -130,7 +130,7 @@ function RecommendedCars() {
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
                         ${car.price.toLocaleString()}
                       </div>
-                      <Link href={getCarDetailHref(car.id)} className="view-car">
+                      <Link href={getCarHref(car)} className="view-car">
                         View <i className="icon-carus-arright" />
                       </Link>
                     </div>

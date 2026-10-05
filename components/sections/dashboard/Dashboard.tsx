@@ -9,7 +9,8 @@ function Dashboard() {
   const { listings, loading, error } = useMyListings();
   const { favoriteIds } = useListingActions();
 
-  const pendingCount = listings.filter((listing) => listing.dashboardStatus === "pending").length;
+  // Not live yet: never-published drafts and listings still in pending checks.
+  const pendingCount = listings.filter((listing) => listing.dashboardStatus === "draft" || listing.dashboardStatus === "pending").length;
   const soldCount = listings.filter((listing) => listing.dashboardStatus === "sold").length;
 
   return (
@@ -83,7 +84,7 @@ function Dashboard() {
                                 </svg>
                               </div>
                               <div className="content-overview">
-                                <h5>Pending</h5>
+                                <h5>Drafts &amp; pending</h5>
                                 <div className="tfcl-dashboard-title">
                                   <span>
                                     <b>{loading ? "-" : pendingCount}</b>

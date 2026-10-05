@@ -1,4 +1,15 @@
-export type DashboardListingStatus = "approved" | "pending" | "sold";
+// "approved" is a live listing (the key predates the real lifecycle and the template's mock
+// data still uses it); the rest are the backend's own listing states, so the dashboard shows
+// what a listing actually is instead of calling everything but live/sold "pending".
+export type DashboardListingStatus =
+  | "approved"
+  | "pending"
+  | "draft"
+  | "under_offer"
+  | "reserved"
+  | "withdrawn"
+  | "expired"
+  | "sold";
 
 export type CarSearchExtras = {
   distanceMiles?: number | null;
@@ -45,11 +56,15 @@ export type Car = {
   filterColor?: string;
   filterYear?: number;
   filterFeatures?: string[];
+  // Additional specifications the seller declared (engine, power, owners, service history...).
+  specs?: { label: string; value: string }[];
   mapPosition?: [number, number];
   // Real listings only: the full real photo set (QA-passed vehicle media) and the
   // backend's own ULID, needed by anything that must call the API about this exact
   // listing again (favoriting, reviews) rather than just displaying it.
   images?: string[];
+  // The listing's walk-around video(s) (QA-passed only), shown in a player on the detail page.
+  videos?: { id: number; url: string; durationSeconds: number | null }[];
   publicId?: string;
   // FR-C-030: the raw backend lifecycle status (live/reserved/sold/...) — needed to gate the
   // "Buy now" direct-buy action, which only makes sense while a listing is actually live.
@@ -68,6 +83,8 @@ export type Car = {
 export type DashboardCar = Car & {
   dashboardImage: string;
   dashboardStatus: DashboardListingStatus;
+  // fixed | offers_invited — needed so editing a listing doesn't reset its price type.
+  priceType?: string;
   vehiclePublicId?: string;
   postingDate: string;
 };

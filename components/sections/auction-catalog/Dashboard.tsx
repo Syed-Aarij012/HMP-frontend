@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { hasRole, useAuth } from "@/contexts/AuthContext";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import NiceSelect, { type NiceSelectOption } from "@/components/common/NiceSelect";
 import { DEFAULT_AUCTION_LOT_FILTERS, useAuctionLots, type AuctionLotFilters } from "@/hooks/useAuctionLots";
+import { describeBlocker } from "@/lib/auctionPublishBlockers";
 import type { ApiAuctionFacets } from "@/lib/mapApiAuction";
 import type { AuctionLot } from "@/types/auction";
 
@@ -117,7 +119,17 @@ function formatPrice(amount: number | null) {
   return `£${amount.toLocaleString()}`;
 }
 
-function LotRow({ lot }: { lot: AuctionLot }) {
+function LotRow({
+  lot,
+  canPublish,
+  publishing,
+  onPublish,
+}: {
+  lot: AuctionLot;
+  canPublish: boolean;
+  publishing: boolean;
+  onPublish: (lotId: string) => void;
+}) {
   const title = lot.vehicle
     ? [lot.vehicle.year, lot.vehicle.make, lot.vehicle.model, lot.vehicle.derivative]
         .filter(Boolean)
@@ -141,9 +153,23 @@ function LotRow({ lot }: { lot: AuctionLot }) {
       <td>{formatPrice(lot.currentPrice)}</td>
       <td>{lot.saleName ?? "-"}</td>
       <td>
-        <Link href={`/auction/${lot.id}`} className="sc-button">
-          <span>View lot</span>
-        </Link>
+        <div className="flex gap-10 align-center" style={{ flexWrap: "wrap" }}>
+          <Link href={`/auction/${lot.id}`} className="sc-button">
+            <span>View lot</span>
+          </Link>
+          {/* FR-D-003: run-list staff publish a cataloged lot once nothing is blocking it. */}
+          {canPublish && lot.status === "cataloged" && lot.publishBlockers !== null && (
+            lot.publishBlockers.length === 0 ? (
+              <button type="button" className="sc-button" disabled={publishing} onClick={() => onPublish(lot.id)}>
+                <span>{publishing ? "Publishing..." : "Publish"}</span>
+              </button>
+            ) : (
+              <span className="fs-13 text-color-1" title="These must be resolved before the lot can be published">
+                Not ready: {lot.publishBlockers.map(describeBlocker).join("; ")}
+              </span>
+            )
+          )}
+        </div>
       </td>
     </tr>
   );
@@ -152,7 +178,18 @@ function LotRow({ lot }: { lot: AuctionLot }) {
 function Dashboard() {
   const [status, setStatus] = useState("");
   const [filters, setFilters] = useState(DEFAULT_AUCTION_LOT_FILTERS);
-  const { lots, facets, loading, error } = useAuctionLots(status || undefined, filters);
+  const { lots, facets, loading, error, publish } = useAuctionLots(status || undefined, filters);
+  const { user } = useAuth();
+  const canPublish = hasRole(user, "auctioneer") || hasRole(user, "super_admin");
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [publishError, setPublishError] = useState<string | null>(null);
+
+  async function handlePublish(lotId: string) {
+    setPublishingId(lotId);
+    setPublishError(null);
+    setPublishError(await publish(lotId));
+    setPublishingId(null);
+  }
 
   return (
     <div id="themesflat-content">
@@ -185,6 +222,7 @@ function Dashboard() {
 
                   {loading && <p>Loading the auction catalog...</p>}
                   {error && <div className="alert alert-danger">{error}</div>}
+                  {publishError && <div className="alert alert-danger">{publishError}</div>}
 
                   {!loading && !error && lots.length === 0 && (
                     <p className="tfcl-empty-data">No lots match this filter right now.</p>
@@ -205,7 +243,13 @@ function Dashboard() {
                         </thead>
                         <tbody>
                           {lots.map((lot) => (
-                            <LotRow key={lot.id} lot={lot} />
+                            <LotRow
+                              key={lot.id}
+                              lot={lot}
+                              canPublish={canPublish}
+                              publishing={publishingId === lot.id}
+                              onPublish={handlePublish}
+                            />
                           ))}
                         </tbody>
                       </table>

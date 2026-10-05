@@ -72,6 +72,10 @@ export type AuctionLot = {
   laneName: string | null;
   vehicle: AuctionLotVehicle | null;
   conditionReport: ConditionReport | null;
+  // What still stops a Cataloged lot from being published (codes — see
+  // lib/auctionPublishBlockers). Only sent for the consignor's own lots and to run-list
+  // staff; null when not provided, [] when the lot is ready to publish.
+  publishBlockers: string[] | null;
 };
 
 export type AuctionBid = {

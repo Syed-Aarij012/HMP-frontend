@@ -4,6 +4,8 @@ import ScrollspySection from "@/components/common/ScrollspySection";
 import ListingDetailActionsSection from "./ListingDetailActionsSection";
 import ListingDetailDescriptionSection from "./ListingDetailDescriptionSection";
 import ListingDetailOverviewSection from "./ListingDetailOverviewSection";
+import ListingDetailSpecsSection from "./ListingDetailSpecsSection";
+import ListingDetailVideoSection from "./ListingDetailVideoSection";
 import ListingDetailFeaturesSection from "./ListingDetailFeaturesSection";
 import ListingDetailLoanCalculatorSection from "./ListingDetailLoanCalculatorSection";
 import ListingDetailLocationSection from "./ListingDetailLocationSection";
@@ -24,6 +26,8 @@ export default function ListingDetailScrollspySections({
     <>
       <ListingDetailActionsSection car={car} />
       <ListingDetailDescriptionSection car={car} />
+      <ListingDetailVideoSection car={car} />
+      <ListingDetailSpecsSection car={car} />
       {showOverview ? (
         <ScrollspySection id="scrollspyHeading1">
           <ListingDetailOverviewSection car={car} />

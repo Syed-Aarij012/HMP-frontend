@@ -1,3 +1,4 @@
+import { specRows, type VehicleExtrasApi } from "@/lib/vehicleExtras";
 import type { Car } from "@/types/cars";
 
 export type ApiListing = {
@@ -6,7 +7,7 @@ export type ApiListing = {
   price: string | number;
   description?: string | null;
   published_at: string | null;
-  vehicle: {
+  vehicle: ({
     make?: string;
     model?: string;
     derivative?: string;
@@ -18,8 +19,8 @@ export type ApiListing = {
     seats?: number;
     year?: number;
     current_mileage?: number;
-    photos?: { id: number; type: string; url: string; is_360: boolean; sequence: number }[];
-  } | null;
+    photos?: { id: number; type: string; url: string; is_360: boolean; sequence: number; duration_seconds?: number | null }[];
+  } & VehicleExtrasApi) | null;
   condition_report?: {
     condition_grade: number | null;
     mechanical_grade: string | null;
@@ -117,12 +118,19 @@ export function mapApiListingToCar(listing: ApiListing): Car {
     .sort((a, b) => a.sequence - b.sequence)
     .map((photo) => photo.url);
   const galleryImages = images.length > 0 ? images : ["/assets/images/car-list/car1.webp"];
+  // Walk-around videos were returned by the API but dropped here, so no listing page ever
+  // showed one. Kept in upload order alongside the photos.
+  const videos = (vehicle?.photos ?? [])
+    .filter((photo) => photo.type === "video")
+    .sort((a, b) => a.sequence - b.sequence)
+    .map((video) => ({ id: video.id, url: video.url, durationSeconds: video.duration_seconds ?? null }));
 
   return {
     id: hashListingId(listing.id),
     href: `/listing-detail-v1/${listing.id}`,
     image: galleryImages[0],
     images: galleryImages,
+    videos,
     publicId: listing.id,
     rawStatus: listing.status,
     title: title || "Untitled listing",
@@ -148,6 +156,9 @@ export function mapApiListingToCar(listing: ApiListing): Car {
     filterSeats: vehicle?.seats,
     filterColor: vehicle?.colour,
     filterYear: vehicle?.year,
+    // The seller's features checklist and additional specifications.
+    filterFeatures: vehicle?.features?.length ? vehicle.features : undefined,
+    specs: specRows(vehicle),
     conditionReport: listing.condition_report
       ? {
           conditionGrade: listing.condition_report.condition_grade,

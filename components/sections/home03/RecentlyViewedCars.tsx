@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "@/components/common/AppImage";
-import { home03RecentlyViewedCars, getCarDetailHref } from "@/data/cars";
+import { home03RecentlyViewedCars, getCarHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -95,7 +95,7 @@ function RecentlyViewedCars() {
                   </div>
                   <div className="content">
                     <h3 className="link-style-1">
-                      <Link href={getCarDetailHref(car.id)}>{car.title}</Link>
+                      <Link href={getCarHref(car)}>{car.title}</Link>
                     </h3>
                     <div className="icon-box flex flex-wrap">
                       <div className="icons flex-three">
@@ -127,7 +127,7 @@ function RecentlyViewedCars() {
                         ${car.price.toLocaleString()}
                       </div>
                       <Link
-                        href={getCarDetailHref(car.id)}
+                        href={getCarHref(car)}
                         className="view-car"
                       >
                         View <i className="icon-carus-arright" />

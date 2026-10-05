@@ -908,3 +908,32 @@ button.specs-features {
     line-height: 1;
   }
 }
+
+// Listing status badges for the real lifecycle states (the template CSS only styles pending /
+// publish / sold). Same shape as .status-pending etc. in public/assets/css/styles.css.
+.tfcl-table-listing .column-status .tfcl-listing-status {
+  &.status-draft,
+  &.status-withdrawn {
+    background: rgba(107, 114, 128, 0.1);
+    border-color: rgba(107, 114, 128, 0.18);
+    color: #4b5563;
+  }
+
+  &.status-under-offer {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #b45309;
+  }
+
+  &.status-reserved {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: rgba(124, 58, 237, 0.18);
+    color: #6d28d9;
+  }
+
+  &.status-expired {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.16);
+    color: #b91c1c;
+  }
+}

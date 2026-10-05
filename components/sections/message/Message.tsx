@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "@/components/common/AppImage";
+import Link from "next/link";
 import {
   useEffect,
   useMemo,
@@ -18,9 +19,11 @@ import { useConversation } from "@/hooks/useConversation";
 import QuickReplies from "./QuickReplies";
 import { describeApiError } from "@/lib/api-client";
 import {
+  conversationListingTitle,
   conversationTitle,
   otherPartyAvatar,
   otherPartyName,
+  otherPartyRoleLabel,
   type ApiConversation,
   type ApiMessage,
 } from "@/lib/mapApiConversation";
@@ -197,9 +200,16 @@ function ChatMessageBubble({
       <div className="client-chat mb-3">
         <div className="client-inner">
           <div className="avatar">
-            <Image src={avatar} alt="avatar" width={60} height={60} />
+            <Image
+              src={message.sender?.avatar_url ?? avatar}
+              alt={message.sender?.name ?? "avatar"}
+              width={60}
+              height={60}
+            />
           </div>
           <div className="content">
+            {/* On a dealer's side any teammate can answer — say who actually wrote this one. */}
+            {message.sender?.name && <div className="fs-13 fw-6 mb-1">{message.sender.name}</div>}
             <p>{renderMessageText(message.body)}</p>
             {message.attachments?.length ? (
               <div className="attrach">
@@ -462,7 +472,7 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
                                     <div className="avatar">
                                       <Image
                                         src={otherPartyAvatar(conversation, viewerId) ?? PLACEHOLDER_AVATAR}
-                                        alt={conversationTitle(conversation, viewerId)}
+                                        alt={otherPartyName(conversation, viewerId)}
                                         width={60}
                                         height={60}
                                       />
@@ -470,13 +480,16 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
                                     <div className="content">
                                       <div className="inner">
                                         <div className="name">
-                                          {conversationTitle(conversation, viewerId)}
+                                          {otherPartyName(conversation, viewerId)}
                                         </div>
                                         <span className="date">
                                           {formatListDate(conversation.last_message_at)}
                                         </span>
                                       </div>
-                                      <p>{truncatePreview(preview)}</p>
+                                      <p>
+                                        {conversationListingTitle(conversation) ? `${conversationListingTitle(conversation)}: ` : ""}
+                                        {truncatePreview(preview)}
+                                      </p>
                                     </div>
                                   </button>
                                 </li>
@@ -500,10 +513,18 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
                               <div className="content">
                                 <div className="inner">
                                   <div className="name">
-                                    {conversationTitle(activeConversation, viewerId)}
+                                    {activeConversation.other_party?.profile_path ? (
+                                      <Link href={activeConversation.other_party.profile_path}>
+                                        {otherPartyName(activeConversation, viewerId)}
+                                      </Link>
+                                    ) : (
+                                      otherPartyName(activeConversation, viewerId)
+                                    )}
                                   </div>
                                   <span className="nofi">
-                                    {otherPartyName(activeConversation, viewerId)}
+                                    {[otherPartyRoleLabel(activeConversation), conversationListingTitle(activeConversation)]
+                                      .filter(Boolean)
+                                      .join(" · ")}
                                   </span>
                                 </div>
                               </div>
