@@ -50,7 +50,7 @@ export default function RoleHome() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-1">Welcome{user?.name ? `, ${user.name.split(" ")[0]}` : ""}</h1>
-                  <p className="text-color-1 mb-4" style={{ textTransform: "capitalize" }}>
+                  <p className="text-color-2 mb-4" style={{ textTransform: "capitalize" }}>
                     {roleNames.length > 0 ? roleNames.join(" · ") : "Your account"}
                   </p>
 
@@ -62,7 +62,7 @@ export default function RoleHome() {
 
                   {canFavorite && (
                     <div className="tfcl-card p-3 mb-4" style={{ maxWidth: 280 }}>
-                      <div className="text-color-1">Favourites</div>
+                      <div className="text-color-2">Favourites</div>
                       <div style={{ fontSize: 28, fontWeight: 700 }}>{favoriteIds.length}</div>
                     </div>
                   )}
@@ -72,7 +72,7 @@ export default function RoleHome() {
                       <div key={shortcut.href} className="col-sm-6 col-xl-4 mb-3">
                         <Link href={shortcut.href} className="tfcl-card p-3 d-block h-100" style={{ color: "inherit" }}>
                           <h5 className="mb-1">{shortcut.title}</h5>
-                          <div className="text-color-1">{shortcut.text}</div>
+                          <div className="text-color-2">{shortcut.text}</div>
                         </Link>
                       </div>
                     ))}

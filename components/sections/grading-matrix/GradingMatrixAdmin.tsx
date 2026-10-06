@@ -67,7 +67,7 @@ export default function GradingMatrixAdmin() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Grading matrix</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Draft a new version, then have a different Quality Supervisor approve it before it takes effect.
                   </p>
 

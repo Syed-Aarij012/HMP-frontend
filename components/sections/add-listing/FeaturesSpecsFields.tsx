@@ -118,7 +118,7 @@ export default function FeaturesSpecsFields({
     <div className="tfcl-card p-3 mb-3">
       <fieldset disabled={disabled} style={{ border: 0, padding: 0, margin: 0 }}>
         <h4 className="mb-1">Additional specifications</h4>
-        <p className="text-color-1 fs-13 mb-3">Optional, but buyers look for these. They&apos;re shown on your listing.</p>
+        <p className="text-color-2 fs-13 mb-3">Optional, but buyers look for these. They&apos;re shown on your listing.</p>
         <div className="row">
           <div className="col-md-6 col-lg-3 mb-3">
             <label htmlFor="extras_engine" className="mb-1">Engine size (cc)</label>
@@ -161,7 +161,7 @@ export default function FeaturesSpecsFields({
         </div>
 
         <h4 className="mt-2 mb-1">Features</h4>
-        <p className="text-color-1 fs-13 mb-2">
+        <p className="text-color-2 fs-13 mb-2">
           Tick everything the car has. {value.features.length > 0 ? `${value.features.length} selected.` : ""}
         </p>
         <div className="row">
@@ -213,7 +213,7 @@ export default function FeaturesSpecsFields({
             <span>Add</span>
           </button>
         </div>
-        {atLimit && <p className="text-color-1 fs-13 mt-1 mb-0">That&apos;s the maximum of {MAX_FEATURES} features.</p>}
+        {atLimit && <p className="text-color-2 fs-13 mt-1 mb-0">That&apos;s the maximum of {MAX_FEATURES} features.</p>}
       </fieldset>
     </div>
   );

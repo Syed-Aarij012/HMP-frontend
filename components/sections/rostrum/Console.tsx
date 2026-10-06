@@ -77,7 +77,7 @@ export default function Console() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-1">Rostrum console</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Run your lane: start, pause or skip, take hall bids and hammer. Bidders appear as paddle numbers only.
                   </p>
 
@@ -142,7 +142,7 @@ export default function Console() {
                           <div className="col-md-6">
                             <div className="tfcl-card p-3 mb-3">
                               <h4 className="mb-1">{lot.vehicle ?? "Current lot"}</h4>
-                              <p className="text-color-1 mb-2 text-capitalize">{lot.status.replace("_", " ")}</p>
+                              <p className="text-color-2 mb-2 text-capitalize">{lot.status.replace("_", " ")}</p>
                               <p style={{ fontSize: 28 }} className="mb-1">
                                 <b>{lot.currentPrice !== null ? `£${lot.currentPrice.toLocaleString()}` : "No bids"}</b>
                               </p>
@@ -155,7 +155,7 @@ export default function Console() {
                                 </p>
                               )}
                               {state.lane.saleType === "timed_online" && (
-                                <p className="text-color-1">Timed sale: this lot closes automatically.</p>
+                                <p className="text-color-2">Timed sale: this lot closes automatically.</p>
                               )}
 
                               <div className="flex gap-10 mt-2" style={{ flexWrap: "wrap" }}>

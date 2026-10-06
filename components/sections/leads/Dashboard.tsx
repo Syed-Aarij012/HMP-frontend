@@ -28,9 +28,9 @@ function OfferCell({ offer }: { offer: Lead["offer"] }) {
 
   return (
     <>
-      {pounds(offer.amount)} <span className="text-color-1 text-capitalize">({offer.status})</span>
+      {pounds(offer.amount)} <span className="text-color-2 text-capitalize">({offer.status})</span>
       {offer.part_exchange_appraisal && (
-        <div className="fs-13 text-color-1">
+        <div className="fs-13 text-color-2">
           + part-exchange {range ? `${pounds(range.low)}–${pounds(range.high)}` : "(to be appraised)"} at{" "}
           {offer.part_exchange_appraisal.mileage.toLocaleString("en-GB")} mi
         </div>
@@ -60,7 +60,7 @@ export default function Dashboard() {
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-1">Leads</h1>
                   {isDealer && (
-                    <p className="text-color-1 mb-3">
+                    <p className="text-color-2 mb-3">
                       {isOrgAdmin ? "Every lead across your organization." : "Leads routed to you."}
                     </p>
                   )}
@@ -89,7 +89,7 @@ export default function Dashboard() {
                           <option value="lost">Lost</option>
                           <option value="all">All</option>
                         </select>
-                        <span className="text-color-1">{total} lead(s)</span>
+                        <span className="text-color-2">{total} lead(s)</span>
                       </div>
 
                       {loading && <p>Loading leads...</p>}
@@ -118,7 +118,7 @@ export default function Dashboard() {
                                   <td>{when(lead.created_at)}</td>
                                   <td>
                                     <Link href={`/listing-detail-v1/${lead.listing.id}`}>{lead.listing.title ?? "Listing"}</Link>
-                                    <div className="fs-13 text-color-1">
+                                    <div className="fs-13 text-color-2">
                                       {pounds(lead.listing.price)} · <span className="text-capitalize">{lead.listing.status}</span>
                                     </div>
                                   </td>
@@ -127,7 +127,7 @@ export default function Dashboard() {
                                   <td>
                                     <OfferCell offer={lead.offer} />
                                   </td>
-                                  {isOrgAdmin && <td>{lead.routed_to?.name ?? <span className="text-color-1">Unassigned</span>}</td>}
+                                  {isOrgAdmin && <td>{lead.routed_to?.name ?? <span className="text-color-2">Unassigned</span>}</td>}
                                   <td>
                                     <span className={`badge ${STATUS_CLASS[lead.status]} text-capitalize`}>{lead.status}</span>
                                   </td>

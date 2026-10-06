@@ -22,7 +22,7 @@ export default function Dashboard() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">My appointments</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     {hasDealerSide
                       ? "Test drives booked on your listings, and any you have booked yourself."
                       : "Test drives and dealer visits you have booked."}
@@ -64,7 +64,7 @@ export default function Dashboard() {
                                       ) : null}
                                     </>
                                   ) : (
-                                    <span className="text-color-1">You</span>
+                                    <span className="text-color-2">You</span>
                                   )}
                                 </td>
                               )}

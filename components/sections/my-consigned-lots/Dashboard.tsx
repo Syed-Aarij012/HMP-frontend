@@ -32,7 +32,7 @@ function NextSteps({
   const blockers = lot.publishBlockers;
 
   if (blockers.length === 0) {
-    return <span className="text-color-1">Ready — waiting for the auction team to publish it.</span>;
+    return <span className="text-color-2">Ready — waiting for the auction team to publish it.</span>;
   }
 
   const yours = blockers.filter((code) => (CONSIGNOR_FIXABLE as string[]).includes(code));

@@ -39,7 +39,7 @@ export default function LotCountdown({ closesAt, offsetMs }: { closesAt: string 
       <span style={{ color: closed ? "#999" : urgent ? "#e74c3c" : "inherit", fontVariantNumeric: "tabular-nums" }}>
         {closed ? "ended - concluding..." : format(remaining)}
       </span>
-      {urgent && <span className="text-color-1"> (a bid now extends the timer)</span>}
+      {urgent && <span className="text-color-2"> (a bid now extends the timer)</span>}
     </p>
   );
 }

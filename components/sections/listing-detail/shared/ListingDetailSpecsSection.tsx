@@ -21,7 +21,7 @@ export default function ListingDetailSpecsSection({ car }: ListingDetailSpecsSec
         <dl className="row mb-0">
           {specs.map((spec) => (
             <div key={spec.label} className="col-sm-6 col-lg-4 mb-3">
-              <dt className="fw-6 text-color-1 fs-13 mb-1">{spec.label}</dt>
+              <dt className="fw-6 text-color-2 fs-13 mb-1">{spec.label}</dt>
               <dd className="mb-0">{spec.value}</dd>
             </div>
           ))}

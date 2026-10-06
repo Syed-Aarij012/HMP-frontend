@@ -22,7 +22,7 @@ export default function InspectionLookup() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-2">My inspections</h1>
-                  <p className="text-color-1 mb-3">The vehicles assigned to you. Open one to capture it and write its condition report.</p>
+                  <p className="text-color-2 mb-3">The vehicles assigned to you. Open one to capture it and write its condition report.</p>
 
                   {loading && <p>Loading your tasks...</p>}
                   {error && <div className="alert alert-danger">{error}</div>}

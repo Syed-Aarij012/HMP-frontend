@@ -99,7 +99,7 @@ export default function DealerAnalyticsChart({ series }: { series: Series }) {
         {lines.map((line) => (
           <span key={line.key} className="flex gap-10" style={{ alignItems: "center" }}>
             <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: line.color }} />
-            <span className="text-color-1">{line.label}</span>
+            <span className="text-color-2">{line.label}</span>
           </span>
         ))}
       </div>

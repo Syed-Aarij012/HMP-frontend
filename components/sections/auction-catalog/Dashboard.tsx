@@ -164,7 +164,7 @@ function LotRow({
                 <span>{publishing ? "Publishing..." : "Publish"}</span>
               </button>
             ) : (
-              <span className="fs-13 text-color-1" title="These must be resolved before the lot can be published">
+              <span className="fs-13 text-color-2" title="These must be resolved before the lot can be published">
                 Not ready: {lot.publishBlockers.map(describeBlocker).join("; ")}
               </span>
             )

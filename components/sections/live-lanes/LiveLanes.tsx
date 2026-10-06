@@ -36,7 +36,7 @@ function FollowedLaneCard({
     <div className="col-md-6 mb-3">
       <div className="tfcl-card p-3" style={isFocus ? { outline: "2px solid #2ecc71" } : undefined}>
         <h4 className="mb-1">
-          {lane.name} <span className="text-color-1 text-capitalize">({lane.status})</span>
+          {lane.name} <span className="text-color-2 text-capitalize">({lane.status})</span>
         </h4>
         {lane.status === "paused" && <p style={{ color: "#e67e22" }}>Paused by the auctioneer.</p>}
         {!lane.currentLot && <p className="tfcl-empty-data">No lot on this lane.</p>}
@@ -92,7 +92,7 @@ export default function LiveLanes() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-1">Live lanes</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Follow up to {maxLanes} lanes at once. Choose one as your bidding focus to open its lot.
                   </p>
 
@@ -115,10 +115,10 @@ export default function LiveLanes() {
                             disabled={!selected.includes(lane.id) && atLimit}
                             onChange={() => toggle(lane.id)}
                           />{" "}
-                          {lane.saleName} - {lane.name} <span className="text-color-1">({lane.status})</span>
+                          {lane.saleName} - {lane.name} <span className="text-color-2">({lane.status})</span>
                         </label>
                       ))}
-                      {atLimit && <p className="text-color-1">You are following the maximum number of lanes.</p>}
+                      {atLimit && <p className="text-color-2">You are following the maximum number of lanes.</p>}
                     </div>
                   )}
 

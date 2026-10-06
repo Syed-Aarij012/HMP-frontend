@@ -119,7 +119,7 @@ export default function OrderDetail({ publicId }: { publicId: string }) {
                             Right to cancel: {order.disclosure.rightToCancelDays} days (until{" "}
                             {formatDate(order.disclosure.cancellationDeadline)})
                           </p>
-                          <p className="mb-0 text-color-1">
+                          <p className="mb-0 text-color-2">
                             The full information and cancellation pack, including a model cancellation form, is in
                             your documents below.
                           </p>

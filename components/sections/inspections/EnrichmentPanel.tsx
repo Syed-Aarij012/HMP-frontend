@@ -52,7 +52,7 @@ export default function EnrichmentPanel({ vehiclePublicId, vin, onEnriched }: { 
 
         <div className="col-md-6">
           <div className="flex gap-10 mb-1">
-            <span className="text-color-1">VIN: {vin}</span>
+            <span className="text-color-2">VIN: {vin}</span>
             <button type="button" className="sc-button" disabled={vinLoading} onClick={runVinDecode}>
               <span>{vinLoading ? "Decoding..." : "Decode VIN"}</span>
             </button>

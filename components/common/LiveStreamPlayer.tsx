@@ -21,7 +21,7 @@ export default function LiveStreamPlayer({ laneId, compact = false }: LiveStream
   if (!stream || !stream.available) {
     return (
       <div
-        className="tfcl-card p-3 mb-3 text-center text-color-1"
+        className="tfcl-card p-3 mb-3 text-center text-color-2"
         style={compact ? { padding: "12px" } : undefined}
       >
         <p className="mb-0">Video feed not connected for this lane. Bidding is unaffected.</p>

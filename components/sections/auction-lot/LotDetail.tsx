@@ -104,7 +104,7 @@ function StepUpPrompt({
   return (
     <form onSubmit={handleSubmit} className="tfcl-card mb-3">
       <h4 className="mb-2">Step-up verification required</h4>
-      <p className="text-color-1 mb-2">Enter a fresh code from your authenticator app to confirm this bid.</p>
+      <p className="text-color-2 mb-2">Enter a fresh code from your authenticator app to confirm this bid.</p>
       {error && <div className="alert alert-danger mb-2">{error}</div>}
       <div className="form-group">
         <input
@@ -245,7 +245,7 @@ export default function LotDetail({ publicId }: { publicId: string }) {
                               .join(" ")
                           : "Lot"}
                       </h1>
-                      <p className="text-color-1 mb-3">
+                      <p className="text-color-2 mb-3">
                         {lot.saleName} &middot; Status: <span className="text-capitalize">{lot.status.replace("_", " ")}</span>
                         {lot.isHmpAssured && " · HMP Assured"}
                         {" · "}
@@ -277,7 +277,7 @@ export default function LotDetail({ publicId }: { publicId: string }) {
                           {isBiddable && nextBid && (
                             <p>
                               <b>Next minimum bid:</b> £{nextBid.minimum.toLocaleString()}{" "}
-                              <span className="text-color-1">(increment £{nextBid.increment.toLocaleString()})</span>{" "}
+                              <span className="text-color-2">(increment £{nextBid.increment.toLocaleString()})</span>{" "}
                               <button
                                 type="button"
                                 className="sc-button"

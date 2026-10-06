@@ -62,7 +62,7 @@ export default function AuthPage({ initialMode }: { initialMode: "signin" | "sig
           {!loading && user ? (
             <div className="text-center">
               <h1>You&apos;re signed in</h1>
-              <p className="text-color-1">
+              <p className="text-color-2">
                 {user.name} · <span style={{ textTransform: "capitalize" }}>{roleSummary(user)}</span>
               </p>
               <div className="d-flex gap-2 justify-content-center flex-wrap">
@@ -84,7 +84,7 @@ export default function AuthPage({ initialMode }: { initialMode: "signin" | "sig
               {mode === "signin" ? (
                 <>
                   <h1>Welcome back</h1>
-                  <p className="text-color-1 mb-3">Sign in to your HMP account.</p>
+                  <p className="text-color-2 mb-3">Sign in to your HMP account.</p>
                   <SignInForm onSignedIn={go} />
                   <p className="fs-14 mt-3 mb-0 text-center">
                     New to HMP? <button type="button" className="hmp-auth-link" onClick={() => setMode("signup")}>Create an account</button>

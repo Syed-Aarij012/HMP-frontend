@@ -115,7 +115,7 @@ function IdentityVerificationGate() {
             </div>
           </form>
         )}
-        {error && <p className="text-color-1 mt-2">{error}</p>}
+        {error && <p className="text-color-2 mt-2">{error}</p>}
       </div>
     </div>
   );
@@ -381,8 +381,8 @@ function AddListing() {
                                 {vrmLoading ? "Looking up..." : "Look up"}
                               </button>
                             </div>
-                            {vrmMessage && <p className="text-color-1 mt-1">{vrmMessage}</p>}
-                            {vrmError && <p className="text-color-1 mt-1">{vrmError}</p>}
+                            {vrmMessage && <p className="text-color-2 mt-1">{vrmMessage}</p>}
+                            {vrmError && <p className="text-color-2 mt-1">{vrmError}</p>}
                           </div>
                         </div>
                       </div>
@@ -612,8 +612,8 @@ function AddListing() {
                       </div>
 
                       {error && <div className="alert alert-danger">{error}</div>}
-                      {photoUploadStatus && <p className="text-color-1">{photoUploadStatus} {fileUploading ? `(${fileUploadProgress}%)` : ""}</p>}
-                      {!photoUploadStatus && fileUploading && <p className="text-color-1">Uploading video... {fileUploadProgress}%</p>}
+                      {photoUploadStatus && <p className="text-color-2">{photoUploadStatus} {fileUploading ? `(${fileUploadProgress}%)` : ""}</p>}
+                      {!photoUploadStatus && fileUploading && <p className="text-color-2">Uploading video... {fileUploadProgress}%</p>}
 
                       <div className="group-button-submit">
                         <button className="pre-btn" type="submit" disabled={submitting}>

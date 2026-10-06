@@ -42,7 +42,7 @@ export default function ValuationTool() {
           <div className="col-lg-8">
             <div className="tfcl-dashboard mt-4 mb-5">
               <h1 className="admin-title mb-1">Free car valuation</h1>
-              <p className="text-color-1 mb-4">
+              <p className="text-color-2 mb-4">
                 Enter your registration and current mileage for an instant estimate, built from
                 real listings and sales on this platform blended with trade guide data. No sign-in
                 required.
@@ -90,13 +90,13 @@ export default function ValuationTool() {
                   {result.vehicle && (
                     <p className="mb-1">
                       {[result.vehicle.year, result.vehicle.make, result.vehicle.model].filter(Boolean).join(" ") || "Vehicle"}{" "}
-                      <span className="text-color-1">
+                      <span className="text-color-2">
                         ({result.vehicle.vrm}
                         {result.vehicle.colour ? ` · ${result.vehicle.colour}` : ""})
                       </span>
                     </p>
                   )}
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     {CONFIDENCE_LABEL[result.confidenceBand] ?? result.confidenceBand}
                   </p>
 
@@ -126,7 +126,7 @@ export default function ValuationTool() {
                         </tbody>
                       </table>
                       <h5 className="mt-3 mb-1">How we worked this out</h5>
-                      <ul className="text-color-1 mb-0">
+                      <ul className="text-color-2 mb-0">
                         <li>
                           Platform sales:{" "}
                           {result.internal.value !== null

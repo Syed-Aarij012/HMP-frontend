@@ -85,7 +85,7 @@ function ListFixedPrice() {
               <main id="main" className="main-content">
                 <form className="tfcl-dashboard add-list" onSubmit={handleSubmit}>
                   <h1 className="admin-title mb-3">List a vehicle at a fixed price</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Describe your vehicle and set an asking price. It goes live for instant
                     purchase by other trade buyers as soon as it has a published condition
                     report.

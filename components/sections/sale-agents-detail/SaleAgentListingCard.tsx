@@ -111,7 +111,7 @@ export default function SaleAgentListingCard({
           </>
         )}
         {car.extras && (
-          <div className="text-color-1 mt-1" style={{ fontSize: 13, lineHeight: 1.5 }}>
+          <div className="text-color-2 mt-1" style={{ fontSize: 13, lineHeight: 1.5 }}>
             {car.extras.priceDropAmount ? (
               <div style={{ color: "#27ae60", fontWeight: 600 }}>
                 Price drop: £{car.extras.priceDropAmount.toLocaleString()} off

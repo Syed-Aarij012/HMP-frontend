@@ -98,7 +98,7 @@ export default function DealerStockFeedDashboard() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Bulk stock upload</h1>
-                  <p className="text-color-1 mb-3">Upload a CSV stock export to list many vehicles at once.</p>
+                  <p className="text-color-2 mb-3">Upload a CSV stock export to list many vehicles at once.</p>
 
                   {templatesLoading && <p>Loading mapping templates...</p>}
                   {templatesError && <div className="alert alert-danger">{templatesError}</div>}
@@ -134,7 +134,7 @@ export default function DealerStockFeedDashboard() {
 
                   <div className="tfcl-card p-3 mb-3">
                     <h4 className="mb-2">Sync from your DMS</h4>
-                    <p className="text-color-1 mb-2">Pulls stock directly from your connected dealer management system.</p>
+                    <p className="text-color-2 mb-2">Pulls stock directly from your connected dealer management system.</p>
                     {syncError && <div className="alert alert-danger">{syncError}</div>}
                     <div className="flex gap-10" style={{ alignItems: "center" }}>
                       <label className="flex gap-10 mb-0" style={{ alignItems: "center" }}>

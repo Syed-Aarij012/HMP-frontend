@@ -64,7 +64,7 @@ function Tracker({ job }: { job: TransportJob }) {
         </p>
       )}
       {job.last_position && (
-        <p className="text-color-1">
+        <p className="text-color-2">
           Last seen at {job.last_position.lat.toFixed(3)}, {job.last_position.lng.toFixed(3)} ({when(job.last_position.at)}).{" "}
           <a
             href={`https://www.openstreetmap.org/?mlat=${job.last_position.lat}&mlon=${job.last_position.lng}#map=11/${job.last_position.lat}/${job.last_position.lng}`}
@@ -75,13 +75,13 @@ function Tracker({ job }: { job: TransportJob }) {
           </a>
         </p>
       )}
-      <p className="text-color-1">
+      <p className="text-color-2">
         {job.pickup_address.postcode} &rarr; {job.dropoff_address.postcode}
         {job.distance_miles ? ` (about ${Number(job.distance_miles).toFixed(0)} road miles)` : ""} &middot; {money(job.quote_amount)}
       </p>
 
       {job.events && job.events.length > 0 && (
-        <ul className="text-color-1" style={{ paddingLeft: 18 }}>
+        <ul className="text-color-2" style={{ paddingLeft: 18 }}>
           {[...job.events].reverse().map((event, index) => (
             <li key={index}>
               {when(event.created_at)} — {event.event_type.replace(/_/g, " ")}
@@ -128,7 +128,7 @@ export function TransportSection({
             requestQuote({ pickupPostcode: pickup, dropoffPostcode: dropoff, vehicleClass: "car", isRunner: true, transportType: enclosed ? "enclosed" : "open" });
           }}
         >
-          <p className="text-color-1">Get quotes from our carrier panel to have the vehicle delivered to you.</p>
+          <p className="text-color-2">Get quotes from our carrier panel to have the vehicle delivered to you.</p>
           <div className="flex gap-10 align-center" style={{ flexWrap: "wrap" }}>
             <input className="form-control" style={{ flex: "0 0 180px" }} placeholder="Collect from (postcode)" value={pickup} onChange={(e) => setPickup(e.target.value)} required />
             <input className="form-control" style={{ flex: "0 0 180px" }} placeholder="Deliver to (postcode)" value={dropoff} onChange={(e) => setDropoff(e.target.value)} required />
@@ -170,7 +170,7 @@ export function TransportSection({
                   </tbody>
                 </table>
               ) : (
-                <p className="text-color-1">Indicative price {money(job.quote_amount)} (we could not measure this route, so this is a flat estimate).</p>
+                <p className="text-color-2">Indicative price {money(job.quote_amount)} (we could not measure this route, so this is a flat estimate).</p>
               )}
               <button type="button" className="sc-button" disabled={busy} onClick={() => book(chosen ?? job.carrier_quotes?.[0]?.carrier_id)}>
                 <span>{busy ? "Booking..." : "Book delivery"}</span>
@@ -188,7 +188,7 @@ export function ReleaseSection({ releaseNoteId, release }: { releaseNoteId: numb
   if (!releaseNoteId) {
     return (
       <Section title="Collection">
-        <p className="text-color-1">Your release code will appear here once your payment has cleared.</p>
+        <p className="text-color-2">Your release code will appear here once your payment has cleared.</p>
       </Section>
     );
   }
@@ -214,12 +214,12 @@ export function ReleaseSection({ releaseNoteId, release }: { releaseNoteId: numb
           <div>
             <p className="mb-1">Show this at the gate together with photo ID:</p>
             <p style={{ fontSize: 28, fontWeight: 700, letterSpacing: 4 }}>{release.release_code}</p>
-            <p className="text-color-1">Only the named collector can collect this vehicle.</p>
+            <p className="text-color-2">Only the named collector can collect this vehicle.</p>
           </div>
         </div>
       )}
       {release?.handover_checklist && (
-        <ul className="text-color-1" style={{ paddingLeft: 18 }}>
+        <ul className="text-color-2" style={{ paddingLeft: 18 }}>
           {Object.entries(release.handover_checklist).map(([key, value]) => (
             <li key={key}>
               {key.replace(/_/g, " ")}: {value ? "yes" : "no"}
@@ -258,7 +258,7 @@ export function DocumentsSection({ documents }: { documents: ReturnType<typeof u
           {rows.map((row) => (
             <tr key={row.url}>
               <td>{row.label}</td>
-              <td className="text-color-1">Kept until {row.retain}</td>
+              <td className="text-color-2">Kept until {row.retain}</td>
               <td>
                 <button type="button" className="sc-button" onClick={() => downloadFile(row.url, row.file).catch(() => setError("That document could not be downloaded."))}>
                   <span>Download</span>

@@ -24,7 +24,7 @@ export default function OrdersDashboard() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">My orders</h1>
-                  <p className="text-color-1 mb-3">Vehicles you&apos;ve bought outright with a holding deposit.</p>
+                  <p className="text-color-2 mb-3">Vehicles you&apos;ve bought outright with a holding deposit.</p>
 
                   {loading && <p>Loading your orders...</p>}
                   {error && <div className="alert alert-danger">{error}</div>}

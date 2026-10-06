@@ -80,7 +80,7 @@ export default function TradeCredit() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-2">Trade credit</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     A trade credit line lets you bid and buy at auction without a deposit for every lot. We check your business
                     (KYB) and trading history before deciding.
                   </p>

@@ -52,7 +52,7 @@ function HotspotPhoto({
         >
           <b className="text-capitalize">{active.panel}</b> — {active.damageType} ({active.severity})
           {active.repairCostBand && <div>Repair cost band: {active.repairCostBand}</div>}
-          {active.cvSuggested && <div className="text-color-1">Flagged by CV pre-detection, inspector-confirmed.</div>}
+          {active.cvSuggested && <div className="text-color-2">Flagged by CV pre-detection, inspector-confirmed.</div>}
         </div>
       )}
     </div>
@@ -79,7 +79,7 @@ export default function ConditionReportSection({
   return (
     <div className="tfcl-card mb-4">
       <h4 className="mb-2">Condition report</h4>
-      <p className="text-color-1 mb-2">
+      <p className="text-color-2 mb-2">
         Grade {report.conditionGrade ?? "-"} / 5 &middot; Mechanical grade {report.mechanicalGrade ?? "-"}
         {report.publishedAt && ` · Inspected ${new Date(report.publishedAt).toLocaleDateString()}`}
       </p>
