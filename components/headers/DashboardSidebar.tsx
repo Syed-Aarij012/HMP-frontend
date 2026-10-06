@@ -5,9 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useDashboardSidebar } from "@/components/dashboard/DashboardSidebarContext";
-import { hasRole, useAuth } from "@/contexts/AuthContext";
+import { can, canAny, hasRole, useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/components/common/MessagesContext";
 import { isNavLinkActive } from "@/lib/navigation";
+import { canAccessRoute } from "@/lib/routeAccess";
+import { canUseAdminPanel, firstAdminPageFor } from "@/components/admin/AdminSidebar";
 
 const DEFAULT_AVATAR = "/assets/images/dashboard/avatar.png";
 
@@ -183,6 +185,13 @@ const tradeBuyerMenuItems: DashboardMenuItem[] = [
     label: "My exposure",
   },
   {
+    id: "trade-credit",
+    href: "/trade-credit",
+    className: "menu-index-6",
+    iconClass: "icon-carus-power",
+    label: "Trade credit",
+  },
+  {
     id: "bidding-deposits",
     href: "/bidding-deposits",
     className: "menu-index-6",
@@ -249,9 +258,13 @@ const rostrumItem: DashboardMenuItem = {
   label: "Rostrum console",
 };
 
+// Inserts before `beforeId`; menus without that item (the retail menu has no "security")
+// fall back to just before Profile, then Logout, rather than silently dropping the item.
 function insertBefore(items: DashboardMenuItem[], extra: DashboardMenuItem, beforeId: string): DashboardMenuItem[] {
-  const index = items.findIndex((item) => item.id === beforeId);
-  if (index === -1) return items;
+  const index = [beforeId, "my-profile", "logout"]
+    .map((id) => items.findIndex((item) => item.id === id))
+    .find((i) => i !== -1);
+  if (index === undefined) return [...items, extra];
   return [...items.slice(0, index), extra, ...items.slice(index)];
 }
 
@@ -338,6 +351,25 @@ const trustSafetyItem: DashboardMenuItem = {
   label: "Trust & Safety",
 };
 
+// REQ RBAC-003: the Org Admin's delegated administration — staff, roles, rooftops, spending limits.
+const teamItem: DashboardMenuItem = {
+  id: "team",
+  href: "/team",
+  className: "menu-index-4",
+  iconClass: "icon-carus-usercheck",
+  label: "Team & roles",
+};
+
+// SRS §2.2 P7: Super Admins run the platform from the separate Admin Panel (/admin), which has
+// its own sidebar — here they just get a way into it.
+const adminPanelItem: DashboardMenuItem = {
+  id: "admin-panel",
+  href: "/admin",
+  className: "menu-index-1",
+  iconClass: "icon-carus-shieldcheck",
+  label: "Admin Panel",
+};
+
 function menuFor(userType: string | undefined, organizationId: number | null): DashboardMenuItem[] {
   // FR-D-033: multi-lane viewing is a trade-buyer surface; FR-D-034: the rostrum is the
   // auctioneer's (and Super Admin's) console.
@@ -360,23 +392,50 @@ export default function DashboardSidebar() {
   const { unreadCount: unreadMessageCount } = useMessages();
   const organizationId = typeof user?.organization_id === "number" ? user.organization_id : null;
   const baseMenuItems = menuFor(user?.user_type, organizationId);
-  const isInspectionPersona =
-    hasRole(user, "inspector") || hasRole(user, "quality_supervisor") || hasRole(user, "super_admin");
-  const isQualitySupervisorPersona = hasRole(user, "quality_supervisor") || hasRole(user, "super_admin");
+  // Extras are driven by permissions (SRS §2 RBAC), not by role names.
+  const isInspectionPersona = canAny(user, ["create-condition-report", "countersign-condition-report"]);
+  const isQualitySupervisorPersona = can(user, "publish-grading-matrix");
   let menuItems = isInspectionPersona && !baseMenuItems.some((item) => item.id === "inspections")
     ? insertBefore(baseMenuItems, inspectionsItem, "security")
     : baseMenuItems;
   if (isQualitySupervisorPersona && !menuItems.some((item) => item.id === "grading-matrix")) {
     menuItems = insertBefore(menuItems, gradingMatrixItem, "security");
   }
-  if (hasRole(user, "super_admin") && !menuItems.some((item) => item.id === "taxonomy")) {
+  // §2.2 P3 Org Admin / P4 trade buyer: trade credit application.
+  if (can(user, "apply-trade-credit") && !menuItems.some((item) => item.id === "trade-credit")) {
+    menuItems = insertBefore(menuItems, { id: "trade-credit", href: "/trade-credit", className: "menu-index-4", iconClass: "icon-carus-power", label: "Trade credit" }, "security");
+  }
+  // REQ RBAC-003: a Group Admin runs their dealer group's dealerships.
+  if (can(user, "manage-dealer-group") && !menuItems.some((item) => item.id === "dealer-group")) {
+    menuItems = insertBefore(menuItems, { id: "dealer-group", href: "/dealer-group", className: "menu-index-4", iconClass: "icon-carus-usercheck", label: "Dealer group" }, "security");
+  }
+  if (can(user, "manage-org-users") && !menuItems.some((item) => item.id === "team")) {
+    menuItems = insertBefore(menuItems, teamItem, "security");
+  }
+  if (can(user, "manage-taxonomy") && !menuItems.some((item) => item.id === "taxonomy")) {
     menuItems = insertBefore(menuItems, taxonomyItem, "security");
   }
-  if (hasRole(user, "super_admin") && !menuItems.some((item) => item.id === "routing-rules")) {
+  if (can(user, "manage-run-list") && !menuItems.some((item) => item.id === "routing-rules")) {
     menuItems = insertBefore(menuItems, routingRulesItem, "security");
   }
-  if ((hasRole(user, "trust_safety_analyst") || hasRole(user, "super_admin")) && !menuItems.some((item) => item.id === "trust-safety")) {
+  if (can(user, "admin-fraud-actions") && !menuItems.some((item) => item.id === "trust-safety")) {
     menuItems = insertBefore(menuItems, trustSafetyItem, "security");
+  }
+
+  // Only show what this account may open — the same map the route guard uses.
+  menuItems = menuItems.filter((item) => canAccessRoute(user, item.href));
+
+  // A Super Admin's operational tools (taxonomy, routing rules, Trust & Safety, grading matrix)
+  // live in the Admin Panel; the dashboard just links to it, first.
+  // Other staff with pages in the Admin Panel (Trust & Safety, Support, Data & Pricing) get a
+  // link straight to their first one.
+  const staffPanelHref = !hasRole(user, "super_admin") && canUseAdminPanel(user) ? firstAdminPageFor(user) : undefined;
+  if (staffPanelHref) {
+    menuItems = [{ ...adminPanelItem, label: "Staff panel", href: staffPanelHref }, ...menuItems];
+  }
+  if (hasRole(user, "super_admin")) {
+    const inAdminPanel = ["taxonomy", "routing-rules", "trust-safety", "grading-matrix"];
+    menuItems = [adminPanelItem, ...menuItems.filter((item) => !inAdminPanel.includes(item.id))];
   }
 
   useEffect(() => {

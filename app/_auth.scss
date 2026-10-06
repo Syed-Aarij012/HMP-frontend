@@ -1,0 +1,260 @@
+// Sign in / create account (components/auth) — scoped under .hmp-auth so nothing leaks.
+
+.hmp-auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: linear-gradient(160deg, #eef1fe 0%, #f7f8fc 45%, #ffffff 100%);
+
+  .hmp-auth-shell {
+    width: 100%;
+    max-width: 1040px;
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+
+    @media (max-width: 860px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .hmp-auth-aside {
+    background: linear-gradient(180deg, #405ff2 0%, #2c44c4 100%);
+    color: #fff;
+    padding: 40px 36px;
+    display: flex;
+    flex-direction: column;
+
+    h2 {
+      color: #fff;
+      font-size: 26px;
+      line-height: 1.25;
+      margin: 28px 0 20px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 auto;
+
+      li {
+        padding: 10px 0 10px 26px;
+        position: relative;
+        opacity: 0.95;
+
+        &::before {
+          content: "✓";
+          position: absolute;
+          left: 0;
+          top: 10px;
+          font-weight: 700;
+        }
+      }
+    }
+
+    @media (max-width: 860px) {
+      padding: 24px;
+
+      ul,
+      h2 {
+        display: none;
+      }
+    }
+  }
+
+  .hmp-auth-logo img {
+    height: 52px;
+    width: auto;
+    background: #fff;
+    border-radius: 10px;
+    padding: 4px 10px;
+  }
+
+  .hmp-auth-aside-foot {
+    margin: 24px 0 0;
+    font-size: 13px;
+    opacity: 0.85;
+  }
+
+  .hmp-auth-main {
+    padding: 40px 44px;
+
+    h1 {
+      font-size: 26px;
+      margin: 0 0 6px;
+    }
+
+    @media (max-width: 560px) {
+      padding: 28px 20px;
+    }
+  }
+
+  .hmp-auth-tabs {
+    display: inline-flex;
+    background: #f1f3f9;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 24px;
+
+    button {
+      border: 0;
+      background: transparent;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #64748b;
+
+      &.is-active {
+        background: #fff;
+        color: #0f172a;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+      }
+    }
+  }
+
+  .hmp-auth-label {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .hmp-auth-password {
+    position: relative;
+
+    .form-control {
+      padding-right: 70px;
+    }
+
+    button {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      color: #405ff2;
+      font-weight: 600;
+      font-size: 13px;
+    }
+  }
+
+  .hmp-auth-link {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: #405ff2;
+    font-weight: 600;
+  }
+
+  .hmp-auth-types {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .hmp-auth-type {
+    text-align: left;
+    border: 1.5px solid #e4e7ef;
+    border-radius: 12px;
+    background: #fff;
+    padding: 16px;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+
+    &:hover,
+    &:focus-visible {
+      border-color: #405ff2;
+      box-shadow: 0 6px 18px rgba(64, 95, 242, 0.14);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      font-size: 13px;
+      color: #64748b;
+    }
+  }
+
+  .hmp-auth-type-title {
+    display: block;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0f172a;
+  }
+
+  .hmp-auth-type-text {
+    display: block;
+    font-size: 12px;
+    color: #405ff2;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .hmp-auth-chosen {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #eef1fe;
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  .hmp-auth-demo {
+    margin-top: 24px;
+    border-top: 1px dashed #e4e7ef;
+    padding-top: 14px;
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      color: #405ff2;
+      margin-bottom: 8px;
+    }
+  }
+
+  .hmp-auth-demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+
+    button {
+      text-align: left;
+      border: 1px solid #e4e7ef;
+      border-radius: 8px;
+      background: #f8f9fc;
+      padding: 8px 10px;
+      font-size: 13px;
+
+      span {
+        display: block;
+        color: #64748b;
+        font-size: 12px;
+      }
+
+      &:hover {
+        border-color: #405ff2;
+      }
+    }
+  }
+}
+
+// The same forms inside the header's sign-in / sign-up pop-ups: reuse the page's pieces.
+.hmp-auth-modal {
+  @extend .hmp-auth;
+  min-height: 0;
+  display: block;
+  padding: 0;
+  background: none;
+}

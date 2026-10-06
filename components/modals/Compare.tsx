@@ -3,7 +3,7 @@
 import Image from "@/components/common/AppImage";
 import Link from "next/link";
 import { useMemo } from "react";
-import { getCarDetailHref } from "@/data/cars";
+import { getCarHref } from "@/data/cars";
 import { useListingActions } from "@/components/common/ListingActionsContext";
 
 export default function Compare() {
@@ -87,7 +87,7 @@ export default function Compare() {
                           <h3 className="tfcl-listing-title title">
                             <Link
                               title={car.title}
-                              href={getCarDetailHref(car.id)}
+                              href={getCarHref(car)}
                             >
                               {car.title}
                             </Link>

@@ -6,7 +6,7 @@ import LeaveReplyForm from "@/components/common/LeaveReplyForm";
 import LatePriceListWidget from "@/components/common/LatePriceListWidget";
 import MobileDealerSidebarShell from "@/components/common/MobileDealerSidebarShell";
 import DealerSaleAgentSlider from "@/components/sections/dealer-detail/DealerSaleAgentSlider";
-import DealerInventorySlider from "@/components/sections/dealer-detail/DealerInventorySlider";
+import SaleAgentListingsPanel from "@/components/sections/sale-agents-detail/SaleAgentListingsPanel";
 import { useFilteredListings } from "@/hooks/useFilteredListings";
 import { useAgents } from "@/hooks/useAgents";
 import { useContactDealer } from "@/components/common/ContactDealerContext";
@@ -29,7 +29,7 @@ const OPENING_HOURS_DAYS: [keyof DealerOpeningHours, string][] = [
 function DealerDetail({ dealer }: DealerDetailProps) {
   const { cars: inventoryCars } = useFilteredListings({ organizationId: dealer.organizationId });
   const { agents: allAgents } = useAgents();
-  const { setContactDealerTarget } = useContactDealer();
+  const { setContactDealerTarget, canMessageSellers } = useContactDealer();
   const dealerAgents = dealer.organizationId
     ? allAgents.filter((agent) => agent.organizationId === dealer.organizationId)
     : [];
@@ -87,18 +87,14 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                     <DealerSaleAgentSlider agents={dealerAgents} />
                   </div>
                 )}
-                {inventoryCars.length > 0 && (
+                {/* The dealer's ads — the same grid and ad cards as a seller's profile, scoped to
+                    this dealership only. */}
+                {dealer.organizationId !== undefined && (
                   <div className="tf-list-car-agent">
-                    <div className="heading-section flex align-center justify-space flex-wrap gap-20">
-                      <h2 className="heading-tittle">
-                        Dealership inventory ({inventoryCars.length})
-                      </h2>
-                      <Link href={`/listing-grid`} className="tf-btn-arrow">
-                        See all
-                        <i className="icon-carus-arrowcircleright" />
-                      </Link>
-                    </div>
-                    <DealerInventorySlider cars={inventoryCars} />
+                    <SaleAgentListingsPanel
+                      organizationId={dealer.organizationId}
+                      title={`Ads from ${dealer.name} (${dealer.listingsCount ?? inventoryCars.length})`}
+                    />
                   </div>
                 )}
                 <h2 className="mb-8">{dealer.name} servicing</h2>
@@ -249,20 +245,21 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                   <a href="#" className="button-form-2">
                     Chat via Whatsapp
                   </a>
-                  {leadFormCar ? (
-                    <a
-                      data-bs-target="#ModalTogglemess"
-                      data-bs-toggle="modal"
-                      className="button-form-3"
-                      onClick={() => setContactDealerTarget(leadFormCar)}
-                    >
-                      Send mesage
-                    </a>
-                  ) : (
-                    <span className="button-form-3 disabled" aria-disabled="true">
-                      Send mesage
-                    </span>
-                  )}
+                  {canMessageSellers &&
+                    (leadFormCar ? (
+                      <a
+                        data-bs-target="#ModalTogglemess"
+                        data-bs-toggle="modal"
+                        className="button-form-3"
+                        onClick={() => setContactDealerTarget(leadFormCar)}
+                      >
+                        Send message
+                      </a>
+                    ) : (
+                      <span className="button-form-3 disabled" aria-disabled="true">
+                        Send message
+                      </span>
+                    ))}
                 </div>
                 <div className="map-contact">
                   <div

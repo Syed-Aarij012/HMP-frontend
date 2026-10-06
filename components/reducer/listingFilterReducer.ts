@@ -7,7 +7,8 @@ import type { Car } from "@/types/cars";
 export const LISTING_PRICE_MAX = 500000;
 export const LISTING_MILEAGE_MAX = 800000;
 export const LISTING_YEAR_MIN = 2000;
-export const LISTING_YEAR_MAX = 2026;
+// Next year's models can be on sale before the calendar turns, so the slider runs one year ahead.
+export const LISTING_YEAR_MAX = new Date().getFullYear() + 1;
 
 export const listingFilterInitialState: ListingFilterState = {
   categoryTab: "all",
@@ -85,7 +86,11 @@ function matchesAllFilters(car: Car, state: ListingFilterState): boolean {
 
   if (state.featured && !car.featured) return false;
 
-  if (car.price < state.price[0] || car.price > state.price[1]) return false;
+  // A range handle left at the end of its slider means "no limit" that way (ListingFilterMeta
+  // already treats it as no filter). Otherwise a car priced or driven beyond the slider's top, or
+  // newer/older than its last year, silently vanished from results nobody had filtered.
+  const priceUpper = state.price[1] >= state.listingPriceMax ? Infinity : state.price[1];
+  if (car.price < state.price[0] || car.price > priceUpper) return false;
 
   if (
     state.fuel &&
@@ -108,7 +113,8 @@ function matchesAllFilters(car: Car, state: ListingFilterState): boolean {
     return false;
   }
 
-  if (car.mileage < state.mileage[0] || car.mileage > state.mileage[1]) {
+  const mileageUpper = state.mileage[1] >= LISTING_MILEAGE_MAX ? Infinity : state.mileage[1];
+  if (car.mileage < state.mileage[0] || car.mileage > mileageUpper) {
     return false;
   }
 
@@ -146,7 +152,9 @@ function matchesAllFilters(car: Car, state: ListingFilterState): boolean {
   }
 
   const carYear = car.filterYear ?? LISTING_YEAR_MAX;
-  if (carYear < state.year[0] || carYear > state.year[1]) return false;
+  const yearLower = state.year[0] <= LISTING_YEAR_MIN ? -Infinity : state.year[0];
+  const yearUpper = state.year[1] >= LISTING_YEAR_MAX ? Infinity : state.year[1];
+  if (carYear < yearLower || carYear > yearUpper) return false;
 
   if (
     state.features.length &&

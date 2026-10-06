@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "@/components/common/AppImage";
 import ListingCardActions from "@/components/common/ListingCardActions";
-import { featuredCar, getCarDetailHref } from "@/data/cars";
+import { featuredCar, getCarHref } from "@/data/cars";
 
 function FeaturedCar() {
   return (
@@ -63,7 +63,7 @@ function FeaturedCar() {
                       />
                     </div>
                     <h3 className="link-style-1">
-                      <Link href={getCarDetailHref(featuredCar.id)}>
+                      <Link href={getCarHref(featuredCar)}>
                         {featuredCar.title}
                       </Link>
                     </h3>
@@ -110,7 +110,7 @@ function FeaturedCar() {
                         </div>
                       </div>
                       <Link
-                        href={getCarDetailHref(featuredCar.id)}
+                        href={getCarHref(featuredCar)}
                         className="view-car"
                       >
                         View <i className="icon-carus-arright" />

@@ -11,12 +11,14 @@ import {
 import Nav from "./Nav";
 import MobileNav from "./MobileNav";
 import { HeaderSearchTrigger } from "./HeaderSearch";
-import { useAuth } from "@/contexts/AuthContext";
+import { canAny, useAuth } from "@/contexts/AuthContext";
 
 const DEFAULT_AVATAR = "/assets/images/dashboard/agent1.jpg";
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
+  // SRS §2.2: selling is for seller accounts (P2/P3); guests see it and are asked to sign up.
+  const canSell = !user || canAny(user, ["manage-own-listings", "manage-org-listings"]);
   const avatarSrc = typeof user?.avatar_url === "string" ? user.avatar_url : DEFAULT_AVATAR;
   const isRealAvatar = typeof user?.avatar_url === "string";
 
@@ -82,9 +84,11 @@ export default function DashboardHeader() {
                     </Link>
                   </div>
                   <div className="flat-bt-top">
-                    <Link className="sc-button" href={`/add-listing`}>
-                      <span>Sell my car</span>
-                    </Link>
+                    {canSell && (
+                      <Link className="sc-button" href={`/add-listing`}>
+                        <span>Sell my car</span>
+                      </Link>
+                    )}
                   </div>
                 </div>
                 <MobileMenuTrigger />
@@ -130,9 +134,11 @@ export default function DashboardHeader() {
               </div>
             </div>
             <div className="button-mobi-sell">
-              <Link className="sc-button btn-icon center" href={`/add-listing`}>
-                <span>Sell my car</span>
-              </Link>
+              {canSell && (
+                <Link className="sc-button btn-icon center" href={`/add-listing`}>
+                  <span>Sell my car</span>
+                </Link>
+              )}
             </div>
             <div className="conatct-us">
               <div className="fs-18 fw-6 title">Contact us</div>

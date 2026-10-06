@@ -187,6 +187,29 @@ export default function DashboardListingsTable({
     );
   };
 
+  // FR-C-001 Draft → PendingChecks → Live: a listing that has never been approved is submitted
+  // for review (a moderator puts it live); a previously approved one that was withdrawn is
+  // relisted straight away. The backend refuses with a specific reason either way — thrown
+  // through so the row shows it.
+  const handlePublish = async (id: number) => {
+    const listing = listings.find((item) => item.id === id);
+    if (!listing?.publicId) return;
+
+    const needsReview = listing.rawStatus === "draft" || !listing.publishedAt;
+    const response = await apiFetch<{ data: { status: string } }>(`/listings/${listing.publicId}`, {
+      method: "PATCH",
+      body: { status: needsReview ? "pending_checks" : "live" },
+    });
+
+    setListings((current) =>
+      current.map((item) =>
+        item.id === id
+          ? { ...item, dashboardStatus: mapStatus(response.data.status), rawStatus: response.data.status }
+          : item,
+      ),
+    );
+  };
+
   const handleRenew = async (id: number) => {
     const listing = listings.find((item) => item.id === id);
     if (!listing?.publicId) return;
@@ -334,6 +357,7 @@ export default function DashboardListingsTable({
               onSave={handleSave}
               onMarkSold={handleMarkSold}
               onRenew={handleRenew}
+              onPublish={handlePublish}
             />
           </table>
         </div>

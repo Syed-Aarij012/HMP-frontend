@@ -24,6 +24,8 @@ export type Dealer = {
   // from a mock one, and to call GET /dealers/{slug} again.
   slug?: string;
   organizationId?: number;
+  // Number of live ads this dealer has listed (shown on the dealer card).
+  listingsCount?: number;
   // FR-C-002: real dealers only — opening hours and the FCA/regulatory disclosures block,
   // both already stored and editable server-side (DealerStorefrontProfileController) but
   // never rendered on the public storefront page until now.

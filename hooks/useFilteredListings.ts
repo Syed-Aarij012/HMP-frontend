@@ -28,7 +28,7 @@ type FilteredListingsParams = {
 export function useFilteredListings({
   organizationId,
   sellerUserId,
-  perPage = 50,
+  perPage = 100,
 }: FilteredListingsParams): FilteredListingsResult {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(Boolean(organizationId || sellerUserId));

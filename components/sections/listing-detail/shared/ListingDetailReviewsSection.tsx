@@ -3,7 +3,7 @@
 import Image from "@/components/common/AppImage";
 import { useMemo, useState } from "react";
 import LeaveReplyForm from "@/components/common/LeaveReplyForm";
-import { useAuth } from "@/contexts/AuthContext";
+import { can, useAuth } from "@/contexts/AuthContext";
 import { useListingReviews } from "@/hooks/useListingReviews";
 import {
   LISTING_REVIEWS,
@@ -180,12 +180,15 @@ export default function ListingDetailReviewsSection({
           </div>
         </div>
       </div>
-      <LeaveReplyForm
-        onSubmit={isRealListing && user ? submitReview : undefined}
-        disabledMessage={
-          isRealListing && !user ? "Please log in to leave a review." : undefined
-        }
-      />
+      {/* SRS §2.2 P1: verified-purchase reviews are a buyer capability. */}
+      {(!user || can(user, "leave-reviews")) && (
+        <LeaveReplyForm
+          onSubmit={isRealListing && user ? submitReview : undefined}
+          disabledMessage={
+            isRealListing && !user ? "Please log in to leave a review." : undefined
+          }
+        />
+      )}
     </div>
   );
 }

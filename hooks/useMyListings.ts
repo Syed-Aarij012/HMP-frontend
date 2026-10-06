@@ -9,7 +9,9 @@ type ApiListing = {
   id: string;
   status: string;
   price: string | number;
+  price_type?: string;
   published_at: string | null;
+  review_note?: string | null;
   vehicle: {
     id?: string;
     make?: string;
@@ -26,10 +28,27 @@ type ApiListingsResponse = {
   data: ApiListing[];
 };
 
+/**
+ * The dashboard badge for a listing's lifecycle status (ListingLifecycleService::TRANSITIONS).
+ * Only `pending_checks` is genuinely "pending" — a draft that was never published, an offer
+ * being negotiated, a withdrawn or expired listing each get their own label.
+ */
 export function mapStatus(status: string): DashboardListingStatus {
-  if (status === "sold") return "sold";
-  if (status === "live") return "approved";
-  return "pending";
+  switch (status) {
+    case "live":
+      return "approved";
+    case "pending_checks":
+      return "pending";
+    case "draft":
+    case "under_offer":
+    case "reserved":
+    case "withdrawn":
+    case "expired":
+    case "sold":
+      return status;
+    default:
+      return "pending";
+  }
 }
 
 function mapListing(listing: ApiListing): DashboardCar {
@@ -47,6 +66,10 @@ function mapListing(listing: ApiListing): DashboardCar {
     // returns NaN for every one of them, which previously collapsed every row to id: 0
     // and made DashboardListingsTable's per-row edit/delete match every listing at once.
     id: hashListingId(listing.id),
+    // The numeric id above is only a stable row key — a detail URL built from it (the
+    // getCarHref fallback) resolves against the template's mock cars and 404s for a real
+    // listing, whose route param is the ULID.
+    href: `/listing-detail-v1/${listing.id}`,
     image,
     publicId: listing.id,
     title: title || "Untitled listing",
@@ -59,8 +82,11 @@ function mapListing(listing: ApiListing): DashboardCar {
     dashboardImage: image,
     dashboardStatus: mapStatus(listing.status),
     rawStatus: listing.status,
+    priceType: listing.price_type,
     vehiclePublicId: vehicle?.id,
     postingDate: listing.published_at ?? new Date().toISOString(),
+    publishedAt: listing.published_at,
+    reviewNote: listing.review_note ?? null,
   };
 }
 

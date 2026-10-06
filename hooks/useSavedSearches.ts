@@ -19,9 +19,9 @@ export type SavedSearch = {
  * FR-B-005: the signed-in user's saved searches, with pause / frequency / email opt-in
  * (which records consent server-side) and delete.
  */
-export function useSavedSearches() {
+export function useSavedSearches({ autoLoad = true }: { autoLoad?: boolean } = {}) {
   const [searches, setSearches] = useState<SavedSearch[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(autoLoad);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -49,7 +49,8 @@ export function useSavedSearches() {
     };
   }, []);
 
-  useEffect(() => load(), [load]);
+  // A caller that only saves (the listing search bar) doesn't need the list fetched.
+  useEffect(() => (autoLoad ? load() : undefined), [autoLoad, load]);
 
   const save = useCallback(
     async (query: Record<string, unknown>, options?: { emailAlerts?: boolean; frequency?: SavedSearch["alert_frequency"] }) => {

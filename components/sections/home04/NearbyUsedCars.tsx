@@ -3,11 +3,7 @@
 import Link from "next/link";
 import Image from "@/components/common/AppImage";
 import { useMemo, useState } from "react";
-import {
-  home04NearbyUsedCars,
-  home04NearbyUsedPriceTabs,
-  getCarDetailHref,
-} from "@/data/cars";
+import { home04NearbyUsedCars, home04NearbyUsedPriceTabs, getCarHref } from "@/data/cars";
 import ListingCardActions from "@/components/common/ListingCardActions";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -136,7 +132,7 @@ function NearbyUsedCars() {
                         </div>
                         <div className="content">
                           <h3 className="link-style-1">
-                            <Link href={getCarDetailHref(car.id)}>{car.title}</Link>
+                            <Link href={getCarHref(car)}>{car.title}</Link>
                           </h3>
                           {car.description && (
                             <p className="des">{car.description}</p>
@@ -171,7 +167,7 @@ function NearbyUsedCars() {
                               ${car.price.toLocaleString()}
                             </div>
                             <Link
-                              href={getCarDetailHref(car.id)}
+                              href={getCarHref(car)}
                               className="view-car"
                             >
                               View <i className="icon-carus-arright" />

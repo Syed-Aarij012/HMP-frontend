@@ -277,8 +277,13 @@ export const DEALER_BRAND_OPTIONS: NiceSelectOption[] = [
 
 export const DASHBOARD_STATUS_OPTIONS: NiceSelectOption[] = [
   { label: "Select Status", value: "all" },
-  { label: "Approved", value: "approved" },
-  { label: "Pending", value: "pending" },
+  { label: "Live", value: "approved" },
+  { label: "Draft", value: "draft" },
+  { label: "Pending checks", value: "pending" },
+  { label: "Under offer", value: "under_offer" },
+  { label: "Reserved", value: "reserved" },
+  { label: "Withdrawn", value: "withdrawn" },
+  { label: "Expired", value: "expired" },
   { label: "Sold", value: "sold" },
 ];
 
@@ -321,6 +326,20 @@ export const ADD_LISTING_TRANSMISSION_OPTIONS: NiceSelectOption[] = [
   { label: "Select", value: "" },
   { label: "Manual", value: "manual" },
   { label: "Automatic", value: "automatic" },
+];
+
+// FR-F-011: V5C (logbook) status — mandatory before a vehicle can be listed.
+export const ADD_LISTING_V5C_STATUS_OPTIONS: NiceSelectOption[] = [
+  { label: "Select", value: "" },
+  { label: "I have the V5C (logbook)", value: "present" },
+  { label: "I've applied for a V5C", value: "applied_for" },
+];
+
+// FR-E-032: VAT status — mandatory before a vehicle's auction lot can be published.
+export const VAT_STATUS_OPTIONS: NiceSelectOption[] = [
+  { label: "Select", value: "" },
+  { label: "VAT qualifying", value: "qualifying" },
+  { label: "Margin scheme", value: "margin_scheme" },
 ];
 
 export const ADD_LISTING_PRICE_TYPE_OPTIONS: NiceSelectOption[] = [

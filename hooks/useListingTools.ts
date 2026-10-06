@@ -142,8 +142,9 @@ export function usePhotoGuidance(vehiclePublicId?: string) {
     setLoading(true);
     const query = vehiclePublicId ? `?vehicle_master_record_id=${encodeURIComponent(vehiclePublicId)}` : "";
 
-    apiFetch<ApiPhotoGuidance>(`/listings/photo-guidance${query}`)
-      .then((response) => setGuidance(mapApiPhotoGuidance(response)))
+    // The guidance sits under `data`, like every other ListingToolsController response.
+    apiFetch<{ data: ApiPhotoGuidance }>(`/listings/photo-guidance${query}`)
+      .then((response) => setGuidance(mapApiPhotoGuidance(response.data)))
       .catch(() => undefined)
       .finally(() => setLoading(false));
   }, [vehiclePublicId]);

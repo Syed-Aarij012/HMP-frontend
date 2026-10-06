@@ -15,7 +15,8 @@ export type ListingEditableFields = {
   price: number;
   price_type: string;
   description: string;
-  status: "live" | "under_offer" | "withdrawn" | "sold";
+  // Omitted when the seller didn't change it, so saving a new price never flips the status.
+  status?: "live" | "under_offer" | "withdrawn" | "sold";
 };
 
 type DashboardListingTableRowProps = {
@@ -24,6 +25,8 @@ type DashboardListingTableRowProps = {
   onSave?: (id: number, updates: ListingEditableFields) => Promise<void>;
   onMarkSold?: (id: number) => Promise<void>;
   onRenew?: (id: number) => Promise<void>;
+  // Draft -> live, or withdrawn -> live ("Relist"). Rejects with the server's reason.
+  onPublish?: (id: number) => Promise<void>;
 };
 
 const DEFAULT_LISTING_DESCRIPTION =
@@ -120,6 +123,7 @@ export default function DashboardListingTableRow({
   onSave,
   onMarkSold,
   onRenew,
+  onPublish,
 }: DashboardListingTableRowProps) {
   const detailHref = getCarHref(listing);
   const statusMeta = DASHBOARD_LISTING_STATUS_META[listing.dashboardStatus];
@@ -136,18 +140,26 @@ export default function DashboardListingTableRow({
   const [markSoldError, setMarkSoldError] = useState<string | null>(null);
   const [renewing, setRenewing] = useState(false);
   const [renewError, setRenewError] = useState<string | null>(null);
+  const canPublish = Boolean(listing.publicId && onPublish && ["draft", "withdrawn"].includes(listing.rawStatus ?? ""));
+  // FR-C-001: a listing that's never been approved goes to review; an approved one is relisted.
+  const needsReview = listing.rawStatus === "draft" || !listing.publishedAt;
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [price, setPrice] = useState(String(listing.price));
-  const [priceType, setPriceType] = useState("fixed");
+  const [priceType, setPriceType] = useState(listing.priceType ?? "fixed");
   const [description, setDescription] = useState(listing.description ?? "");
-  const [status, setStatus] = useState<ListingEditableFields["status"]>("live");
+  // "" = leave the status as it is.
+  const [status, setStatus] = useState<NonNullable<ListingEditableFields["status"]> | "">("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const startEditing = () => {
     setPrice(String(listing.price));
     setDescription(listing.description ?? "");
+    setPriceType(listing.priceType ?? "fixed");
+    setStatus("");
     setError(null);
     setIsEditing(true);
   };
@@ -163,6 +175,20 @@ export default function DashboardListingTableRow({
       setMarkSoldError(describeApiError(err, "Could not mark this listing as sold."));
     } finally {
       setMarkingSold(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!onPublish) return;
+
+    setPublishing(true);
+    setPublishError(null);
+    try {
+      await onPublish(listing.id);
+    } catch (err) {
+      setPublishError(describeApiError(err, "Could not submit this listing."));
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -190,7 +216,7 @@ export default function DashboardListingTableRow({
         price: Number(price),
         price_type: priceType,
         description,
-        status,
+        status: status || undefined,
       });
       setIsEditing(false);
     } catch (err) {
@@ -222,7 +248,8 @@ export default function DashboardListingTableRow({
                 <label>Price type</label>
                 <NiceSelect
                   options={ADD_LISTING_PRICE_TYPE_OPTIONS}
-                  defaultValue="fixed"
+                  value={priceType}
+                  defaultValue={priceType}
                   className="form-control"
                   onChange={(value) => setPriceType(String(value))}
                 />
@@ -239,11 +266,12 @@ export default function DashboardListingTableRow({
             <div className="form-group mb-2">
               <label>Status</label>
               <NiceSelect
-                options={LISTING_STATUS_OPTIONS}
-                defaultValue="live"
+                options={[{ label: `Keep as ${statusMeta.label}`, value: "" }, ...LISTING_STATUS_OPTIONS]}
+                value={status}
+                defaultValue=""
                 className="form-control"
                 onChange={(value) =>
-                  setStatus(value as ListingEditableFields["status"])
+                  setStatus(String(value) as NonNullable<ListingEditableFields["status"]> | "")
                 }
               />
             </div>
@@ -308,6 +336,12 @@ export default function DashboardListingTableRow({
         >
           {statusMeta.label}
         </span>
+        {/* FR-C-001: a declined listing comes back as a draft with the reviewer's reason. */}
+        {listing.rawStatus === "draft" && listing.reviewNote && (
+          <div className="text-danger fs-13 mt-1" style={{ maxWidth: 220 }}>
+            Not approved: {listing.reviewNote}
+          </div>
+        )}
       </td>
       <td className="column-date">
         <div className="tfcl-listing-date">{formatListingDate(listing.postingDate)}</div>
@@ -329,6 +363,43 @@ export default function DashboardListingTableRow({
               onClick={startEditing}
             >
               Edit
+            </button>
+          </div>
+        )}
+        {canEdit && listing.publicId && (
+          <div className="inner-controller">
+            <span className="icon">
+              <Image
+                src="/assets/images/dashboard/pen.svg"
+                alt="icon"
+                width={20}
+                height={20}
+              />
+            </span>
+            {/* Every vehicle detail, the listing's fields, and photos/video — the quick Edit above
+                only covers price, description and status. */}
+            <Link href={`/edit-listing/${listing.publicId}`} className="btn-action tfcl-dashboard-action-edit">
+              Edit all details
+            </Link>
+          </div>
+        )}
+        {canPublish && (
+          <div className="inner-controller">
+            <span className="icon">
+              <Image
+                src="/assets/images/dashboard/pen.svg"
+                alt="icon"
+                width={20}
+                height={20}
+              />
+            </span>
+            <button
+              type="button"
+              className="btn-action tfcl-dashboard-action-edit"
+              onClick={handlePublish}
+              disabled={publishing}
+            >
+              {publishing ? "Sending..." : needsReview ? "Submit for review" : "Relist"}
             </button>
           </div>
         )}
@@ -404,6 +475,9 @@ export default function DashboardListingTableRow({
             Delete
           </button>
         </div>
+        {publishError && (
+          <div className="text-danger fs-12 w-100 mt-1">{publishError}</div>
+        )}
         {markSoldError && (
           <div className="text-danger fs-12 w-100 mt-1">{markSoldError}</div>
         )}

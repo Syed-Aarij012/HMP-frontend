@@ -4,12 +4,30 @@ import DashboardListingsTable from "@/components/common/DashboardListingsTable";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useMyListings } from "@/hooks/useMyListings";
 import { useListingActions } from "@/components/common/ListingActionsContext";
+import DealerPageBanner from "@/components/sections/dashboard/DealerPageBanner";
+import RoleHome from "@/components/sections/dashboard/RoleHome";
+import { canAny, useAuth } from "@/contexts/AuthContext";
 
+/**
+ * SRS §2 RBAC: the dashboard home is per role — a seller (P2) or dealer (P3) sees their
+ * listings; everyone else (buyers, trade buyers, internal staff) gets a home built from the
+ * features their role actually has.
+ */
 function Dashboard() {
-  const { listings, loading, error } = useMyListings();
-  const { favoriteIds } = useListingActions();
+  const { user } = useAuth();
+  const isSeller = canAny(user, ["manage-own-listings", "manage-org-listings"]);
 
-  const pendingCount = listings.filter((listing) => listing.dashboardStatus === "pending").length;
+  return isSeller ? <SellerDashboard /> : <RoleHome />;
+}
+
+function SellerDashboard() {
+  const { user } = useAuth();
+  const isDealer = typeof user?.organization_id === "number";
+  const { listings, loading, error } = useMyListings();
+  const { favoriteIds, canFavorite } = useListingActions();
+
+  // Not live yet: never-published drafts and listings still in pending checks.
+  const pendingCount = listings.filter((listing) => listing.dashboardStatus === "draft" || listing.dashboardStatus === "pending").length;
   const soldCount = listings.filter((listing) => listing.dashboardStatus === "sold").length;
 
   return (
@@ -22,7 +40,8 @@ function Dashboard() {
               <div className="content-area">
                 <main id="main" className="main-content">
                   <div className="tfcl-dashboard">
-                    <h1 className="admin-title">Dashboard</h1>
+                    <h1 className="admin-title">{isDealer ? "Dealer dashboard" : "Dashboard"}</h1>
+                    {isDealer && <DealerPageBanner adCount={listings.filter((l) => l.dashboardStatus === "approved").length} />}
                     <div className="tfcl-dashboard-overview">
                       <div className="row">
                         <div className="col-sm-6 col-xxl-3">
@@ -83,7 +102,7 @@ function Dashboard() {
                                 </svg>
                               </div>
                               <div className="content-overview">
-                                <h5>Pending</h5>
+                                <h5>Drafts &amp; pending</h5>
                                 <div className="tfcl-dashboard-title">
                                   <span>
                                     <b>{loading ? "-" : pendingCount}</b>
@@ -93,6 +112,7 @@ function Dashboard() {
                             </div>
                           </div>
                         </div>
+                        {canFavorite && (
                         <div className="col-sm-6 col-xxl-3">
                           <div className="tfcl-card">
                             <div className="card-body">
@@ -123,6 +143,8 @@ function Dashboard() {
                             </div>
                           </div>
                         </div>
+                        )}
+
                         <div className="col-sm-6 col-xxl-3">
                           <div className="tfcl-card">
                             <div className="card-body">

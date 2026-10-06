@@ -96,7 +96,7 @@ function CheckIcon() {
 export default function ListingDetailActionIcons({
   car,
 }: ListingDetailActionIconsProps) {
-  const { isFavorite, addToCompare, toggleFavorite } = useListingActions();
+  const { isFavorite, addToCompare, toggleFavorite, canFavorite } = useListingActions();
   const [copied, setCopied] = useState(false);
 
   const favoriteActive = isFavorite(car.id);
@@ -132,6 +132,7 @@ export default function ListingDetailActionIcons({
 
   return (
     <>
+      {canFavorite && (
       <li>
         <button
           type="button"
@@ -149,6 +150,7 @@ export default function ListingDetailActionIcons({
           )}
         </button>
       </li>
+      )}
       <li>
         <a
           href="#"

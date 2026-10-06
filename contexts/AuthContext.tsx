@@ -19,6 +19,12 @@ export type AuthUser = {
   // and GET /user — the only way to tell apart a persona like quality_supervisor that isn't
   // its own user_type, just an additional role granted on top of another one.
   roles?: { name: string }[];
+  // The effective permission names (SRS §2 RBAC, config/rbac.php on the backend). The UI uses
+  // these to decide what to show; the API enforces every one of them regardless.
+  permissions?: string[];
+  // SRS §2.2 Customer Support impersonation-view: set when this session is a support agent's
+  // read-only view of the account — the whole UI is watermarked and nothing can be changed.
+  impersonation?: { session_id: number; support_agent: string | null; expires_at: string | null; read_only: true } | null;
   // FR-B-007(b): null means never consented to behavioral tracking/personalization.
   personalization_consent_at?: string | null;
   [key: string]: unknown;
@@ -28,8 +34,17 @@ export function hasRole(user: AuthUser | null, roleName: string): boolean {
   return Boolean(user?.roles?.some((role) => role.name === roleName));
 }
 
+/** Whether the signed-in user holds a permission (display only — the backend enforces it). */
+export function can(user: AuthUser | null, permission: string): boolean {
+  return Boolean(user?.permissions?.includes(permission));
+}
+
+export function canAny(user: AuthUser | null, permissions: string[]): boolean {
+  return permissions.some((permission) => can(user, permission));
+}
+
 type LoginResult =
-  | { status: "ok" }
+  | { status: "ok"; user: AuthUser | null }
   | { status: "two_factor_required"; challengeToken: string };
 
 export type RegisterPayload = {
@@ -54,9 +69,9 @@ type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
-  completeTwoFactorChallenge: (challengeToken: string, code: string) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
-  registerDealer: (payload: RegisterDealerPayload) => Promise<void>;
+  completeTwoFactorChallenge: (challengeToken: string, code: string) => Promise<AuthUser | null>;
+  register: (payload: RegisterPayload) => Promise<AuthUser>;
+  registerDealer: (payload: RegisterDealerPayload) => Promise<AuthUser>;
   updateProfile: (name: string, phone?: string) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
   removeAvatar: () => Promise<void>;
@@ -119,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setStoredToken(data.token ?? null);
     setUser(data.user ?? null);
-    return { status: "ok" };
+    return { status: "ok", user: data.user ?? null };
   }, []);
 
   const completeTwoFactorChallenge = useCallback(async (challengeToken: string, code: string) => {
@@ -129,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
     setStoredToken(data.token ?? null);
     setUser(data.user ?? null);
+    return data.user ?? null;
   }, []);
 
   const register = useCallback(async (payload: RegisterPayload) => {
@@ -139,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setStoredToken(data.token);
     setUser(data.user);
+    return data.user;
   }, []);
 
   const registerDealer = useCallback(async (payload: RegisterDealerPayload) => {
@@ -149,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setStoredToken(data.token);
     setUser(data.user);
+    return data.user;
   }, []);
 
   const updateProfile = useCallback(async (name: string, phone?: string) => {

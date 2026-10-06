@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
+import { can, useAuth } from "@/contexts/AuthContext";
 import { useContactDealer } from "@/components/common/ContactDealerContext";
 import { apiFetch, ApiError } from "@/lib/api-client";
 
@@ -20,6 +20,15 @@ export default function ContactDealerForm() {
         <p className="fs-14">
           Please <Link href="/login">log in</Link> to send a message to this dealer.
         </p>
+      </div>
+    );
+  }
+
+  // SRS §2.2 P1: messaging a seller is a buyer capability (the API enforces it too).
+  if (!can(user, "message-sellers")) {
+    return (
+      <div className="p-3">
+        <p className="mb-0">Messaging sellers is available to buyer accounts. Replies to your own listings are in your Message inbox.</p>
       </div>
     );
   }

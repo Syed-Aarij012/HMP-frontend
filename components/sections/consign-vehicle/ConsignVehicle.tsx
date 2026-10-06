@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import NiceSelect from "@/components/common/NiceSelect";
 import UploadPhotoSection from "@/components/sections/add-listing/UploadPhotoSection";
@@ -14,7 +14,9 @@ import {
   ADD_LISTING_BODY_TYPE_OPTIONS,
   ADD_LISTING_FUEL_TYPE_OPTIONS,
   ADD_LISTING_TRANSMISSION_OPTIONS,
+  ADD_LISTING_V5C_STATUS_OPTIONS,
   ADD_LISTING_YEAR_OPTIONS,
+  VAT_STATUS_OPTIONS,
 } from "@/data/niceSelectOptions";
 
 function ConsignVehicle() {
@@ -32,7 +34,11 @@ function ConsignVehicle() {
   const [colour, setColour] = useState("");
   const [year, setYear] = useState("");
   const [mileage, setMileage] = useState("");
+  const [v5cStatus, setV5cStatus] = useState("");
+  const [vatStatus, setVatStatus] = useState("");
+  const [acquisitionCost, setAcquisitionCost] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [video, setVideo] = useState<VideoSelection>(null);
   const [spinFrames, setSpinFrames] = useState<File[]>([]);
@@ -40,6 +46,11 @@ function ConsignVehicle() {
   const handlePhotosChange = useCallback((files: File[]) => {
     setPhotoFiles(files);
   }, []);
+
+  const shownError = error ?? formError;
+  useEffect(() => {
+    if (shownError) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [shownError]);
 
   const openSales = sales.filter((sale) => sale.status === "scheduled");
 
@@ -49,6 +60,16 @@ function ConsignVehicle() {
 
     if (!saleId || !bodyType || !fuelType || !transmission || !year) {
       setFormError("Please choose a sale, body type, year, fuel type and transmission.");
+      return;
+    }
+
+    // Without these the lot can be cataloged but never published into the auction.
+    if (!v5cStatus || !vatStatus) {
+      setFormError("Please say whether you have the V5C (logbook) and what the vehicle's VAT status is.");
+      return;
+    }
+    if (vatStatus === "margin_scheme" && acquisitionCost === "") {
+      setFormError("The margin scheme needs the price you acquired the vehicle for.");
       return;
     }
 
@@ -64,6 +85,9 @@ function ConsignVehicle() {
         colour: colour || undefined,
         year: Number(year),
         mileage: Number(mileage),
+        v5cStatus,
+        vatStatus,
+        acquisitionCost: vatStatus === "margin_scheme" ? Number(acquisitionCost) : undefined,
         photoFiles,
         video,
         spinFrames,
@@ -86,13 +110,10 @@ function ConsignVehicle() {
                   <h1 className="admin-title mb-3">Consign a vehicle to auction</h1>
                   <p className="text-color-1 mb-3">
                     Describe your vehicle and choose an upcoming sale still accepting
-                    consignments. It enters the catalog in a &quot;cataloged&quot; state until
-                    it&apos;s published to a lane.
+                    consignments. It enters the catalog in a &quot;cataloged&quot; state, and goes
+                    live once the VAT and V5C details below are in, an inspector has published a
+                    condition report, and the auction team publishes it.
                   </p>
-
-                  {(error || formError) && (
-                    <div className="alert alert-danger mb-3">{error ?? formError}</div>
-                  )}
 
                   <UploadPhotoSection onPhotosChange={handlePhotosChange} />
                   <UploadVideoSpinSection onVideoChange={setVideo} onSpinFramesChange={setSpinFrames} />
@@ -214,8 +235,49 @@ function ConsignVehicle() {
                           required
                         />
                       </div>
+                      <div className="form-group">
+                        <label htmlFor="consign_v5c">V5C (logbook) *</label>
+                        <NiceSelect
+                          options={ADD_LISTING_V5C_STATUS_OPTIONS}
+                          defaultValue=""
+                          className="form-control"
+                          onChange={(value) => setV5cStatus(String(value))}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="consign_vat">VAT status *</label>
+                        <NiceSelect
+                          options={VAT_STATUS_OPTIONS}
+                          defaultValue=""
+                          className="form-control"
+                          onChange={(value) => setVatStatus(String(value))}
+                        />
+                      </div>
+                      {vatStatus === "margin_scheme" && (
+                        <div className="form-group">
+                          <label htmlFor="consign_acquisition">Acquisition cost (£) *</label>
+                          <input
+                            id="consign_acquisition"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            className="form-control"
+                            value={acquisitionCost}
+                            onChange={(e) => setAcquisitionCost(e.target.value)}
+                            required
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {/* Next to the button, not at the top of this long form: after clicking Consign the
+                      reason for a refusal has to be on screen, not scrolled out of sight. */}
+                  {(error || formError) && (
+                    <div ref={errorRef} className="alert alert-danger mb-3" role="alert">
+                      {error ?? formError}
+                    </div>
+                  )}
 
                   <button type="submit" className="sc-button" disabled={submitting}>
                     <span>{submitting ? (stage ?? "Consigning...") : "Consign vehicle"}</span>

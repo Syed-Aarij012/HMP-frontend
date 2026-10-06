@@ -5,10 +5,12 @@ export const metadata: Metadata = {
     "My Listing | HMP - Car Dealer, Rental & Listing",
   description: "HMP - Car Dealer, Rental & Listing",
 };
-export default function MyListingPage() {
+export default async function MyListingPage({ searchParams }: { searchParams: Promise<{ submitted?: string }> }) {
+  const { submitted } = await searchParams;
+
   return (
     <>
-              <Dashboard />
+              <Dashboard submitted={submitted === "1"} />
     </>
   );
 }

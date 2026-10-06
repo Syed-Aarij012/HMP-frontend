@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { hasRole, useAuth } from "@/contexts/AuthContext";
+import { can, useAuth } from "@/contexts/AuthContext";
 import { apiFetch, describeApiError } from "@/lib/api-client";
 import {
   mapApiOrganizationSubscription,
@@ -21,7 +21,7 @@ import {
 export function useOrganizationSubscription() {
   const { user } = useAuth();
   const organizationId = typeof user?.organization_id === "number" ? user.organization_id : null;
-  const canManage = hasRole(user, "dealer_org_admin") || hasRole(user, "super_admin");
+  const canManage = can(user, "manage-org-subscriptions") || can(user, "admin-tenant-management");
   const [subscription, setSubscription] = useState<OrganizationSubscription | null>(null);
   const [loading, setLoading] = useState(organizationId !== null);
   const [error, setError] = useState<string | null>(null);

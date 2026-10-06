@@ -13,7 +13,7 @@ import {
 import { favoriteCars, getCarById } from "@/data/cars";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { mapApiListingToCar, type ApiListing } from "@/lib/mapApiListing";
-import { useAuth } from "@/contexts/AuthContext";
+import { can, useAuth } from "@/contexts/AuthContext";
 import type { Car } from "@/types/cars";
 
 const COMPARE_STORAGE_KEY = "hmp-compare-ids";
@@ -35,6 +35,9 @@ type ListingActionsContextValue = {
   isFavorite: (id: number) => boolean;
   addToCompare: (car: Car) => void;
   toggleFavorite: (car: Car) => void;
+  // SRS §2.2 P1 "save searches & vehicles" is a buyer capability: false for a signed-in account
+  // without it (e.g. a seller), so favorites aren't offered. Guests keep local favorites.
+  canFavorite: boolean;
   removeFromCompare: (id: number) => void;
   removeFromFavorite: (id: number) => void;
   openComparePanel: () => void;
@@ -186,10 +189,12 @@ export function ListingActionsProvider({
 
   // Signed-in users' favorites are real Watchlist rows — merge them in on login (and drop
   // them again on logout, so one browser's local list can't leak into the next account).
+  const canFavorite = !user || can(user, "save-searches-and-vehicles");
+
   useEffect(() => {
     let cancelled = false;
 
-    if (!user) {
+    if (!user || !can(user, "save-searches-and-vehicles")) {
       queueMicrotask(() => {
         if (!cancelled) setWatchlistEntryIds({});
       });
@@ -317,6 +322,8 @@ export function ListingActionsProvider({
 
   const toggleFavorite = useCallback(
     (car: Car) => {
+      if (!canFavorite) return;
+
       setCarCache((current) => ({ ...current, [car.id]: car }));
 
       const currentlyFavorite = favoriteIds.includes(car.id);
@@ -360,7 +367,7 @@ export function ListingActionsProvider({
           }
         });
     },
-    [favoriteIds, user, watchlistEntryIds],
+    [canFavorite, favoriteIds, user, watchlistEntryIds],
   );
 
   const value = useMemo(
@@ -373,6 +380,7 @@ export function ListingActionsProvider({
       isFavorite,
       addToCompare,
       toggleFavorite,
+      canFavorite,
       removeFromCompare,
       removeFromFavorite,
       openComparePanel,
@@ -388,6 +396,7 @@ export function ListingActionsProvider({
       isFavorite,
       addToCompare,
       toggleFavorite,
+      canFavorite,
       removeFromCompare,
       removeFromFavorite,
       openComparePanel,
