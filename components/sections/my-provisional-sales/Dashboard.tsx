@@ -125,7 +125,7 @@ function Dashboard() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Provisional sales</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     When a lot you consign hammers below reserve, it lands here for you to
                     accept, decline, or counter — and when you&apos;re the highest bidder on a
                     lot like that, any counter-offer you need to respond to shows up here too.

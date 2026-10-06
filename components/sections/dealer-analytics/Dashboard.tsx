@@ -10,7 +10,7 @@ import DealerAnalyticsChart from "./DealerAnalyticsChart";
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="tfcl-card p-3">
-      <div className="text-color-1 mb-1">{label}</div>
+      <div className="text-color-2 mb-1">{label}</div>
       <div style={{ fontSize: 28, fontWeight: 600 }}>{value}</div>
     </div>
   );
@@ -198,7 +198,7 @@ export default function Dashboard() {
                           {analytics.leads.total} total ·{" "}
                           {analytics.leads.conversionRate !== null ? `${(analytics.leads.conversionRate * 100).toFixed(1)}% converted` : "no conversions yet"}
                         </p>
-                        <p className="text-color-1 mb-0">
+                        <p className="text-color-2 mb-0">
                           New {analytics.leads.byStatus.new} · Contacted {analytics.leads.byStatus.contacted} · Converted{" "}
                           {analytics.leads.byStatus.converted} · Lost {analytics.leads.byStatus.lost}
                         </p>
@@ -212,7 +212,7 @@ export default function Dashboard() {
                             ? `${(analytics.appointments.noShowRate * 100).toFixed(1)}% no-show rate`
                             : "No completed or missed test drives yet"}
                         </p>
-                        <p className="text-color-1 mb-0">
+                        <p className="text-color-2 mb-0">
                           Booked {analytics.appointments.booked} · Completed {analytics.appointments.completed} · No-show{" "}
                           {analytics.appointments.noShow} · Cancelled {analytics.appointments.cancelled}
                         </p>

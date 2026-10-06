@@ -19,7 +19,7 @@ export function PartExchangeSummary({ appraisal }: { appraisal: ApiPartExchangeA
     <>
       <p className="mb-1">
         Instant part-exchange range: <b>{pounds(appraisal.trade_in_range.low)} – {pounds(appraisal.trade_in_range.high)}</b>{" "}
-        <span className="text-color-1">({appraisal.confidence} confidence, at {appraisal.mileage.toLocaleString("en-GB")} miles)</span>
+        <span className="text-color-2">({appraisal.confidence} confidence, at {appraisal.mileage.toLocaleString("en-GB")} miles)</span>
       </p>
       {appraisal.outstanding_settlement_figure && (
         <p className="mb-1">
@@ -113,11 +113,11 @@ export default function PartExchangeStep({ onChange }: { onChange: (vehicleId: n
             <b>
               {[result.vehicle.year, result.vehicle.make, result.vehicle.model].filter(Boolean).join(" ") || "Your car"}
             </b>{" "}
-            {result.vehicle.vrm && <span className="text-color-1">({result.vehicle.vrm})</span>}
-            {result.vehicle.colour && <span className="text-color-1"> · {result.vehicle.colour}</span>}
+            {result.vehicle.vrm && <span className="text-color-2">({result.vehicle.vrm})</span>}
+            {result.vehicle.colour && <span className="text-color-2"> · {result.vehicle.colour}</span>}
           </p>
           <PartExchangeSummary appraisal={result.appraisal} />
-          <p className="text-color-1 fs-13 mb-2">The final figure is confirmed by the dealer when they see the car.</p>
+          <p className="text-color-2 fs-13 mb-2">The final figure is confirmed by the dealer when they see the car.</p>
           <button
             type="button"
             className="sc-button"

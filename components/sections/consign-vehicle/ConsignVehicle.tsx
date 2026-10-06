@@ -108,7 +108,7 @@ function ConsignVehicle() {
               <main id="main" className="main-content">
                 <form className="tfcl-dashboard add-list" onSubmit={handleSubmit}>
                   <h1 className="admin-title mb-3">Consign a vehicle to auction</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Describe your vehicle and choose an upcoming sale still accepting
                     consignments. It enters the catalog in a &quot;cataloged&quot; state, and goes
                     live once the VAT and V5C details below are in, an inspector has published a

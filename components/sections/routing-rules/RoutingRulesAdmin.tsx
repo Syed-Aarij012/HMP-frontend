@@ -51,7 +51,7 @@ export default function RoutingRulesAdmin() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Auto-routing rules</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Rules are evaluated in priority order (lowest first); the first fully-matching active rule wins.
                   </p>
 

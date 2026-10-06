@@ -42,7 +42,7 @@ function Dashboard() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Bidding deposits</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     A refundable deposit funds your bidding headroom alongside (or instead of) a
                     trade credit account.
                   </p>

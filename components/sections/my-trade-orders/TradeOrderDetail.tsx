@@ -41,7 +41,7 @@ export default function TradeOrderDetail({ id }: { id: number }) {
                               .join(" ")
                           : `Trade order #${tradeOrder.id}`}
                       </h1>
-                      <p className="text-color-1 mb-3">
+                      <p className="text-color-2 mb-3">
                         <Link href={`/auction/${tradeOrder.lotId}`}>View lot</Link> &middot; Status:{" "}
                         <span className="text-capitalize">{tradeOrder.status.replace("_", " ")}</span>
                       </p>

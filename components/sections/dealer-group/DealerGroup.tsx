@@ -33,7 +33,7 @@ function OpenDealership({ onOpen }: { onOpen: (body: Record<string, unknown>) =>
   return (
     <form onSubmit={submit} className="tfcl-card p-3 mb-4">
       <h4 className="mb-1">Open a new dealership</h4>
-      <p className="text-color-1 fs-13 mb-3">It joins your group with its own public page. Give it an Org Admin who then sets up rooftops and staff. KYB starts as pending.</p>
+      <p className="text-color-2 fs-13 mb-3">It joins your group with its own public page. Give it an Org Admin who then sets up rooftops and staff. KYB starts as pending.</p>
       <div className="row">
         <div className="col-md-6 mb-2"><input className="form-control" placeholder="Dealership name" aria-label="Dealership name" value={form.name} onChange={set("name")} required /></div>
         <div className="col-md-6 mb-2"><input className="form-control" placeholder="Org Admin's full name" aria-label="Org Admin name" value={form.admin_name} onChange={set("admin_name")} required /></div>
@@ -104,7 +104,7 @@ export default function DealerGroup() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-1">{overview ? overview.group.name : "Dealer group"}</h1>
-                  <p className="text-color-1 mb-3">Your dealerships, their stock and their Org Admins in one place. Each dealership still manages its own ads, rooftops and staff.</p>
+                  <p className="text-color-2 mb-3">Your dealerships, their stock and their Org Admins in one place. Each dealership still manages its own ads, rooftops and staff.</p>
 
                   {loading && <p>Loading your group...</p>}
                   {error && <div className="alert alert-danger">{error}</div>}
@@ -121,7 +121,7 @@ export default function DealerGroup() {
                         ].map(([label, value]) => (
                           <div key={label} className="col-6 col-md-4 col-xl mb-2">
                             <div className="tfcl-card p-3">
-                              <div className="text-color-1 fs-13">{label}</div>
+                              <div className="text-color-2 fs-13">{label}</div>
                               <div style={{ fontSize: 26, fontWeight: 700 }}>{value}</div>
                             </div>
                           </div>
@@ -133,7 +133,7 @@ export default function DealerGroup() {
                           <div key={d.id} className="col-md-6 col-xl-4 mb-3">
                             <div className="tfcl-card p-3 h-100">
                               <h5 className="mb-1">{d.name}</h5>
-                              <div className="fs-13 text-color-1 mb-2">
+                              <div className="fs-13 text-color-2 mb-2">
                                 KYB {d.kyb_status} · {d.status}
                               </div>
                               <div className="fs-14 mb-2">
@@ -185,7 +185,7 @@ export default function DealerGroup() {
                             <tbody>
                               {ads.data.map((ad) => (
                                 <tr key={ad.id}>
-                                  <td><Link href={`/listing-detail-v1/${ad.id}`}>{ad.title || "Ad"}</Link><div className="fs-13 text-color-1">{ad.vrm ?? ""}</div></td>
+                                  <td><Link href={`/listing-detail-v1/${ad.id}`}>{ad.title || "Ad"}</Link><div className="fs-13 text-color-2">{ad.vrm ?? ""}</div></td>
                                   <td>{ad.dealership ?? "-"}</td>
                                   <td>{ad.rooftop ?? "Whole dealership"}</td>
                                   <td>£{Number(ad.price).toLocaleString("en-GB")}</td>

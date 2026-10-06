@@ -132,7 +132,7 @@ export default function Dashboard() {
                       <div className="tfcl-card p-3 mb-4">
                         <div className="d-flex justify-content-between flex-wrap gap-10">
                           <div>
-                            <div className="text-color-1 mb-1">Current plan</div>
+                            <div className="text-color-2 mb-1">Current plan</div>
                             <h3 className="mb-1">{subscription.plan.title}</h3>
                             <p className="mb-0">
                               {money(subscription.plan.price)} / {interval(subscription.plan)} ·{" "}
@@ -140,7 +140,7 @@ export default function Dashboard() {
                             </p>
                           </div>
                           <div className="text-md-end">
-                            <div className="text-color-1 mb-1">Current cycle</div>
+                            <div className="text-color-2 mb-1">Current cycle</div>
                             <p className="mb-0">
                               {date(subscription.startedAt)} – {date(subscription.endsAt)}
                             </p>

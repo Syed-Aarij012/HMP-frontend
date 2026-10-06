@@ -25,13 +25,13 @@ function ClaimsSection({ order, records }: { order: TradeOrder; records: ReturnT
         <div key={claim.id} className="mb-2">
           <b className="text-capitalize">{claim.claim_type.replace(/_/g, " ")}</b> — <span className="text-capitalize">{claim.status.replace(/_/g, " ")}</span>
           {claim.resolution && ` (${claim.resolution.replace(/_/g, " ")}${claim.resolution_amount ? `, ${money(claim.resolution_amount)}` : ""})`}
-          <div className="text-color-1">{claim.description}</div>
-          {claim.resolution_notes && <div className="text-color-1">Outcome: {claim.resolution_notes}</div>}
+          <div className="text-color-2">{claim.description}</div>
+          {claim.resolution_notes && <div className="text-color-2">Outcome: {claim.resolution_notes}</div>}
         </div>
       ))}
 
-      {closes === null && <p className="text-color-1">You can raise a claim once the vehicle has been collected.</p>}
-      {closes !== null && !open && <p className="text-color-1">The claim window closed on {when(order.assuranceClaimWindowClosesAt)}.</p>}
+      {closes === null && <p className="text-color-2">You can raise a claim once the vehicle has been collected.</p>}
+      {closes !== null && !open && <p className="text-color-2">The claim window closed on {when(order.assuranceClaimWindowClosesAt)}.</p>}
 
       {open && (
         <form
@@ -42,7 +42,7 @@ function ClaimsSection({ order, records }: { order: TradeOrder; records: ReturnT
             if (ok) setDescription("");
           }}
         >
-          <p className="text-color-1">You can raise a claim until {when(order.assuranceClaimWindowClosesAt)}.</p>
+          <p className="text-color-2">You can raise a claim until {when(order.assuranceClaimWindowClosesAt)}.</p>
           {records.claimError && <div className="alert alert-danger">{records.claimError}</div>}
           {sent && <div className="alert alert-success">Claim submitted. We aim to review it within one working day.</div>}
           <select className="form-control mb-2" value={type} onChange={(e) => setType(e.target.value)} aria-label="Claim type">

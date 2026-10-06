@@ -46,7 +46,7 @@ export default function QuickReplies({
   return (
     <div className="mb-2">
       <div className="flex gap-8 align-center" style={{ flexWrap: "wrap" }} role="group" aria-label="Quick replies">
-        <span className="fs-13 text-color-1">Quick replies:</span>
+        <span className="fs-13 text-color-2">Quick replies:</span>
         {system.map((reply) => (
           <button key={reply.key} type="button" style={chipStyle} disabled={disabled} title={reply.body} onClick={() => insert(reply)}>
             {reply.title}

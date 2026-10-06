@@ -54,7 +54,7 @@ function Security() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Security</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Two-factor authentication is required before placing a bid of £10,000 or
                     more, and to enroll in it you&apos;ll need an authenticator app (Google
                     Authenticator, Authy, etc.).
@@ -134,7 +134,7 @@ function Security() {
                   {recoveryCodes && (
                     <div className="tfcl-card mb-4">
                       <h4 className="mb-2">Save your recovery codes</h4>
-                      <p className="text-color-1 mb-2">
+                      <p className="text-color-2 mb-2">
                         Each code can be used once if you lose access to your authenticator
                         app. This is the only time they&apos;ll be shown.
                       </p>

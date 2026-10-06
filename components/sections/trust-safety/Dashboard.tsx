@@ -84,7 +84,7 @@ function CaseReview({
           {detail.conversation && (
             <>
               <h5 className="mb-1">Conversation</h5>
-              <p className="text-color-1 mb-2">
+              <p className="text-color-2 mb-2">
                 {detail.conversation.listing_id ? (
                   <Link
                     href={`/listing-detail-v1/${detail.conversation.listing_id}`}
@@ -121,7 +121,7 @@ function CaseReview({
                           : "1px solid transparent",
                       }}
                     >
-                      <div className="fs-13 text-color-1">
+                      <div className="fs-13 text-color-2">
                         {message.sender?.name ?? "Unknown"} ·{" "}
                         {when(message.created_at)}
                         {isCaseMessage && (
@@ -135,7 +135,7 @@ function CaseReview({
                         {message.body}
                       </div>
                       {message.attachment_count > 0 && (
-                        <div className="fs-13 text-color-1">
+                        <div className="fs-13 text-color-2">
                           {message.attachment_count} attachment(s)
                         </div>
                       )}
@@ -276,7 +276,7 @@ function Queue() {
           <option value="dismissed">Dismissed</option>
           <option value="all">All</option>
         </select>
-        <span className="text-color-1">{total} case(s)</span>
+        <span className="text-color-2">{total} case(s)</span>
       </div>
 
       {loading && <p>Loading cases...</p>}

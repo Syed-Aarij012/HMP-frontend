@@ -21,7 +21,7 @@ type UploadVideoSpinSectionProps = {
 // instead of letting a large file upload only to be rejected by the server.
 function NotInPlan({ what }: { what: string }) {
   return (
-    <p className="text-color-1 mt-2">
+    <p className="text-color-2 mt-2">
       {what} aren&apos;t included in your plan. <Link href="/subscription">Upgrade your subscription</Link> to add them.
     </p>
   );
@@ -101,7 +101,7 @@ export default function UploadVideoSpinSection({
           {!entitlementsLoading && !canUploadVideo ? (
             <NotInPlan what="Video uploads" />
           ) : (
-            <p className="text-color-1 mt-2">Up to {MAX_VIDEO_DURATION_SECONDS / 60} minutes.</p>
+            <p className="text-color-2 mt-2">Up to {MAX_VIDEO_DURATION_SECONDS / 60} minutes.</p>
           )}
           {videoError && <div className="alert alert-danger mt-2">{videoError}</div>}
         </div>
@@ -126,7 +126,7 @@ export default function UploadVideoSpinSection({
           {!entitlementsLoading && !canUpload360 ? (
             <NotInPlan what="360° spin sets" />
           ) : (
-            <p className="text-color-1 mt-2">At least {MIN_SPIN_SET_FRAMES} frames, one set per vehicle.</p>
+            <p className="text-color-2 mt-2">At least {MIN_SPIN_SET_FRAMES} frames, one set per vehicle.</p>
           )}
           {spinError && <div className="alert alert-danger mt-2">{spinError}</div>}
         </div>

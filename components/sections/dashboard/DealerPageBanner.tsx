@@ -17,7 +17,7 @@ export default function DealerPageBanner({ adCount }: { adCount: number }) {
     <div className="tfcl-card p-3 mb-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
       <div>
         <h5 className="mb-1">{storefront.display_name}</h5>
-        <div className="text-color-1 fs-14">
+        <div className="text-color-2 fs-14">
           Your dealer page shows buyers all {adCount} of your ads. Add, edit or remove ads below and it updates straight away.
         </div>
       </div>

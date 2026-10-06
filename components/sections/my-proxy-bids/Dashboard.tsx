@@ -19,7 +19,7 @@ function Dashboard() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">My proxy bids</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Your armed proxy maxima are confidential — even to you, once lodged — so
                     only their status and the lot they&apos;re on show here. Your aggregate
                     exposure against them is on{" "}

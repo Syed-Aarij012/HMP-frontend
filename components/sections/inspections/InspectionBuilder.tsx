@@ -89,7 +89,7 @@ function PhotoWithPins({
       </div>
       <div className="flex gap-10 mt-1" style={{ justifyContent: "space-between" }}>
         <span className="text-capitalize">{media.type}</span>
-        <span className={media.qaStatus === "failed" ? "text-color-danger" : "text-color-1"}>
+        <span className={media.qaStatus === "failed" ? "text-color-danger" : "text-color-2"}>
           {QA_STATUS_LABELS[media.qaStatus]}
         </span>
       </div>
@@ -259,7 +259,7 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
                   <h1 className="admin-title mb-3">
                     Condition report — {vehicle.make} {vehicle.model} {vehicle.derivative}
                   </h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     VIN {vehicle.vin} · VRM {vehicle.currentVrm ?? "-"} · Provenance: {vehicle.provenanceStatus}
                   </p>
 
@@ -357,7 +357,7 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
                                 <span>{capturingGeo ? "Getting location..." : geo ? "Re-capture location" : "Capture my location"}</span>
                               </button>
                               {geo && (
-                                <span className="text-color-1">
+                                <span className="text-color-2">
                                   {geo.lat.toFixed(5)}, {geo.lng.toFixed(5)}
                                 </span>
                               )}
@@ -405,7 +405,7 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
                       {suggestions.length > 0 && (
                         <div className="tfcl-card p-3 mb-3">
                           <h4 className="mb-2">CV-suggested damage</h4>
-                          <p className="text-color-1 mb-2">Proposals only — nothing here affects the grade until you confirm it by pinning it to the photo.</p>
+                          <p className="text-color-2 mb-2">Proposals only — nothing here affects the grade until you confirm it by pinning it to the photo.</p>
                           {suggestions.map((s, i) => (
                             <div key={i} className="flex gap-10 mb-1" style={{ alignItems: "center" }}>
                               <span>{s.panel} · {s.damageType} · {s.severity}</span>

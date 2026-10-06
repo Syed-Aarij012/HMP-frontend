@@ -185,11 +185,11 @@ export default function ListingSearchBar({ params, interpretation, locationArea,
         </div>
       </form>
 
-      {saveMessage && <p className="text-color-1 mt-2">{saveMessage}</p>}
+      {saveMessage && <p className="text-color-2 mt-2">{saveMessage}</p>}
       {searchError && <div className="alert alert-warning mt-2">{searchError}</div>}
 
       {(chips.length > 0 || corrections.length > 0 || locationArea) && (
-        <p className="text-color-1 mt-2">
+        <p className="text-color-2 mt-2">
           {chips.length > 0 && <>Understood as {chips.join(", ")}. </>}
           {corrections.map(([from, to]) => (
             <span key={from}>

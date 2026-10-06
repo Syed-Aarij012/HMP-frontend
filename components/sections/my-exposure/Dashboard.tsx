@@ -16,7 +16,7 @@ function Dashboard() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">My exposure</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     What you&apos;ve committed across every lot you&apos;re currently active on, and
                     what&apos;s left before bidding is declined for insufficient funding.
                   </p>

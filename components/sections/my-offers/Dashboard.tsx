@@ -29,7 +29,7 @@ function OfferRow({
       <td>
         £{offer.amount.toLocaleString()}
         {offer.partExchange && (
-          <div className="fs-13 text-color-1">
+          <div className="fs-13 text-color-2">
             + part-exchange
             {offer.partExchange.low !== null && offer.partExchange.high !== null
               ? ` (£${Math.round(offer.partExchange.low).toLocaleString()}–£${Math.round(offer.partExchange.high).toLocaleString()})`
@@ -93,7 +93,7 @@ export default function Dashboard() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">My offers</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Offers you have made, and offers made on your own listings — accept, decline or counter.
                   </p>
 

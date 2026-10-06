@@ -34,7 +34,7 @@ function SavedSearches() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Saved searches</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     We check your saved searches for new listings and price drops and notify you in
                     the app. Turn on email to also get them by email — you can unsubscribe from
                     any email in one click.
@@ -68,7 +68,7 @@ function SavedSearches() {
                             <tr key={search.id}>
                               <td>
                                 {describeQuery(search.query)}
-                                <div className="text-color-1" style={{ fontSize: 12 }}>
+                                <div className="text-color-2" style={{ fontSize: 12 }}>
                                   {search.channel === "auction" ? "Auction" : "Retail"}
                                 </div>
                               </td>

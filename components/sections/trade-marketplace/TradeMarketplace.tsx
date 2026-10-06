@@ -43,7 +43,7 @@ function TradeMarketplace() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Trade marketplace — Buy Now</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Fixed-price trade stock — purchase instantly at the seller&apos;s asking
                     price, no bidding.
                   </p>
@@ -93,7 +93,7 @@ function TradeMarketplace() {
                                     <span>{submitting && buyingId === listing.id ? "Buying..." : "Buy now"}</span>
                                   </button>
                                 ) : (
-                                  <span className="text-color-1">View only</span>
+                                  <span className="text-color-2">View only</span>
                                 )}
                               </td>
                             </tr>

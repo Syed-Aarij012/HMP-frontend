@@ -28,20 +28,20 @@ export default function ListingDocumentsSection({ vehiclePublicId }: { vehiclePu
   return (
     <div className="tfcl-card p-3 mb-3">
       <h4 className="mb-1">Documents</h4>
-      <p className="text-color-1 fs-13 mb-3">
+      <p className="text-color-2 fs-13 mb-3">
         Add your V5C logbook, MOT and service history. Our reviewers check them before your listing goes live; they&apos;re
         never shown to buyers.
       </p>
 
       {loading && <p>Loading documents...</p>}
-      {!loading && documents.length === 0 && <p className="text-color-1">No documents yet.</p>}
+      {!loading && documents.length === 0 && <p className="text-color-2">No documents yet.</p>}
       {documents.length > 0 && (
         <ul className="list-unstyled mb-3">
           {documents.map((doc) => (
             <li key={doc.id} className="d-flex align-items-center justify-content-between gap-2 py-2" style={{ borderBottom: "1px solid #eee" }}>
               <div>
                 <b>{LABELS[doc.type] ?? doc.type}</b>
-                <div className="fs-13 text-color-1">
+                <div className="fs-13 text-color-2">
                   {doc.original_name} · {(doc.size_bytes / 1024).toFixed(0)} KB
                 </div>
               </div>

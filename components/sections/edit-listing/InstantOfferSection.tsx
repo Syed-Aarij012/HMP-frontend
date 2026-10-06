@@ -70,7 +70,7 @@ export default function InstantOfferSection({ vehiclePublicId, vrm, mileage, lis
         </div>
       ) : (
         <>
-          <p className="text-color-1 fs-13 mb-2">
+          <p className="text-color-2 fs-13 mb-2">
             Get an instant offer and we&apos;ll sell your car to trade buyers at auction — no viewings or negotiating.
             {listed && " Withdraw your listing first if you choose this."}
           </p>

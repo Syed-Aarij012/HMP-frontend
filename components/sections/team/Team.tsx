@@ -62,7 +62,7 @@ function PermissionChecks({ options, roleGiven, value, onChange, disabled }: {
               onChange={(e) => onChange(e.target.checked ? [...value, permission] : value.filter((p) => p !== permission))}
             />{" "}
             {PERMISSION_LABELS[permission] ?? permission}
-            {fromRole && <span className="text-color-1"> (from role)</span>}
+            {fromRole && <span className="text-color-2"> (from role)</span>}
           </label>
         );
       })}
@@ -80,7 +80,7 @@ function RooftopRolesEditor({ rooftops, roles, wideRoles, value, onChange, disab
   disabled?: boolean;
 }) {
   const bindable = roles.filter((r) => r.name !== "dealer_org_admin" && !wideRoles.includes(r.name));
-  if (rooftops.length === 0 || bindable.length === 0) return <span className="fs-13 text-color-1">No rooftops yet.</span>;
+  if (rooftops.length === 0 || bindable.length === 0) return <span className="fs-13 text-color-2">No rooftops yet.</span>;
 
   return (
     <div className="d-flex flex-column gap-2">
@@ -160,14 +160,14 @@ function StaffRow({ member, isSelf, roles, delegable, rooftops, onSave }: {
       <td>
         <b>{member.name}</b>
         {isSelf && <span className="badge bg-light text-dark border ms-1">You</span>}
-        <div className="fs-13 text-color-1">{member.email}</div>
+        <div className="fs-13 text-color-2">{member.email}</div>
         <span className={`badge ${member.status === "active" ? "bg-success" : "bg-danger"} text-capitalize`}>
           {member.status === "suspended" ? "deactivated" : member.status}
         </span>
       </td>
       <td style={{ minWidth: 180 }}>
         <RoleChecks roles={roles} value={memberRoles} onChange={setMemberRoles} disabled={isSelf} />
-        {isSelf && <div className="fs-13 text-color-1 mt-1">Another Org Admin changes your roles.</div>}
+        {isSelf && <div className="fs-13 text-color-2 mt-1">Another Org Admin changes your roles.</div>}
       </td>
       <td style={{ minWidth: 220 }}>
         <PermissionChecks options={delegable} roleGiven={roleGiven} value={extra} onChange={setExtra} disabled={isSelf} />
@@ -339,7 +339,7 @@ function Rooftops({ rooftops, onSave }: { rooftops: TeamRooftop[]; onSave: (id: 
   return (
     <div className="tfcl-card p-3">
       <h4 className="mb-2">Rooftops</h4>
-      {rooftops.length === 0 && <p className="text-color-1">No rooftops yet.</p>}
+      {rooftops.length === 0 && <p className="text-color-2">No rooftops yet.</p>}
       {rooftops.length > 0 && (
         <div className="table-responsive">
           <table className="table">
@@ -399,7 +399,7 @@ export default function Team() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-2">Team &amp; roles</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     Add staff, choose what each person can do, assign them to a rooftop and set a spending limit for auction
                     buying. Hover a role to see its permissions. A role under <b>Roles</b> applies across the whole dealership; under
                     <b> Rooftop roles</b> it applies at that rooftop only — so someone can be Sales Manager in Leeds and Sales Executive

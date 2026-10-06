@@ -170,10 +170,10 @@ export default function Dashboard() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">My payouts</h1>
-                  <p className="text-color-1 mb-3">Add a bank account, track what you&apos;re owed, and request a payout.</p>
+                  <p className="text-color-2 mb-3">Add a bank account, track what you&apos;re owed, and request a payout.</p>
 
                   <div className="tfcl-card p-3 mb-4">
-                    <div className="text-color-1 mb-1">Available to withdraw</div>
+                    <div className="text-color-2 mb-1">Available to withdraw</div>
                     {balanceLoading && <div style={{ fontSize: 28, fontWeight: 600 }}>...</div>}
                     {balanceError && <div className="alert alert-danger">{balanceError}</div>}
                     {balance && <div style={{ fontSize: 28, fontWeight: 600 }}>£{balance.amount.toLocaleString()}</div>}

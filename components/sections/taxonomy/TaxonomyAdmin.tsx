@@ -48,7 +48,7 @@ export default function TaxonomyAdmin() {
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Vehicle taxonomy</h1>
-                  <p className="text-color-1 mb-3">Draft a make/model/derivative tree, then publish it.</p>
+                  <p className="text-color-2 mb-3">Draft a make/model/derivative tree, then publish it.</p>
 
                   <div className="tfcl-card p-3 mb-3">
                     <h4 className="mb-2">Versions</h4>
@@ -116,7 +116,7 @@ export default function TaxonomyAdmin() {
                       {tree.length > 0 && (
                         <ul className="mb-3">
                           {flatNodes.map((n) => (
-                            <li key={n.id}>{n.label} <span className="text-color-1">({n.type})</span></li>
+                            <li key={n.id}>{n.label} <span className="text-color-2">({n.type})</span></li>
                           ))}
                         </ul>
                       )}
@@ -150,7 +150,7 @@ export default function TaxonomyAdmin() {
                         </form>
                       )}
                       {addError && <div className="alert alert-danger mt-2">{addError}</div>}
-                      {selectedVersion.publishedAt && <p className="text-color-1 mt-2">This version is published and read-only.</p>}
+                      {selectedVersion.publishedAt && <p className="text-color-2 mt-2">This version is published and read-only.</p>}
                     </div>
                   )}
                 </div>

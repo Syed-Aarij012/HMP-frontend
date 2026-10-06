@@ -42,7 +42,7 @@ function BackgroundReplacementControl({ vehiclePublicId, photoId }: { vehiclePub
       {error && <div className="alert alert-danger mt-2">{error}</div>}
       {previewUrl && (
         <div className="mt-2">
-          <p className="text-color-1 mb-1">Preview (the original photo is kept either way):</p>
+          <p className="text-color-2 mb-1">Preview (the original photo is kept either way):</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={previewUrl} alt="Background-replaced preview" style={{ maxWidth: 320, borderRadius: 6 }} />
         </div>
@@ -116,7 +116,7 @@ export default function GuidedCapture({ vehiclePublicId }: { vehiclePublicId: st
               <main id="main" className="main-content">
                 <div className="tfcl-dashboard">
                   <h1 className="admin-title mb-3">Guided photo capture</h1>
-                  <p className="text-color-1 mb-3">
+                  <p className="text-color-2 mb-3">
                     {requiredPassedCount} of {requiredCount} required shots done.
                   </p>
 
@@ -159,7 +159,7 @@ export default function GuidedCapture({ vehiclePublicId }: { vehiclePublicId: st
                   {currentShot && (
                     <div className="tfcl-card p-3">
                       <h4 className="mb-2">{currentShot.label}</h4>
-                      <p className="text-color-1 mb-2">{currentShot.tip}</p>
+                      <p className="text-color-2 mb-2">{currentShot.tip}</p>
 
                       {currentState?.status === "failed" && currentState.message && (
                         <div className="alert alert-danger mb-2">{currentState.message}</div>

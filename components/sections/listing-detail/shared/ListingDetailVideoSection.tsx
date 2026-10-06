@@ -35,7 +35,7 @@ export default function ListingDetailVideoSection({ car }: ListingDetailVideoSec
               Your browser can&apos;t play this video.
             </video>
             {formatDuration(video.durationSeconds) && (
-              <figcaption className="text-color-1 fs-13 mt-1">Walk-around video · {formatDuration(video.durationSeconds)}</figcaption>
+              <figcaption className="text-color-2 fs-13 mt-1">Walk-around video · {formatDuration(video.durationSeconds)}</figcaption>
             )}
           </figure>
         ))}

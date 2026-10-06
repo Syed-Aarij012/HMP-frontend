@@ -141,7 +141,7 @@ function MediaManager({
     <div className="tfcl-card p-3 mb-3">
       <h4 className="mb-2">Photos &amp; video</h4>
 
-      {photos.length === 0 && <p className="text-color-1">No photos yet.</p>}
+      {photos.length === 0 && <p className="text-color-2">No photos yet.</p>}
       <div className="d-flex flex-wrap gap-3 mb-3">
         {photos.map((photo) => (
           <div key={photo.id} style={{ width: 150 }}>
@@ -165,7 +165,7 @@ function MediaManager({
             {photo.qa_status === "failed" && (
               <div className="fs-13 text-danger mt-1">{photo.qa_message ?? "This photo failed the quality check."} Remove it and add a clearer one.</div>
             )}
-            {photo.qa_status === "pending" && <div className="fs-13 text-color-1 mt-1">Being checked...</div>}
+            {photo.qa_status === "pending" && <div className="fs-13 text-color-2 mt-1">Being checked...</div>}
           </div>
         ))}
       </div>
@@ -175,12 +175,12 @@ function MediaManager({
       </button>
 
       <h5 className="mt-4 mb-2">Video</h5>
-      {videos.length === 0 && <p className="text-color-1">No video yet.</p>}
+      {videos.length === 0 && <p className="text-color-2">No video yet.</p>}
       {videos.map((video) => (
         <div key={video.id} className="mb-3" style={{ maxWidth: 420 }}>
           <video src={video.url} controls preload="metadata" playsInline style={{ width: "100%", borderRadius: 6, background: "#000" }} />
           <div className="d-flex justify-content-between align-items-center mt-1">
-            <span className="fs-13 text-color-1">
+            <span className="fs-13 text-color-2">
               {video.duration_seconds ? `${video.duration_seconds}s` : "Walk-around video"}
               {video.qa_status === "pending" ? " · being checked" : ""}
             </span>
@@ -194,7 +194,7 @@ function MediaManager({
       <button type="button" className="sc-button" disabled={busy} onClick={() => videoInput.current?.click()}>
         <span>Add video</span>
       </button>
-      <p className="text-color-1 fs-13 mt-2 mb-0">Up to {MAX_VIDEO_SECONDS / 60} minutes per video.</p>
+      <p className="text-color-2 fs-13 mt-2 mb-0">Up to {MAX_VIDEO_SECONDS / 60} minutes per video.</p>
 
       {status && <p className="mt-2 mb-0">{status}</p>}
       {(error || videoError) && (
@@ -357,7 +357,7 @@ function EditForm({
             </Field>
           </div>
         </fieldset>
-        <p className="text-color-1 fs-13 mb-0">
+        <p className="text-color-2 fs-13 mb-0">
           The VIN can&apos;t be changed once a vehicle is registered on the platform. Changing the mileage or registration re-runs the
           vehicle checks.
         </p>
@@ -418,7 +418,7 @@ function EditForm({
         <Link href="/my-listing" className="sc-button">
           <span>Back to my listings</span>
         </Link>
-        <Link href={`/listing-detail-v1/${listingId}`} className="text-color-1">
+        <Link href={`/listing-detail-v1/${listingId}`} className="text-color-2">
           View listing
         </Link>
       </div>
