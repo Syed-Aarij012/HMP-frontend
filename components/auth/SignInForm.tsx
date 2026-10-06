@@ -93,7 +93,7 @@ export default function SignInForm({
         </>
       ) : (
         <>
-          <p className="text-color-1 mb-2">Enter the 6-digit code from your authenticator app.</p>
+          <p className="text-color-2 mb-2">Enter the 6-digit code from your authenticator app.</p>
           <input
             className="form-control mb-3"
             inputMode="numeric"

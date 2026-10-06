@@ -77,7 +77,7 @@ export default function SignUpForm({ onSignedUp, initialType }: { onSignedUp: (u
   if (!type) {
     return (
       <div>
-        <p className="text-color-1 mb-3">What would you like to do on HMP?</p>
+        <p className="text-color-2 mb-3">What would you like to do on HMP?</p>
         <div className="hmp-auth-types">
           {ACCOUNT_TYPES.map((option) => (
             <button key={option.value} type="button" className="hmp-auth-type" onClick={() => setType(option.value)}>
@@ -89,7 +89,7 @@ export default function SignUpForm({ onSignedUp, initialType }: { onSignedUp: (u
             </button>
           ))}
         </div>
-        <p className="fs-13 text-color-1 mt-3 mb-0">
+        <p className="fs-13 text-color-2 mt-3 mb-0">
           HMP staff (auctioneers, inspectors, support and admins) don&apos;t sign up here — your account is created for you. Just sign in.
         </p>
       </div>
@@ -101,7 +101,7 @@ export default function SignUpForm({ onSignedUp, initialType }: { onSignedUp: (u
       <div className="hmp-auth-chosen mb-3">
         <div>
           <div className="fw-bold">{chosen?.title}</div>
-          <div className="fs-13 text-color-1">{chosen?.text}</div>
+          <div className="fs-13 text-color-2">{chosen?.text}</div>
         </div>
         <button type="button" className="hmp-auth-link" onClick={() => setType(null)}>Change</button>
       </div>
@@ -143,7 +143,7 @@ export default function SignUpForm({ onSignedUp, initialType }: { onSignedUp: (u
           {form.password_confirmation !== "" && form.password !== form.password_confirmation && <div className="fs-13 text-danger mb-2">Passwords don&apos;t match.</div>}
         </div>
       </div>
-      <p className="fs-13 text-color-1">At least 8 characters.</p>
+      <p className="fs-13 text-color-2">At least 8 characters.</p>
 
       <button
         type="submit"

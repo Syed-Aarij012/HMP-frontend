@@ -25,7 +25,7 @@ export default function DemoAccounts({ onPick }: { onPick: (email: string, passw
   return (
     <details className="hmp-auth-demo">
       <summary>Demo accounts (local development only)</summary>
-      <p className="fs-13 text-color-1 mb-2">Every demo account uses the password <code>password</code>. Click one to sign in as it.</p>
+      <p className="fs-13 text-color-2 mb-2">Every demo account uses the password <code>password</code>. Click one to sign in as it.</p>
       <div className="hmp-auth-demo-grid">
         {DEMO_ACCOUNTS.map((account) => (
           <button key={account.email} type="button" onClick={() => onPick(account.email, "password")}>
