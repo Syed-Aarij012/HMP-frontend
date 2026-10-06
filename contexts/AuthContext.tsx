@@ -44,7 +44,7 @@ export function canAny(user: AuthUser | null, permissions: string[]): boolean {
 }
 
 type LoginResult =
-  | { status: "ok" }
+  | { status: "ok"; user: AuthUser | null }
   | { status: "two_factor_required"; challengeToken: string };
 
 export type RegisterPayload = {
@@ -69,9 +69,9 @@ type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
-  completeTwoFactorChallenge: (challengeToken: string, code: string) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
-  registerDealer: (payload: RegisterDealerPayload) => Promise<void>;
+  completeTwoFactorChallenge: (challengeToken: string, code: string) => Promise<AuthUser | null>;
+  register: (payload: RegisterPayload) => Promise<AuthUser>;
+  registerDealer: (payload: RegisterDealerPayload) => Promise<AuthUser>;
   updateProfile: (name: string, phone?: string) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
   removeAvatar: () => Promise<void>;
@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setStoredToken(data.token ?? null);
     setUser(data.user ?? null);
-    return { status: "ok" };
+    return { status: "ok", user: data.user ?? null };
   }, []);
 
   const completeTwoFactorChallenge = useCallback(async (challengeToken: string, code: string) => {
@@ -144,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
     setStoredToken(data.token ?? null);
     setUser(data.user ?? null);
+    return data.user ?? null;
   }, []);
 
   const register = useCallback(async (payload: RegisterPayload) => {
@@ -154,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setStoredToken(data.token);
     setUser(data.user);
+    return data.user;
   }, []);
 
   const registerDealer = useCallback(async (payload: RegisterDealerPayload) => {
@@ -164,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setStoredToken(data.token);
     setUser(data.user);
+    return data.user;
   }, []);
 
   const updateProfile = useCallback(async (name: string, phone?: string) => {
