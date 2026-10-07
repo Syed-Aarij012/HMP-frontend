@@ -255,13 +255,13 @@ export default function LotDetail({ publicId }: { publicId: string }) {
                       </p>
 
                       {snapshot?.laneStatus === "paused" && (
-                        <div className="alert alert-danger mb-3">
+                        <div className="alert alert-danger mb-3" role="alert" aria-live="assertive">
                           This lane is paused by the auctioneer. Bidding resumes when they restart it.
                         </div>
                       )}
 
                       {connectionDegraded && (
-                        <div className="alert alert-danger mb-3">
+                        <div className="alert alert-danger mb-3" role="alert" aria-live="assertive">
                           {connectionDropped
                             ? "Live updates dropped, so the price shown may be out of date. You can still bid, but check the latest price first. We refresh it every few seconds."
                             : "Your connection to the auction is slow right now, so the price shown may be a moment behind. You can still bid, but check the latest price first."}
@@ -270,7 +270,10 @@ export default function LotDetail({ publicId }: { publicId: string }) {
 
                       <div className="row mb-4">
                         <div className="col-md-6">
-                          <p><b>Current price:</b> {formatPrice(snapshot?.currentPrice ?? lot.currentPrice)}
+                          {/* UX-003: screen-reader announcement on bid events — this region's
+                              text only changes when the price/leader actually changes, so it
+                              self-limits to real events instead of firing on every poll. */}
+                          <p role="status" aria-live="polite"><b>Current price:</b> {formatPrice(snapshot?.currentPrice ?? lot.currentPrice)}
                             {snapshot?.isLeading && isBiddable && <span style={{ color: "#2ecc71" }}> · You&apos;re the highest bidder</span>}
                           </p>
                           <LotCountdown closesAt={closesAt} offsetMs={offsetMs} />
@@ -325,9 +328,9 @@ export default function LotDetail({ publicId }: { publicId: string }) {
                         <ConditionReportSection report={lot.conditionReport} vehicle={lot.vehicle} />
                       )}
 
-                      {notice && <div className="alert alert-success mb-3">{notice}</div>}
+                      {notice && <div className="alert alert-success mb-3" role="status" aria-live="polite">{notice}</div>}
                       {actionError && stepUpFor === null && (
-                        <div className="alert alert-danger mb-3">{actionError}</div>
+                        <div className="alert alert-danger mb-3" role="alert" aria-live="assertive">{actionError}</div>
                       )}
 
                       {stepUpFor && (
