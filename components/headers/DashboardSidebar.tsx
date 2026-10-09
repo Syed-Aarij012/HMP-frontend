@@ -86,6 +86,27 @@ const dashboardMenuItems: DashboardMenuItem[] = [
     label: "My payouts",
   },
   {
+    id: "my-transport",
+    href: "/my-transport",
+    className: "menu-index-4",
+    iconClass: "icon-carus-map",
+    label: "My transport",
+  },
+  {
+    id: "my-transport-jobs",
+    href: "/my-transport-jobs",
+    className: "menu-index-4",
+    iconClass: "icon-carus-map",
+    label: "Transport jobs",
+  },
+  {
+    id: "gate-release",
+    href: "/gate-release",
+    className: "menu-index-4",
+    iconClass: "icon-carus-shieldcheck",
+    label: "Vehicle release",
+  },
+  {
     id: "message",
     href: "/message",
     className: "menu-index-4",

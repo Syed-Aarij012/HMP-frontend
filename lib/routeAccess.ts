@@ -49,6 +49,9 @@ const ROUTE_REQUIREMENTS: [prefix: string, requirement: RouteRequirement][] = [
   ["/my-listing", { permissions: ["manage-own-listings", "manage-org-listings"] }],
   ["/dealer-stock-feed", { permissions: ["manage-org-listings"] }],
   ["/subscription", { permissions: ["manage-org-subscriptions"] }],
+  ["/my-transport-jobs", { permissions: ["perform-transport", "manage-logistics"] }],
+  ["/gate-release", { permissions: ["release-vehicle"] }],
+  ["/my-transport", { permissions: ["place-bid", "purchase-vehicles"] }],
   ["/leads", { organization: true }],
   ["/dealer-analytics", { organization: true, permissions: ["view-dealer-analytics-any"] }],
 ];

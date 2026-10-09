@@ -17,7 +17,7 @@ type FinanceQuote = {
 const PRODUCT_TYPE = "hp";
 
 function formatCurrency(value: string) {
-  return `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `£${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function LoanCalculatorForm() {
@@ -65,7 +65,7 @@ export default function LoanCalculatorForm() {
           id="total_price"
           className="tb-my-input format-currency"
           name="total_price"
-          placeholder="$"
+          placeholder="£"
           value={totalPrice}
           onChange={(e) => setTotalPrice(e.target.value)}
           // See LoginForm.tsx: a form-autofill browser extension tags every form control it
@@ -136,7 +136,7 @@ export default function LoanCalculatorForm() {
               Monthly payment
             </div>
             <div id="res_monthly_payment" className="fs-16 fw-5 lh-20 text-color-3 font">
-              {quote ? formatCurrency(quote.monthly_payment) : "$0.00"}
+              {quote ? formatCurrency(quote.monthly_payment) : "£0.00"}
             </div>
           </li>
         </ul>

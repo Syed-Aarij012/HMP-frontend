@@ -49,23 +49,9 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                 {dealer.description ? (
                   <p className="mb-3">{dealer.description}</p>
                 ) : (
-                  <>
-                    <p className="mb-2">
-                      Stay informed about emerging trends in the housing market,
-                      such as the demand for sustainable homes, technological
-                      advancements, and demographic shifts. Companies aligning with
-                      these trends may present attractive investment opportunities.
-                    </p>
-                    <p className="mb-3">
-                      Take a long-term investment approach if you believe in the
-                      stability and growth potential of the housing sector. Look for
-                      companies with solid fundamentals and a track record of
-                      success. For short-term traders, capitalize on market
-                      fluctuations driven by economic reports, interest rate
-                      changes, or industry-specific news. Keep a close eye on
-                      earnings reports and government housing data releases.
-                    </p>
-                  </>
+                  <p className="mb-3 text-color-2">
+                    {dealer.name} hasn&apos;t added a profile description yet.
+                  </p>
                 )}
                 <div className="features-thumb mb-4">
                   <Image
@@ -90,25 +76,27 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                 {/* The dealer's ads — the same grid and ad cards as a seller's profile, scoped to
                     this dealership only. */}
                 {dealer.organizationId !== undefined && (
-                  <div className="tf-list-car-agent">
+                  <div className="tf-list-car-agent" id="dealer-stock">
                     <SaleAgentListingsPanel
                       organizationId={dealer.organizationId}
                       title={`Ads from ${dealer.name} (${dealer.listingsCount ?? inventoryCars.length})`}
                     />
                   </div>
                 )}
-                <h2 className="mb-8">{dealer.name} servicing</h2>
-                <p className="mb-3 fs-14">
-                  Check out what {dealer.name} serves their customers
-                </p>
                 <div className="widget-book-apoint">
-                  <h3>Book an appointment</h3>
+                  <h3>Book a test drive</h3>
                   <p className="mb-3">
-                    You are interested in this dealership and want to book an
-                    appointment with <br /> them? Just leave your contact and
-                    preferred date and time
+                    Test drives are booked against a specific car — open one of{" "}
+                    {dealer.name}&apos;s listings below and use &quot;Book a test drive&quot;
+                    on that page.
                   </p>
-                  <a href="#">Book an appointment with Dealership</a>
+                  {leadFormCar ? (
+                    <Link href={`/listing-detail-v1/${leadFormCar.id}`}>
+                      View {leadFormCar.title}
+                    </Link>
+                  ) : (
+                    <span aria-disabled="true">No live listings to book against yet</span>
+                  )}
                 </div>
                 <div
                   className="listing-reviews dealer-review flat-property-detail"
@@ -303,67 +291,21 @@ function DealerDetail({ dealer }: DealerDetailProps) {
                 </div>
               )}
               <LatePriceListWidget footerHref="/listing-list" />
-              <div className="widget-categori-car widget">
-                <div className="listing-header">
-                  <h3>Cars for sale</h3>
+              {dealer.organizationId !== undefined && (
+                <div className="widget-categori-car widget">
+                  <div className="listing-header">
+                    <h3>Cars for sale</h3>
+                  </div>
+                  <ul>
+                    <li className="flex-two">
+                      <Link href="#dealer-stock" className="fs-16 fw-4">
+                        {dealer.name}
+                      </Link>
+                      <p>({(dealer.listingsCount ?? inventoryCars.length).toLocaleString()})</p>
+                    </li>
+                  </ul>
                 </div>
-                <ul>
-                  <li className="flex-two">
-                    <Link href={`/listing-list`} className="fs-16 fw-4">
-                      Toyota
-                    </Link>
-                    <p>(2.972)</p>
-                  </li>
-                  <li className="flex-two">
-                    <Link href={`/listing-list`} className="fs-16 fw-4">
-                      Ford
-                    </Link>
-                    <p>(2.796)</p>
-                  </li>
-                  <li className="flex-two">
-                    <Link href={`/listing-list`} className="fs-16 fw-4">
-                      Mitsubishi
-                    </Link>
-                    <p>(2.346)</p>
-                  </li>
-                  <li className="flex-two">
-                    <Link href={`/listing-list`} className="fs-16 fw-4">
-                      Honda
-                    </Link>
-                    <p>(1.839)</p>
-                  </li>
-                  <li className="flex-two">
-                    <Link href={`/listing-list`} className="fs-16 fw-4">
-                      Nissan
-                    </Link>
-                    <p>(1.732)</p>
-                  </li>
-                  <li className="flex-two">
-                    <Link href={`/listing-list`} className="fs-16 fw-4">
-                      Subaru
-                    </Link>
-                    <p>(783)</p>
-                  </li>
-                  <li className="flex-two">
-                    <Link href={`/listing-list`} className="fs-16 fw-4">
-                      Hyundai
-                    </Link>
-                    <p>(417)</p>
-                  </li>
-                  <li className="flex-two">
-                    <Link href={`/listing-list`} className="fs-16 fw-4">
-                      Mazda
-                    </Link>
-                    <p>(369)</p>
-                  </li>
-                  <li className="flex-two">
-                    <Link href={`/listing-list`} className="fs-16 fw-4">
-                      Suzuki
-                    </Link>
-                    <p>(226)</p>
-                  </li>
-                </ul>
-              </div>
+              )}
             </MobileDealerSidebarShell>
           </div>
         </div>
