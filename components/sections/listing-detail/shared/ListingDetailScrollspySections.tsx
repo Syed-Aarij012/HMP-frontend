@@ -40,7 +40,7 @@ export default function ListingDetailScrollspySections({
         <ListingDetailSimilarCarsSection car={car} />
       </ScrollspySection>
       <ScrollspySection id="scrollspyHeading4">
-        <ListingDetailLoanCalculatorSection />
+        <ListingDetailLoanCalculatorSection car={car} />
       </ScrollspySection>
       <ListingDetailLocationSection />
       <ScrollspySection id="scrollspyHeading5">
