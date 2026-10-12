@@ -45,7 +45,10 @@ function Hero() {
                     <ul className="ul flex flex-wrap category-list-car fade-item fade-item-2">
                       {heroCategories.map((category) => (
                         <li key={category.id}>
-                          <Link href={`/listing-grid`} className="flex-three">
+                          <Link
+                            href={`/listing-grid?${category.filterParam}=${category.filterValue}`}
+                            className="flex-three"
+                          >
                             <div className="icon">
                               <i className={category.icon} />
                             </div>

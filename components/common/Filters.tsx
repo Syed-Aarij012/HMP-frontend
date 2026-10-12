@@ -1,6 +1,7 @@
 "use client";
 
 import { Dispatch, useMemo, useReducer, useState } from "react";
+import { useRouter } from "next/navigation";
 import RangeSlider from "@/components/common/RangeSlider";
 import NiceSelect, {
   type NiceSelectOption,
@@ -27,7 +28,7 @@ import {
   setDriveType,
   setFuel,
   setMileageRange,
-  setModelCategory,
+  setModel,
   setOwnership,
   setPriceRange,
   setSeats,
@@ -118,13 +119,19 @@ type FiltersProps = {
   state?: ListingFilterState;
   dispatch?: Dispatch<ListingFilterAction>;
   priceOptions?: NiceSelectOption[];
+  // Real vehicle-model options sourced live from current inventory (see home03/CarFilter.tsx).
+  // Falls back to the static dummy list below for every other page that renders this search
+  // widget without fetching live data.
+  modelOptions?: NiceSelectOption[];
 };
 
 export default function Filters({
   state: controlledState,
   dispatch: controlledDispatch,
   priceOptions,
+  modelOptions,
 }: FiltersProps) {
+  const router = useRouter();
   const [localState, localDispatch] = useReducer(
     listingFilterReducer,
     listingFilterInitialState,
@@ -187,6 +194,21 @@ export default function Filters({
               method="post"
               onSubmit={(event) => {
                 event.preventDefault();
+                // Param names match /listing-grid's own URL convention
+                // (ListingGridContent.tsx's URL_PARAM_NAMES) so this hands off straight into
+                // its real, server-side-filtered search.
+                const params = new URLSearchParams();
+                if (state.brand) params.set("make", state.brand);
+                if (state.bodyType) params.set("body_type", state.bodyType);
+                if (state.model) params.set("model", state.model);
+                if (state.price[1] < state.listingPriceMax) {
+                  params.set("price_max", String(state.price[1]));
+                }
+                if (state.categoryTab !== "all") {
+                  params.set("tab", state.categoryTab);
+                }
+                const query = params.toString();
+                router.push(query ? `/listing-grid?${query}` : "/listing-grid");
               }}
             >
               <div className="wd-find-select flex align-end">
@@ -217,11 +239,9 @@ export default function Filters({
                     <div className="group-select">
                       <label>Model</label>
                       <NiceSelect
-                        options={MODEL_OPTIONS}
-                        value={state.modelCategory}
-                        onChange={(value) =>
-                          setModelCategory(String(value), dispatch)
-                        }
+                        options={modelOptions ?? MODEL_OPTIONS}
+                        value={state.model}
+                        onChange={(value) => setModel(String(value), dispatch)}
                       />
                     </div>
                   </div>
@@ -352,7 +372,7 @@ export default function Filters({
                       min={0}
                       max={state.listingPriceMax}
                       value={state.price}
-                      suffix="$"
+                      suffix="£"
                       thousand=","
                       onChange={(range) => setPriceRange(range, dispatch)}
                     />
