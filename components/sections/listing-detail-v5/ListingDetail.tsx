@@ -47,13 +47,13 @@ function ListingDetail({ title, car }: ListingDetailSectionProps) {
                 </ul>
               </div>
               <div className="heading-widget">
-                <div className="money text-color-3 font">$73,000</div>
+                <div className="money text-color-3 font">£73,000</div>
                 <div className="price-wrap">
                   <p className="fs-14 lh-16 text-color-2">
                     Monthly installment payment:{" "}
-                    <span className="fs-14 fw-6 font">$4,000</span>
+                    <span className="fs-14 fw-6 font">£4,000</span>
                   </p>
-                  <p className="fs-14 lh-16">New car price: $100.000</p>
+                  <p className="fs-14 lh-16">New car price: £100,000</p>
                 </div>
               </div>
               <ListingDetailV5Gallery

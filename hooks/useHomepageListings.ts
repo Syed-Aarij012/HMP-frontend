@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
-import { mapApiListingToCar, type ApiListingsResponse } from "@/lib/mapApiListing";
+import {
+  mapApiListingToCar,
+  type ApiFacetBucket,
+  type ApiListingsResponse,
+} from "@/lib/mapApiListing";
 import type { Car } from "@/types/cars";
 
 type FacetCounts = Record<string, number>;
@@ -21,6 +25,11 @@ export type HomepageListingsResult = {
   cars: Car[];
   makeCounts: FacetCounts;
   bodyTypeCounts: FacetCounts;
+  // Real vehicle model names (e.g. "Focus", "Civic") straight from the facet — unlike
+  // makeCounts/bodyTypeCounts above, keys are NOT lowercased: the model filter matches
+  // car.filterModel (= vehicle.model) with an exact, case-sensitive compare, so this has to
+  // carry the original casing through to stay matchable.
+  modelOptions: ApiFacetBucket[];
   loading: boolean;
   error: string | null;
 };
@@ -42,6 +51,7 @@ export function useHomepageListings(perPage = 12): HomepageListingsResult {
   const [cars, setCars] = useState<Car[]>([]);
   const [makeCounts, setMakeCounts] = useState<FacetCounts>({});
   const [bodyTypeCounts, setBodyTypeCounts] = useState<FacetCounts>({});
+  const [modelOptions, setModelOptions] = useState<ApiFacetBucket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,6 +64,7 @@ export function useHomepageListings(perPage = 12): HomepageListingsResult {
         setCars(response.data.map(mapApiListingToCar));
         setMakeCounts(toCounts(response.facets?.make));
         setBodyTypeCounts(toCounts(response.facets?.body_type));
+        setModelOptions(response.facets?.model ?? []);
       })
       .catch(() => {
         if (!cancelled) setError("Could not load live listings from the server.");
@@ -67,5 +78,5 @@ export function useHomepageListings(perPage = 12): HomepageListingsResult {
     };
   }, [perPage]);
 
-  return { cars, makeCounts, bodyTypeCounts, loading, error };
+  return { cars, makeCounts, bodyTypeCounts, modelOptions, loading, error };
 }

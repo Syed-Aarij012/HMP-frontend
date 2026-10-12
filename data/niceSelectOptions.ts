@@ -2,7 +2,8 @@ import type { NiceSelectOption } from "@/components/common/NiceSelect";
 import { dealerBrands, dealerStates } from "@/data/dealers";
 
 export const BRAND_OPTIONS: NiceSelectOption[] = [
-  { label: "Land Rover", value: "" },
+  { label: "Any brand", value: "" },
+  { label: "Land Rover", value: "Land Rover" },
   { label: "KIA", value: "KIA" },
   { label: "Renault", value: "Renault" },
   { label: "Nissan", value: "Nissan" },
@@ -13,14 +14,24 @@ export const BRAND_OPTIONS: NiceSelectOption[] = [
   { label: "Jeep", value: "Jeep" },
 ];
 
+// Values are the raw body_type values the backend actually stores/accepts (see the
+// Rule::in(['hatchback','saloon','estate','suv']) validators in HMP-backend) — this dropdown
+// feeds the real GET /listings?body_type= server-side filter, which matches on exactly these
+// strings. The inventory only ever has these four, so anything else here would silently
+// match zero listings.
 export const TYPE_OPTIONS: NiceSelectOption[] = [
-  { label: "Coupe", value: "" },
-  { label: "Hatchback", value: "Hatchback" },
-  { label: "Hybrid", value: "Hybrid" },
+  { label: "Any type", value: "" },
+  { label: "SUV", value: "suv" },
+  { label: "Sedan", value: "saloon" },
+  { label: "Hatchback", value: "hatchback" },
+  { label: "Station Wagon", value: "estate" },
 ];
 
+// Fallback only — home03/CarFilter.tsx (the live homepage) overrides this with real model
+// names fetched from current inventory via modelOptions. Everywhere else this widget
+// appears is an unused template page, so this list is never matched against real listings.
 export const MODEL_OPTIONS: NiceSelectOption[] = [
-  { label: "Modern Supercar", value: "" },
+  { label: "Any model", value: "" },
   { label: "Muscle Car", value: "Muscle Car" },
   { label: "JDM", value: "JDM" },
   { label: "Off-Road/Truck", value: "Off-Road/Truck" },
@@ -28,14 +39,14 @@ export const MODEL_OPTIONS: NiceSelectOption[] = [
 ];
 
 export const PRICE_OPTIONS: NiceSelectOption[] = [
-  { label: "$2000", value: 2000 },
-  { label: "$3000", value: 3000 },
-  { label: "$5000", value: 5000 },
-  { label: "$10000", value: 10000 },
-  { label: "$20000", value: 20000 },
-  { label: "$30000", value: 30000 },
-  { label: "$50000", value: 50000 },
-  { label: "$100000", value: 100000 },
+  { label: "£2000", value: 2000 },
+  { label: "£3000", value: 3000 },
+  { label: "£5000", value: 5000 },
+  { label: "£10000", value: 10000 },
+  { label: "£20000", value: 20000 },
+  { label: "£30000", value: 30000 },
+  { label: "£50000", value: 50000 },
+  { label: "£100000", value: 100000 },
 ];
 
 export const FUEL_TYPE_OPTIONS: NiceSelectOption[] = [

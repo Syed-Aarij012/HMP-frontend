@@ -769,10 +769,10 @@ export const home04BrandTabs: string[] = [
 
 export const home04NearbyUsedPriceTabs: string[] = [
   "Auto Decar used cars",
-  "$20.000 - $50.000",
-  "$50.000 - $70.000",
-  "$70.000 - $90.000",
-  "$90.000 - $120.000",
+  "£20,000 - £50,000",
+  "£50,000 - £70,000",
+  "£70,000 - £90,000",
+  "£90,000 - £120,000",
 ];
 
 export const home03RecommendedCars: Car[] = [
@@ -1135,7 +1135,7 @@ export const DASHBOARD_LISTINGS_TOTAL_COUNT = 26;
 export const FAVORITE_LISTINGS_TOTAL_COUNT = 26;
 
 export function formatCarPrice(price: number) {
-  return `$${price.toLocaleString("en-US")}`;
+  return `£${price.toLocaleString("en-GB")}`;
 }
 
 export const saleAgentListingTabs = ["Used car", "New car"] as const;
@@ -1288,7 +1288,7 @@ export const home04NearbyUsedCars: Car[] = [
     photoCount: 6,
     priceRange: [
       "Auto Decar used cars",
-      "$70.000 - $90.000",
+      "£70,000 - £90,000",
     ],
   },
   {
@@ -1305,7 +1305,7 @@ export const home04NearbyUsedCars: Car[] = [
     photoCount: 6,
     priceRange: [
       "Auto Decar used cars",
-      "$70.000 - $90.000",
+      "£70,000 - £90,000",
     ],
   },
   {
@@ -1322,7 +1322,7 @@ export const home04NearbyUsedCars: Car[] = [
     photoCount: 6,
     priceRange: [
       "Auto Decar used cars",
-      "$20.000 - $50.000",
+      "£20,000 - £50,000",
     ],
   },
   {
@@ -1339,7 +1339,7 @@ export const home04NearbyUsedCars: Car[] = [
     photoCount: 6,
     priceRange: [
       "Auto Decar used cars",
-      "$20.000 - $50.000",
+      "£20,000 - £50,000",
     ],
   },
   {
@@ -1356,7 +1356,7 @@ export const home04NearbyUsedCars: Car[] = [
     photoCount: 6,
     priceRange: [
       "Auto Decar used cars",
-      "$50.000 - $70.000",
+      "£50,000 - £70,000",
     ],
   },
   {
@@ -1373,7 +1373,7 @@ export const home04NearbyUsedCars: Car[] = [
     photoCount: 6,
     priceRange: [
       "Auto Decar used cars",
-      "$50.000 - $70.000",
+      "£50,000 - £70,000",
     ],
   },
   {
@@ -1390,7 +1390,7 @@ export const home04NearbyUsedCars: Car[] = [
     photoCount: 6,
     priceRange: [
       "Auto Decar used cars",
-      "$90.000 - $120.000",
+      "£90,000 - £120,000",
     ],
   },
   {
@@ -1407,7 +1407,7 @@ export const home04NearbyUsedCars: Car[] = [
     photoCount: 6,
     priceRange: [
       "Auto Decar used cars",
-      "$90.000 - $120.000",
+      "£90,000 - £120,000",
     ],
   },
 ];

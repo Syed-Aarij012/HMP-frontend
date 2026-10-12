@@ -12,21 +12,32 @@ export const heroCategories: HeroCategory[] = [
     id: 1,
     icon: "icon-carus-suv",
     label: "SUV",
+    filterParam: "body_type",
+    filterValue: "suv",
   },
   {
     id: 2,
     icon: "icon-carus-coupe",
     label: "Coupe",
+    // Not a body type the backend actually supports yet (only hatchback/saloon/estate/suv) —
+    // this honestly returns "no results" rather than silently matching the wrong cars.
+    filterParam: "body_type",
+    filterValue: "coupe",
   },
   {
     id: 3,
     icon: "icon-carus-hatchback",
     label: "Hatchback",
+    filterParam: "body_type",
+    filterValue: "hatchback",
   },
   {
     id: 4,
     icon: "icon-carus-hybrid",
     label: "Hybrid",
+    // Hybrid is a fuel type, not a body type, in the real vehicle schema.
+    filterParam: "fuel_type",
+    filterValue: "hybrid",
   },
 ];
 

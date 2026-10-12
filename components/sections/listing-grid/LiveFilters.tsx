@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import NiceSelect, { type NiceSelectOption } from "@/components/common/NiceSelect";
 import RangeSlider from "@/components/common/RangeSlider";
 import type { ApiListingsResponse } from "@/lib/mapApiListing";
@@ -43,6 +43,10 @@ function facetOptions<V extends string | number>(
 }
 
 export default function LiveFilters({ params, facets, onChange }: Props) {
+  // Previously this panel's "show" class was hardcoded on, with nothing in this component
+  // able to turn it back off — it just stayed open permanently once rendered.
+  const [isOpen, setIsOpen] = useState(false);
+
   const set = <K extends keyof ListingSearchParams>(key: K, value: ListingSearchParams[K]) =>
     onChange({ ...params, [key]: value });
 
@@ -106,13 +110,32 @@ export default function LiveFilters({ params, facets, onChange }: Props) {
   ];
 
   return (
-    <div className="flat-filter-search tf-section-listing">
+    // .tf-section-listing carries a -7.6em top margin meant to pull this card up over a hero
+    // *image* — there's no hero image on this page, just the search bar above, so left alone
+    // it pulls this panel up into the search bar's Search button instead. Overridden inline
+    // (higher specificity than the stylesheet class) rather than editing the shared rule,
+    // which other, image-hero pages still rely on.
+    <div className="flat-filter-search tf-section-listing" style={{ marginTop: 0 }}>
       <div className="container">
         <div className="flat-tabs">
           <div className="content-tab">
             <div className="content-inner tab-content">
               <div className="form-sl">
-                <div className="wd-find-select wd-search-form show">
+                <a
+                  href="#"
+                  className={`icon-filter pull-right flex${isOpen ? " active" : ""}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setIsOpen((open) => !open);
+                  }}
+                  role="button"
+                  aria-expanded={isOpen}
+                  aria-label={isOpen ? "Hide filters" : "Show filters"}
+                >
+                  <i className="icon-carus-sliders" />
+                  <i className="icon-carus-search search-icon" />
+                </a>
+                <div className={`wd-find-select wd-search-form${isOpen ? " show" : ""}`}>
                   <div className="box1 grid-4 align-center">
                     <div className="form-group wg-box3">
                       <div className="group-select">

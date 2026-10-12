@@ -30,13 +30,31 @@ function initialParamsFromUrl(searchParams: URLSearchParams): ListingSearchParam
     const value = searchParams.get(URL_PARAM_NAMES[key]);
     if (value) params[key] = value;
   }
+
+  // Handed off from the homepage hero search (and nowhere else) — read once at mount only,
+  // deliberately NOT added to URL_WHITELISTED_FACETS so neither is ever echoed back into the
+  // URL (keeps this page's own canonical-URL/indexability guarantee above intact).
+  const priceMax = searchParams.get("price_max");
+  if (priceMax) params.priceMax = priceMax;
+
+  const fuelType = searchParams.get("fuel_type");
+  if (fuelType) params.fuelType = fuelType;
+
   return params;
+}
+
+function initialCategoryTabFromUrl(
+  searchParams: URLSearchParams,
+): "all" | "new" | "used" {
+  const tab = searchParams.get("tab");
+  return tab === "new" || tab === "used" ? tab : "all";
 }
 
 export default function ListingGridContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [params, setParams] = useState<ListingSearchParams>(() => initialParamsFromUrl(searchParams));
+  const [initialCategoryTab] = useState(() => initialCategoryTabFromUrl(searchParams));
   const hasMounted = useRef(false);
 
   // Keeps the URL in sync with the whitelisted facets only — every other filter change never
@@ -67,12 +85,15 @@ export default function ListingGridContent() {
   // FR-B-001: cars arriving here are already filtered server-side against every param above —
   // this hook now only drives client-side sort-dropdown/page-size/pagination UI state, not
   // filtering (no legacy Filters control writes into it any more, so its own filter fields
-  // never leave their all-match defaults).
+  // stay at their all-match defaults) — except categoryTab, seeded once from an incoming
+  // homepage hero "New cars"/"Used cars" tab selection (New/Used isn't a real server-side
+  // filter, just the New/Used mileage-threshold proxy mapApiListingToCar already computes).
   const { state, dispatch, visibleListings, totalPages } =
     useListingFilterState({
       listings: cars,
       itemPerPage: 10,
       priceMax: facets?.price?.max ?? undefined,
+      categoryTab: initialCategoryTab,
     });
 
   if (error) {

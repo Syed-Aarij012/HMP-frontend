@@ -2,6 +2,11 @@ export type HeroCategory = {
   id: number;
   icon: string;
   label: string;
+  // Drives the /listing-grid search this category links to — the exact raw value the
+  // backend's GET /listings filter expects for that param (see HMP-backend's body_type/
+  // fuel_type validators), not the display label above.
+  filterParam: "body_type" | "fuel_type";
+  filterValue: string;
 };
 
 export type HeroSlide = {

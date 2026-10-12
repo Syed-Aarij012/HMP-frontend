@@ -35,19 +35,19 @@ export default function Header2() {
                 <Link href={`/`}>
                   <Image
                     className="lazyload img-none"
-                    data-src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
-                    src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                    data-src="/assets/images/logo/hmp-logo.png"
+                    src="/assets/images/logo/hmp-logo.png"
                     alt="HMP"
-                    width={100}
-                    height={50}
+                    width={140}
+                    height={47}
                   />
                   <Image
                     className="lazyload img-is-fixed"
-                    data-src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
-                    src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                    data-src="/assets/images/logo/hmp-logo.png"
+                    src="/assets/images/logo/hmp-logo.png"
                     alt="HMP"
-                    width={100}
-                    height={50}
+                    width={140}
+                    height={47}
                   />
                 </Link>
               </div>

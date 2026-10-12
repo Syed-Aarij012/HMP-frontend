@@ -23,11 +23,11 @@ export default function ForgotPass() {
                 <Link href={`/`} className="logo-image">
                   <Image
                     className="lazyload"
-                    data-src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
-                    src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                    data-src="/assets/images/logo/hmp-logo.png"
+                    src="/assets/images/logo/hmp-logo.png"
                     alt="HMP"
                     width={100}
-                    height={50}
+                    height={34}
                   />
                 </Link>
                 <div className="header-form">

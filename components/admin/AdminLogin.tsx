@@ -48,7 +48,7 @@ export default function AdminLogin() {
       <div className="ha-login-card">
         <div className="ha-login-logo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png" alt="HMP" />
+          <img src="/assets/images/logo/hmp-logo.png" alt="HMP" />
         </div>
         <h1>Admin Panel</h1>
         <p className="ha-login-sub">{challenge ? "Enter the code from your authenticator app." : "Sign in with your admin or moderator account."}</p>
@@ -66,7 +66,10 @@ export default function AdminLogin() {
               <>
                 <div className="ha-field">
                   <label htmlFor="admin-email">Email</label>
-                  <input id="admin-email" type="email" className="ha-input" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" autoFocus />
+                  {/* suppressHydrationWarning: a form-autofill browser extension (LastPass and
+                      similar tag every form control with fdprocessedid, not just inputs) —
+                      same harmless mismatch as the email inputs elsewhere in this app. */}
+                  <input id="admin-email" type="email" className="ha-input" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" autoFocus suppressHydrationWarning />
                 </div>
                 <div className="ha-field">
                   <label htmlFor="admin-password">Password</label>
@@ -80,6 +83,7 @@ export default function AdminLogin() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
+                      suppressHydrationWarning
                     />
                     <button
                       type="button"
@@ -87,6 +91,7 @@ export default function AdminLogin() {
                       style={{ position: "absolute", right: 4, top: 4 }}
                       onClick={() => setShowPassword((v) => !v)}
                       aria-label={showPassword ? "Hide password" : "Show password"}
+                      suppressHydrationWarning
                     >
                       {showPassword ? "Hide" : "Show"}
                     </button>

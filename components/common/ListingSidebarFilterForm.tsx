@@ -119,7 +119,7 @@ export default function ListingSidebarFilterForm({
             min={0}
             max={state.listingPriceMax}
             value={state.price}
-            suffix="$"
+            suffix="£"
             thousand=","
             onChange={(range) => setPriceRange(range, dispatch)}
           />

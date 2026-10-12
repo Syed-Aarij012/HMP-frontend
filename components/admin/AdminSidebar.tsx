@@ -50,6 +50,7 @@ export const ADMIN_NAV: { title: string; items: AdminNavItem[] }[] = [
     title: "Catalog & auction",
     items: [
       { href: "/admin/taxonomy", label: "Taxonomy", icon: "icon-carus-list", embedded: true },
+      { href: "/admin/brands", label: "Brands", icon: "icon-carus-car" },
       { href: "/admin/inspections", label: "Inspection assignments", icon: "icon-carus-checkcircle", permission: "assign-inspections" },
       { href: "/admin/grading-matrix", label: "Grading matrix", icon: "icon-carus-sliders", embedded: true },
       { href: "/admin/routing-rules", label: "Auto-routing rules", icon: "icon-carus-arrowsleftright", embedded: true },
@@ -127,7 +128,7 @@ export default function AdminSidebar() {
       <aside className={`ha-sidebar${isOpen ? " is-open" : ""}`} aria-label="Admin navigation">
         <Link href="/admin" className="ha-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png" alt="HMP" />
+          <img src="/assets/images/logo/hmp-logo.png" alt="HMP" />
           <span>ADMIN PANEL</span>
         </Link>
 
