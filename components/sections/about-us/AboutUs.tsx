@@ -10,11 +10,11 @@ function AboutUs() {
               <div className="image-logo">
                 <Image
                   className="lazyload"
-                  data-src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
-                  src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+                  data-src="/assets/images/logo/hmp-logo.png"
+                  src="/assets/images/logo/hmp-logo.png"
                   alt="HMP"
                   width={200}
-                  height={100}
+                  height={67}
                 />
               </div>
             </div>

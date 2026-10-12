@@ -472,10 +472,10 @@ export default function DashboardSidebar() {
         <Link href="/" title="HMP">
           <Image
             className="site-logo"
-            src="/assets/images/WhatsApp_Image_2026-09-14_at_3.32.30_PM-removebg-preview.png"
+            src="/assets/images/logo/hmp-logo.png"
             alt="HMP"
             width={200}
-            height={100}
+            height={67}
           />
         </Link>
       </div>
