@@ -110,7 +110,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -208,7 +208,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -306,7 +306,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -404,7 +404,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -502,7 +502,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -600,7 +600,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -698,7 +698,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -796,7 +796,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -894,7 +894,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -992,7 +992,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -1090,7 +1090,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />
@@ -1188,7 +1188,7 @@ function ListingGridList() {
                     </div>
                     <div className="days-box flex justify-space align-center">
                       <div className="money fs-24 fw-7 lh-30 text-color-2">
-                        $76,500
+                        £76,500
                       </div>
                       <Link href={`/listing-detail-v1`} className="view-car">
                         View <i className="icon-carus-arright" />

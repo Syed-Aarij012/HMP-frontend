@@ -17,25 +17,25 @@ const FEATURED_LISTINGS = [
   {
     image: "/assets/images/blog/blog-post-1.webp",
     title: "2015 Mitsubishi Triton GLS MQ Auto 4x4 MY16 Double Cab",
-    price: "$73,000",
+    price: "£73,000",
     href: getBlogDetailHref(1),
   },
   {
     image: "/assets/images/blog/blog-post-2.webp",
     title: "2021 Skoda Kushaq 1.0 TSI Style AT",
-    price: "$73,000",
+    price: "£73,000",
     href: getBlogDetailHref(2),
   },
   {
     image: "/assets/images/blog/blog-post-3.webp",
     title: "2012 Mercedes-Benz E-Class 2009-2013 E 200 CGI Avantgarde",
-    price: "$73,000",
+    price: "£73,000",
     href: getBlogDetailHref(3),
   },
   {
     image: "/assets/images/blog/blog-post-4.webp",
     title: "2014 Audi A4 2.0 TDI Multitronic",
-    price: "$73,000",
+    price: "£73,000",
     href: getBlogDetailHref(4),
   },
 ] as const;

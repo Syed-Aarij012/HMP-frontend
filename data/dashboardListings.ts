@@ -26,5 +26,5 @@ export const DASHBOARD_LISTING_STATUS_META: Record<
 };
 
 export function formatDashboardListingPrice(price: number) {
-  return `$${price.toLocaleString("en-US")}`;
+  return `£${price.toLocaleString("en-GB")}`;
 }

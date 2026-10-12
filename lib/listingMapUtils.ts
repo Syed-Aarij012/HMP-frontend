@@ -41,7 +41,7 @@ export function carToListingMapLocation(car: MapCar): ListingMapLocation {
     mileage: `${car.mileage.toLocaleString()} Km`,
     fuel: car.fuel,
     transmission: car.transmission,
-    price: `$${car.price.toLocaleString()}`,
+    price: `£${car.price.toLocaleString()}`,
     isNew: car.tag === "New",
     photoCount: car.photoCount,
   };

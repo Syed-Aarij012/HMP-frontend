@@ -149,7 +149,7 @@ export default function ListingFilterMeta({
   if (!isDefaultPrice) {
     tags.push({
       key: "price",
-      label: `$${state.price[0].toLocaleString()} - $${state.price[1].toLocaleString()}`,
+      label: `£${state.price[0].toLocaleString()} - £${state.price[1].toLocaleString()}`,
       onRemove: () => setPriceRange([0, state.listingPriceMax], dispatch),
     });
   }

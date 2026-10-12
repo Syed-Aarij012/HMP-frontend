@@ -53,7 +53,7 @@ function FeaturedCar() {
                   <div className="content">
                     <div className="top-box flex-two gap-20">
                       <div className="money fs-24 fw-7 text-color-2">
-                        $72,500
+                        £72,500
                       </div>
                       <ListingCardActions
                         car={featuredCar}

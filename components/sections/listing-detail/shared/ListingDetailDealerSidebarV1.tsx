@@ -22,13 +22,13 @@ export default function ListingDetailDealerSidebarV1({
     <ListingDetailDealerSidebarShell>
         <div className="widget-listing widget">
           <div className="heading-widget">
-            <div className="money text-color-3 font">${car.price.toLocaleString()}</div>
+            <div className="money text-color-3 font">£{car.price.toLocaleString()}</div>
             <div className="price-wrap">
               <p className="fs-14 lh-16 text-color-2">
                 Monthly installment payment:{" "}
-                <span className="fs-14 fw-6 font">$4,000</span>
+                <span className="fs-14 fw-6 font">£4,000</span>
               </p>
-              <p className="fs-14 lh-16">New car price: $100.000</p>
+              <p className="fs-14 lh-16">New car price: £100,000</p>
             </div>
             <ul className="action-icon flex flex-wrap">
               <ListingDetailActionIcons car={car} />

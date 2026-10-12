@@ -40,5 +40,5 @@ export const LATE_PRICE_LIST_CARS: LatePriceListCar[] = [
 ];
 
 export function formatLatePriceListPrice(price: number) {
-  return `$${price.toLocaleString("en-US")}`;
+  return `£${price.toLocaleString("en-GB")}`;
 }

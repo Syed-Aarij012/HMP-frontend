@@ -18,10 +18,10 @@ export function getListingPriceBounds(cars: Car[]) {
 
 export function formatPriceRangeLabel([min, max]: [number, number]) {
   if (min === 0) {
-    return `Up to $${max.toLocaleString("en-US")}`;
+    return `Up to £${max.toLocaleString("en-GB")}`;
   }
 
-  return `$${min.toLocaleString("en-US")} - $${max.toLocaleString("en-US")}`;
+  return `£${min.toLocaleString("en-GB")} - £${max.toLocaleString("en-GB")}`;
 }
 
 export function buildListingPriceOptions(cars: Car[]): NiceSelectOption[] {
@@ -47,7 +47,7 @@ export function buildListingPriceOptions(cars: Car[]): NiceSelectOption[] {
   return [
     { label: "Any price", value: "" },
     ...sortedCaps.map((cap) => ({
-      label: `Up to $${cap.toLocaleString("en-US")}`,
+      label: `Up to £${cap.toLocaleString("en-GB")}`,
       value: cap,
     })),
   ];
