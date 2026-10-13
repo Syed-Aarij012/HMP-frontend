@@ -10,8 +10,7 @@ import { useMessages } from "@/components/common/MessagesContext";
 import { isNavLinkActive } from "@/lib/navigation";
 import { canAccessRoute } from "@/lib/routeAccess";
 import { canUseAdminPanel, firstAdminPageFor } from "@/components/admin/AdminSidebar";
-
-const DEFAULT_AVATAR = "/assets/images/dashboard/avatar.png";
+import Avatar from "@/components/ui/Avatar";
 
 type DashboardMenuItem = {
   id: string;
@@ -175,7 +174,7 @@ const tradeBuyerMenuItems: DashboardMenuItem[] = [
     href: "/trade-marketplace",
     className: "menu-index-2",
     iconClass: "icon-carus-listings",
-    label: "Trade marketplace (Buy Now)",
+    label: "Trade marketplace",
   },
   {
     id: "list-fixed-price",
@@ -409,6 +408,33 @@ function menuFor(userType: string | undefined, organizationId: number | null): D
   return dashboardMenuItems;
 }
 
+// Sections of the menu, in reading order. Items keep the order menuFor() gives them inside a
+// section; an id not listed here falls into "More" so nothing is ever hidden by the grouping.
+const MENU_GROUPS: Array<{ title: string; ids: string[] }> = [
+  { title: "Overview", ids: ["admin-panel", "dashboard", "message"] },
+  { title: "Selling", ids: ["add-listing", "subscription", "my-listing", "leads", "dealer-analytics", "dealer-stock-feed", "my-payouts"] },
+  { title: "Buying", ids: ["my-favorite", "saved-searches", "my-offers", "my-appointments", "my-orders", "my-review"] },
+  {
+    title: "Auctions & trade",
+    ids: ["auction", "live-lanes", "rostrum", "my-bids", "my-proxy-bids", "my-exposure", "my-provisional-sales", "consign-vehicle", "my-consigned-lots", "trade-marketplace", "list-fixed-price", "my-fixed-price-listings", "my-trade-orders", "trade-credit", "bidding-deposits"],
+  },
+  { title: "Logistics", ids: ["my-transport", "my-transport-jobs", "gate-release"] },
+  { title: "Operations", ids: ["inspections", "grading-matrix", "taxonomy", "routing-rules", "trust-safety"] },
+  { title: "Organisation", ids: ["team", "dealer-group"] },
+  { title: "Account", ids: ["security", "my-profile", "logout"] },
+];
+
+function groupMenu(items: DashboardMenuItem[]) {
+  const known = new Set(MENU_GROUPS.flatMap((group) => group.ids));
+  const groups = MENU_GROUPS.map((group) => ({
+    title: group.title,
+    items: items.filter((item) => group.ids.includes(item.id)),
+  }));
+  const rest = items.filter((item) => !known.has(item.id));
+  if (rest.length > 0) groups.splice(groups.length - 1, 0, { title: "More", items: rest });
+  return groups.filter((group) => group.items.length > 0);
+}
+
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const { isOpen, close, collapsed, toggleCollapsed } = useDashboardSidebar();
@@ -466,88 +492,67 @@ export default function DashboardSidebar() {
     close();
   }, [pathname, close]);
 
-  const linkClass = (baseClass: string, href: string) =>
-    isNavLinkActive(pathname, href) ? `${baseClass} active` : baseClass;
+  const groups = groupMenu(menuItems);
+  const avatarUrl = typeof user?.avatar_url === "string" ? user.avatar_url : null;
 
   return (
-    <aside className={`sidebar-dashboard${isOpen ? " active" : ""}${collapsed ? " collapsed" : ""}`}>
-      <button
-        type="button"
-        className="db-collapse-toggle"
-        onClick={toggleCollapsed}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        {/* Inline SVG rather than the icon font — this app's icon set has no left-pointing
-            arrow, and an icon-font glyph is too easy to get wrong/invisible at this size. */}
-        <svg
-          width={14}
-          height={14}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ transform: collapsed ? "rotate(180deg)" : undefined }}
-        >
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-      <div className="db-content db-logo pad-30">
-        <Link href="/" title="HMP">
-          <Image
-            className="site-logo"
-            src="/assets/images/logo/hmp-logo.png"
-            alt="HMP"
-                    priority
-            width={200}
-            height={67}
-          />
+    <aside id="dashboard-sidebar" className={`hd-sidebar${isOpen ? " is-open" : ""}`} aria-label="Dashboard">
+      <div className="hd-brand">
+        <Link href="/" title="HMP marketplace">
+          <Image className="site-logo" src="/assets/images/logo/hmp-logo.png" alt="HMP" priority width={120} height={40} />
         </Link>
+        <button
+          type="button"
+          className="hd-collapse"
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-pressed={collapsed}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {/* Inline SVG rather than the icon font — this app's icon set has no left-pointing arrow. */}
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
       </div>
-      <div className="db-content db-author pad-30">
-        <h6 className="db-title">Profile</h6>
-        <div className="author">
-          <div className="avatar">
-            <Image
-              loading="lazy"
-              id="tfre_avatar_thumbnail"
-              src={typeof user?.avatar_url === "string" ? user.avatar_url : DEFAULT_AVATAR}
-              alt={user?.name ?? "Account"}
-              title={user?.name ?? "Account"}
-              width={52}
-              height={52}
-              unoptimized={typeof user?.avatar_url === "string"}
-            />
+      <nav className="hd-nav" aria-label="Dashboard menu">
+        {groups.map((group) => (
+          <div key={group.title} className="hd-nav-group">
+            <h2 className="hd-nav-title">{group.title}</h2>
+            <ul>
+              {group.items.map((item) => {
+                const active = isNavLinkActive(pathname, item.href) && item.id !== "logout";
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={item.href}
+                      className="hd-nav-link"
+                      aria-current={active ? "page" : undefined}
+                      onClick={close}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <i className={item.iconClass} aria-hidden="true" />
+                      <span className="hd-nav-label">{item.label}</span>
+                      {item.id === "message" && unreadMessageCount > 0 && (
+                        <span className="hd-count" aria-label={`${unreadMessageCount} unread`}>
+                          {unreadMessageCount}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-          <div className="content">
-            <div className="name">{user?.name ?? "Account"}</div>
-            <div className="author-email">{user?.email ?? ""}</div>
-          </div>
-        </div>
-      </div>
-      <div className="db-content db-list-menu">
-        <h6 className="db-title">Menu</h6>
-        <div className="db-dashboard-menu">
-          <ul>
-            {menuItems.map((item) => (
-              <li key={item.id}>
-                <Link
-                  href={item.href}
-                  className={linkClass(item.className, item.href)}
-                  onClick={close}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <i className={item.iconClass} />
-                  <span className="db-menu-label">{item.label}</span>
-                  {item.id === "message" && unreadMessageCount > 0 && (
-                    <span className="count-page">{unreadMessageCount}</span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
+        ))}
+      </nav>
+      <div className="hd-sidebar-foot">
+        <div className="hd-me" title={collapsed ? user?.name ?? undefined : undefined}>
+          <Avatar src={avatarUrl} name={user?.name} size={34} />
+          <span className="hd-me-text">
+            <b>{user?.name ?? "Account"}</b>
+            <span>{user?.email ?? ""}</span>
+          </span>
         </div>
       </div>
     </aside>

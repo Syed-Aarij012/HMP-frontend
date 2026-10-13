@@ -2,8 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
-import NiceSelect from "@/components/common/NiceSelect";
 import UploadPhotoSection from "@/components/sections/add-listing/UploadPhotoSection";
 import UploadVideoSpinSection, {
   type VideoSelection,
@@ -15,6 +13,8 @@ import {
   ADD_LISTING_TRANSMISSION_OPTIONS,
   ADD_LISTING_YEAR_OPTIONS,
 } from "@/data/niceSelectOptions";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Card, Notice, Select } from "@/components/ui/kit";
 
 /**
  * FR-A-030 (M): self-service listing on the Fixed-Price Trade ("Buy Now") channel — same
@@ -76,134 +76,121 @@ function ListFixedPrice() {
   }
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <form className="tfcl-dashboard add-list" onSubmit={handleSubmit}>
-                  <h1 className="admin-title mb-3">List a vehicle at a fixed price</h1>
-                  <p className="text-color-2 mb-3">
-                    Describe your vehicle and set an asking price. It goes live for instant
-                    purchase by other trade buyers as soon as it has a published condition
-                    report.
-                  </p>
+    <DashboardPage
+      title="List a vehicle at a fixed price"
+      description="Describe your vehicle and set an asking price. It goes live for instant purchase by other trade buyers as soon as it has a published condition report."
+    >
+      <form onSubmit={handleSubmit}>
+        <Card title="Photos and video" className="mb-4">
+          <div className="ha-card-body hd-template-section">
+            <UploadPhotoSection onPhotosChange={handlePhotosChange} />
+            <UploadVideoSpinSection onVideoChange={setVideo} onSpinFramesChange={setSpinFrames} />
+          </div>
+        </Card>
 
-                  {(error || formError) && (
-                    <div className="alert alert-danger mb-3">{error ?? formError}</div>
-                  )}
-
-                  <UploadPhotoSection onPhotosChange={handlePhotosChange} />
-                  <UploadVideoSpinSection onVideoChange={setVideo} onSpinFramesChange={setSpinFrames} />
-
-                  <div className="tfcl-add-listing car-details">
-                    <div className="form-group-4">
-                      <div className="form-group">
+        <Card title="Vehicle and price" description="Fields marked * are required." className="mb-4">
+<div className="ha-card-body">
+                    <div className="ha-form-grid">
+                      <div className="ha-field">
                         <label htmlFor="fp_make">Make *</label>
                         <input
                           id="fp_make"
                           type="text"
-                          className="form-control"
+                          className="ha-input"
                           placeholder="e.g. BMW"
                           value={make}
                           onChange={(e) => setMake(e.target.value)}
                           required
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="fp_model">Model *</label>
                         <input
                           id="fp_model"
                           type="text"
-                          className="form-control"
+                          className="ha-input"
                           placeholder="e.g. X5"
                           value={model}
                           onChange={(e) => setModel(e.target.value)}
                           required
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="fp_derivative">Trim / derivative</label>
                         <input
                           id="fp_derivative"
                           type="text"
-                          className="form-control"
+                          className="ha-input"
                           placeholder="e.g. M Sport"
                           value={derivative}
                           onChange={(e) => setDerivative(e.target.value)}
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="fp_body">Body *</label>
-                        <NiceSelect
+                        <Select id="fp_body"
                           options={ADD_LISTING_BODY_TYPE_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setBodyType(String(value))}
                         />
                       </div>
                     </div>
-                    <div className="form-group-4">
-                      <div className="form-group">
+                    <div className="ha-form-grid">
+                      <div className="ha-field">
                         <label htmlFor="fp_year">Year *</label>
-                        <NiceSelect
+                        <Select id="fp_year"
                           options={ADD_LISTING_YEAR_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setYear(String(value))}
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="fp_fuel">Fuel type *</label>
-                        <NiceSelect
+                        <Select id="fp_fuel"
                           options={ADD_LISTING_FUEL_TYPE_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setFuelType(String(value))}
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="fp_transmission">Transmission *</label>
-                        <NiceSelect
+                        <Select id="fp_transmission"
                           options={ADD_LISTING_TRANSMISSION_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setTransmission(String(value))}
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="fp_colour">Colour</label>
                         <input
                           id="fp_colour"
                           type="text"
-                          className="form-control"
+                          className="ha-input"
                           value={colour}
                           onChange={(e) => setColour(e.target.value)}
                         />
                       </div>
                     </div>
-                    <div className="form-group-4">
-                      <div className="form-group">
+                    <div className="ha-form-grid">
+                      <div className="ha-field">
                         <label htmlFor="fp_mileage">Mileage *</label>
                         <input
                           id="fp_mileage"
                           type="number"
                           min="0"
-                          className="form-control"
+                          className="ha-input"
                           value={mileage}
                           onChange={(e) => setMileage(e.target.value)}
                           required
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="fp_asking_price">Asking price (£) *</label>
                         <input
                           id="fp_asking_price"
                           type="number"
                           min="1"
-                          className="form-control"
+                          className="ha-input"
                           value={askingPrice}
                           onChange={(e) => setAskingPrice(e.target.value)}
                           required
@@ -211,17 +198,17 @@ function ListFixedPrice() {
                       </div>
                     </div>
                   </div>
+        </Card>
 
-                  <button type="submit" className="sc-button" disabled={submitting}>
-                    <span>{submitting ? "Listing..." : "List at fixed price"}</span>
-                  </button>
-                </form>
-              </main>
-            </div>
-          </div>
+        {(error || formError) && <Notice tone="danger">{error ?? formError}</Notice>}
+
+        <div className="ha-form-footer">
+          <button type="submit" className="ha-btn is-primary" disabled={submitting} aria-busy={submitting}>
+            {submitting ? "Listing…" : "List at fixed price"}
+          </button>
         </div>
-      </div>
-    </div>
+      </form>
+    </DashboardPage>
   );
 }
 

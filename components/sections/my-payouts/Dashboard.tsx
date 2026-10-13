@@ -1,9 +1,27 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import { useId, useState, type FormEvent } from "react";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import {
+  Badge,
+  Card,
+  DataTable,
+  DataToolbar,
+  EmptyState,
+  ErrorNotice,
+  LoadingRows,
+  LoadingTable,
+  NoMatches,
+  Notice,
+  StatCard,
+  Stats,
+  StatusBadge,
+  formatDate,
+  formatMoney,
+  useListControls,
+} from "@/components/ui/kit";
 import { useBankAccounts, usePayoutBalance, usePayouts } from "@/hooks/usePayouts";
-import type { BankAccount } from "@/types/payouts";
+import type { BankAccount, Payout } from "@/types/payouts";
 
 const VERIFICATION_LABELS: Record<BankAccount["verificationStatus"], string> = {
   unverified: "Awaiting verification",
@@ -24,6 +42,7 @@ function AddBankAccountForm({
   const [accountName, setAccountName] = useState("");
   const [sortCode, setSortCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const fieldId = useId();
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -36,37 +55,45 @@ function AddBankAccountForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="tfcl-card p-3 mb-3">
-      <h4 className="mb-2">Add a bank account</h4>
-      {addError && <div className="alert alert-danger">{addError}</div>}
-      <div className="row">
-        <div className="col-md-4 form-group">
-          <label>Account name</label>
+    <form onSubmit={handleSubmit} className="ha-card-body" aria-labelledby={`${fieldId}-title`} style={{ borderTop: "1px solid var(--hmp-border)" }}>
+      <h3 id={`${fieldId}-title`} className="ha-primary-text mb-3" style={{ fontSize: 14 }}>
+        Add a bank account
+      </h3>
+      {addError && <Notice tone="danger">{addError}</Notice>}
+      <div className="ha-form-grid">
+        <div className="ha-field">
+          <label htmlFor={`${fieldId}-name`}>Account name</label>
           <input
+            id={`${fieldId}-name`}
             type="text"
-            className="form-control"
+            className="ha-input"
             placeholder="Name on the account"
+            autoComplete="name"
             value={accountName}
             onChange={(e) => setAccountName(e.target.value)}
             required
           />
         </div>
-        <div className="col-md-4 form-group">
-          <label>Sort code</label>
+        <div className="ha-field">
+          <label htmlFor={`${fieldId}-sort`}>Sort code</label>
           <input
+            id={`${fieldId}-sort`}
             type="text"
-            className="form-control"
+            inputMode="numeric"
+            className="ha-input"
             placeholder="12-34-56"
             value={sortCode}
             onChange={(e) => setSortCode(e.target.value)}
             required
           />
         </div>
-        <div className="col-md-4 form-group">
-          <label>Account number</label>
+        <div className="ha-field">
+          <label htmlFor={`${fieldId}-number`}>Account number</label>
           <input
+            id={`${fieldId}-number`}
             type="text"
-            className="form-control"
+            inputMode="numeric"
+            className="ha-input"
             placeholder="12345678"
             value={accountNumber}
             onChange={(e) => setAccountNumber(e.target.value)}
@@ -74,8 +101,8 @@ function AddBankAccountForm({
           />
         </div>
       </div>
-      <button type="submit" className="sc-button" disabled={adding}>
-        <span>{adding ? "Adding..." : "Add account"}</span>
+      <button type="submit" className="ha-btn is-primary" disabled={adding} aria-busy={adding}>
+        {adding ? "Adding…" : "Add account"}
       </button>
     </form>
   );
@@ -97,6 +124,7 @@ function RequestPayoutForm({
   const verifiedAccounts = bankAccounts.filter((account) => account.verificationStatus !== "unverified");
   const [bankAccountId, setBankAccountId] = useState("");
   const [amount, setAmount] = useState("");
+  const fieldId = useId();
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -106,50 +134,51 @@ function RequestPayoutForm({
   }
 
   if (bankAccounts.length === 0) {
-    return <p className="tfcl-empty-data">Add a bank account before you can request a payout.</p>;
+    return <EmptyState icon="icon-carus-power" title="Add a bank account first" text="Add a bank account before you can request a payout." />;
   }
 
   if (verifiedAccounts.length === 0) {
     return (
-      <p className="tfcl-empty-data">
-        Your bank account is awaiting verification. Once it&apos;s verified you&apos;ll be able to request a payout here.
-      </p>
+      <EmptyState
+        icon="icon-carus-clock"
+        title="Awaiting verification"
+        text="Your bank account is awaiting verification. Once it's verified you'll be able to request a payout here."
+      />
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="tfcl-card p-3 mb-3">
-      <h4 className="mb-2">Request a payout</h4>
-      {requestError && <div className="alert alert-danger">{requestError}</div>}
-      <div className="row">
-        <div className="col-md-6 form-group">
-          <label>Pay into</label>
-          <select className="form-control" value={bankAccountId} onChange={(e) => setBankAccountId(e.target.value)} required>
-            <option value="">Choose an account...</option>
-            {verifiedAccounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.accountName} · ...{account.accountNumberLast4}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="col-md-6 form-group">
-          <label>Amount (£)</label>
-          <input
-            type="number"
-            step="0.01"
-            min="0.01"
-            max={availableAmount ?? undefined}
-            className="form-control"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="ha-card-body">
+      {requestError && <Notice tone="danger">{requestError}</Notice>}
+      <div className="ha-field">
+        <label htmlFor={`${fieldId}-account`}>Pay into</label>
+        <select id={`${fieldId}-account`} className="ha-select" value={bankAccountId} onChange={(e) => setBankAccountId(e.target.value)} required>
+          <option value="">Choose an account…</option>
+          {verifiedAccounts.map((account) => (
+            <option key={account.id} value={account.id}>
+              {account.accountName} · …{account.accountNumberLast4}
+            </option>
+          ))}
+        </select>
       </div>
-      <button type="submit" className="sc-button" disabled={requesting || availableAmount === 0}>
-        <span>{requesting ? "Requesting..." : "Request payout"}</span>
+      <div className="ha-field">
+        <label htmlFor={`${fieldId}-amount`}>Amount (£)</label>
+        <input
+          id={`${fieldId}-amount`}
+          type="number"
+          step="0.01"
+          min="0.01"
+          max={availableAmount ?? undefined}
+          className="ha-input"
+          placeholder="0.00"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
+        />
+        {availableAmount !== null && <div className="ha-hint">Up to {formatMoney(availableAmount, { pence: true })} available</div>}
+      </div>
+      <button type="submit" className="ha-btn is-primary" disabled={requesting || availableAmount === 0} aria-busy={requesting}>
+        {requesting ? "Requesting…" : "Request payout"}
       </button>
     </form>
   );
@@ -160,100 +189,119 @@ export default function Dashboard() {
   const { payouts, loading: payoutsLoading, error: payoutsError, requestPayout, requesting, requestError } = usePayouts();
   const { balance, loading: balanceLoading, error: balanceError } = usePayoutBalance();
 
+  const controls = useListControls<Payout>({
+    items: payouts,
+    filters: [
+      { key: "status", label: "Status", get: (payout) => payout.status },
+      { key: "review", label: "Fraud review", get: (payout) => payout.fraudReviewStatus },
+    ],
+    sorts: [
+      { value: "recent", label: "Most recent", compare: (a, b) => (b.sentAt ?? "9999").localeCompare(a.sentAt ?? "9999") || b.id - a.id },
+      { value: "amount", label: "Largest amount", compare: (a, b) => b.amount - a.amount },
+    ],
+  });
+
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">My payouts</h1>
-                  <p className="text-color-2 mb-3">Add a bank account, track what you&apos;re owed, and request a payout.</p>
+    <DashboardPage title="My payouts" description="Add a bank account, track what you're owed, and request a payout.">
+      <Stats>
+        <StatCard
+          label="Available to withdraw"
+          icon="icon-carus-power"
+          value={balanceLoading ? "—" : balance ? formatMoney(balance.amount, { pence: true }) : "—"}
+        />
+      </Stats>
+      {balanceError && <Notice tone="danger">{balanceError}</Notice>}
 
-                  <div className="tfcl-card p-3 mb-4">
-                    <div className="text-color-2 mb-1">Available to withdraw</div>
-                    {balanceLoading && <div style={{ fontSize: 28, fontWeight: 600 }}>...</div>}
-                    {balanceError && <div className="alert alert-danger">{balanceError}</div>}
-                    {balance && <div style={{ fontSize: 28, fontWeight: 600 }}>£{balance.amount.toLocaleString()}</div>}
-                  </div>
+      <div className="ha-grid is-2 mb-4" style={{ alignItems: "start" }}>
+        <Card title="Request a payout">
+          {accountsLoading || balanceLoading ? (
+            <LoadingRows rows={3} label="Loading" />
+          ) : (
+            <RequestPayoutForm
+              bankAccounts={bankAccounts}
+              availableAmount={balance?.amount ?? null}
+              onRequest={requestPayout}
+              requesting={requesting}
+              requestError={requestError}
+            />
+          )}
+        </Card>
 
-                  {accountsError && <div className="alert alert-danger">{accountsError}</div>}
-                  {!accountsLoading && <AddBankAccountForm onAdd={addBankAccount} adding={adding} addError={addError} />}
-
-                  {!accountsLoading && bankAccounts.length > 0 && (
-                    <div className="table-responsive mb-4">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Account</th>
-                            <th>Number</th>
-                            <th>Status</th>
-                            <th>Default</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {bankAccounts.map((account) => (
-                            <tr key={account.id}>
-                              <td>{account.accountName}</td>
-                              <td>...{account.accountNumberLast4}</td>
-                              <td>{VERIFICATION_LABELS[account.verificationStatus]}</td>
-                              <td>{account.isDefault ? "Yes" : "-"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  {!accountsLoading && !balanceLoading && (
-                    <RequestPayoutForm
-                      bankAccounts={bankAccounts}
-                      availableAmount={balance?.amount ?? null}
-                      onRequest={requestPayout}
-                      requesting={requesting}
-                      requestError={requestError}
-                    />
-                  )}
-
-                  <h4 className="mb-2">Payout history</h4>
-                  {payoutsLoading && <p>Loading your payouts...</p>}
-                  {payoutsError && <div className="alert alert-danger">{payoutsError}</div>}
-                  {!payoutsLoading && !payoutsError && payouts.length === 0 && (
-                    <p className="tfcl-empty-data">You have no payouts yet.</p>
-                  )}
-
-                  {payouts.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Fraud review</th>
-                            <th>Sent</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {payouts.map((payout) => (
-                            <tr key={payout.id}>
-                              <td>£{payout.amount.toLocaleString()}</td>
-                              <td className="text-capitalize">{payout.status}</td>
-                              <td className="text-capitalize">{payout.fraudReviewStatus.replace("_", " ")}</td>
-                              <td>{payout.sentAt ? new Date(payout.sentAt).toLocaleDateString() : "-"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
+        <Card title="Bank accounts">
+          {accountsError && <ErrorNotice message={accountsError} />}
+          {accountsLoading && <LoadingRows rows={2} label="Loading bank accounts" />}
+          {!accountsLoading && bankAccounts.length > 0 && (
+            <DataTable caption="Your bank accounts">
+              <thead>
+                <tr>
+                  <th scope="col">Account</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bankAccounts.map((account) => (
+                  <tr key={account.id}>
+                    <td data-label="Account">
+                      <div className="ha-primary-text">
+                        {account.accountName} {account.isDefault && <Badge tone="primary" plain>Default</Badge>}
+                      </div>
+                      <div className="ha-sub ha-num">…{account.accountNumberLast4}</div>
+                    </td>
+                    <td data-label="Status">
+                      <Badge tone={account.verificationStatus === "unverified" ? "warning" : "success"}>{VERIFICATION_LABELS[account.verificationStatus]}</Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </DataTable>
+          )}
+          {!accountsLoading && <AddBankAccountForm onAdd={addBankAccount} adding={adding} addError={addError} />}
+        </Card>
       </div>
-    </div>
+
+      <Card title="Payout history">
+        {payoutsLoading && <LoadingTable label="Loading your payouts" />}
+        {payoutsError && <ErrorNotice message={payoutsError} />}
+        {!payoutsLoading && !payoutsError && payouts.length === 0 && (
+          <EmptyState icon="icon-carus-power" title="No payouts yet" text="Payouts you request will be listed here with their status." />
+        )}
+
+        {payouts.length > 0 && (
+          <>
+            <DataToolbar controls={controls} noun="payout" />
+            {controls.results.length === 0 ? (
+              <NoMatches onClear={controls.clearAll} />
+            ) : (
+              <DataTable caption="Payout history">
+                <thead>
+                  <tr>
+                    <th scope="col" className="is-num">Amount</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Fraud review</th>
+                    <th scope="col">Sent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {controls.results.map((payout) => (
+                    <tr key={payout.id}>
+                      <td data-label="Amount" className="is-num ha-primary-text">
+                        {formatMoney(payout.amount, { pence: true })}
+                      </td>
+                      <td data-label="Status">
+                        <StatusBadge status={payout.status} />
+                      </td>
+                      <td data-label="Fraud review">
+                        <StatusBadge status={payout.fraudReviewStatus} tone={payout.fraudReviewStatus === "not_required" ? "neutral" : undefined} />
+                      </td>
+                      <td data-label="Sent">{payout.sentAt ? formatDate(payout.sentAt) : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+          </>
+        )}
+      </Card>
+    </DashboardPage>
   );
 }

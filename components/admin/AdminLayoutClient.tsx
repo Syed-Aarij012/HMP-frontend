@@ -65,11 +65,11 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   }, [isLoginPage, loading, user, router, isAdmin, isSuperAdmin, pathname]);
 
   if (isLoginPage) return <>{children}</>;
-  if (loading || !user) return <div className="hmp-admin" />;
+  if (loading || !user) return <div className="hmp-ui hmp-admin" />;
 
   if (!isAdmin) {
     return (
-      <div className="hmp-admin ha-login">
+      <div className="hmp-ui hmp-admin ha-login">
         <div className="ha-login-card" style={{ textAlign: "center" }}>
           <h1>Admins only</h1>
           <p className="ha-login-sub">
@@ -94,7 +94,7 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   const allowed = canOpenAdminItem(user, page);
 
   return (
-    <div className="hmp-admin">
+    <div className="hmp-ui hmp-admin">
       <ToastProvider>
         <DashboardSidebarProvider>
           <AdminSidebar />

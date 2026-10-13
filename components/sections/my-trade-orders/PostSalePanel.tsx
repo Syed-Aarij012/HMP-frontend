@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DocumentsSection, ReleaseSection, Section, TransportSection } from "@/components/sections/post-sale/PostSaleSections";
 import { usePostSaleRecords } from "@/hooks/usePostSaleRecords";
 import type { TradeOrder } from "@/types/auction";
+import { Notice } from "@/components/ui/kit";
 
 const money = (value: string | number) => `£${Number(value).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "-");
@@ -25,13 +26,13 @@ function ClaimsSection({ order, records }: { order: TradeOrder; records: ReturnT
         <div key={claim.id} className="mb-2">
           <b className="text-capitalize">{claim.claim_type.replace(/_/g, " ")}</b> — <span className="text-capitalize">{claim.status.replace(/_/g, " ")}</span>
           {claim.resolution && ` (${claim.resolution.replace(/_/g, " ")}${claim.resolution_amount ? `, ${money(claim.resolution_amount)}` : ""})`}
-          <div className="text-color-2">{claim.description}</div>
-          {claim.resolution_notes && <div className="text-color-2">Outcome: {claim.resolution_notes}</div>}
+          <div className="ha-muted">{claim.description}</div>
+          {claim.resolution_notes && <div className="ha-muted">Outcome: {claim.resolution_notes}</div>}
         </div>
       ))}
 
-      {closes === null && <p className="text-color-2">You can raise a claim once the vehicle has been collected.</p>}
-      {closes !== null && !open && <p className="text-color-2">The claim window closed on {when(order.assuranceClaimWindowClosesAt)}.</p>}
+      {closes === null && <p className="ha-muted">You can raise a claim once the vehicle has been collected.</p>}
+      {closes !== null && !open && <p className="ha-muted">The claim window closed on {when(order.assuranceClaimWindowClosesAt)}.</p>}
 
       {open && (
         <form
@@ -42,9 +43,9 @@ function ClaimsSection({ order, records }: { order: TradeOrder; records: ReturnT
             if (ok) setDescription("");
           }}
         >
-          <p className="text-color-2">You can raise a claim until {when(order.assuranceClaimWindowClosesAt)}.</p>
-          {records.claimError && <div className="alert alert-danger">{records.claimError}</div>}
-          {sent && <div className="alert alert-success">Claim submitted. We aim to review it within one working day.</div>}
+          <p className="ha-muted">You can raise a claim until {when(order.assuranceClaimWindowClosesAt)}.</p>
+          {records.claimError && <Notice tone="danger">{records.claimError}</Notice>}
+          {sent && <Notice tone="success">Claim submitted. We aim to review it within one working day.</Notice>}
           <select className="form-control mb-2" value={type} onChange={(e) => setType(e.target.value)} aria-label="Claim type">
             <option value="mechanical">Mechanical fault</option>
             <option value="condition_mismatch">Condition doesn&apos;t match the report</option>
@@ -59,9 +60,7 @@ function ClaimsSection({ order, records }: { order: TradeOrder; records: ReturnT
             minLength={10}
             required
           />
-          <button type="submit" className="sc-button" disabled={records.submitting}>
-            <span>{records.submitting ? "Submitting..." : "Submit claim"}</span>
-          </button>
+          <button type="submit" className="ha-btn is-primary" disabled={records.submitting}>{records.submitting ? "Submitting…" : "Submit claim"}</button>
         </form>
       )}
     </Section>

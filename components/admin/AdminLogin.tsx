@@ -44,7 +44,7 @@ export default function AdminLogin() {
   const signedInAsNonAdmin = !loading && user !== null && !canUseAdminPanel(user);
 
   return (
-    <div className="hmp-admin ha-login">
+    <div className="hmp-ui hmp-admin ha-login">
       <div className="ha-login-card">
         <div className="ha-login-logo">
           {/* eslint-disable-next-line @next/next/no-img-element */}

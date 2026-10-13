@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch, describeApiError } from "@/lib/api-client";
+import { Notice } from "@/components/ui/kit";
 
 type AccessRequest = { id: number; agent: string | null; reason: string; requested_at: string | null };
 
@@ -40,24 +41,26 @@ export default function SupportAccessRequests() {
   if (requests.length === 0) return null;
 
   return (
-    <div className="container" style={{ paddingTop: 16 }}>
+    <div className="mb-4" role="region" aria-label="Support access requests">
       {requests.map((request) => (
-        <div key={request.id} className="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div>
-            <b>{request.agent ?? "HMP Support"}</b> from HMP Support is asking to view your account (read-only) to help with:
-            <i> “{request.reason}”</i>. They won&apos;t be able to change anything, and the view ends automatically.
+        <Notice key={request.id} tone="warning">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div style={{ maxWidth: "68ch" }}>
+              <b>{request.agent ?? "HMP Support"}</b> from HMP Support is asking to view your account (read-only) to help with:
+              <i> “{request.reason}”</i>. They won&apos;t be able to change anything, and the view ends automatically.
+            </div>
+            <div className="ha-actions">
+              <button type="button" className="ha-btn is-sm is-primary" onClick={() => decide(request.id, "approve")}>
+                Allow
+              </button>
+              <button type="button" className="ha-btn is-sm" onClick={() => decide(request.id, "deny")}>
+                Deny
+              </button>
+            </div>
           </div>
-          <div className="d-flex gap-2">
-            <button type="button" className="sc-button" onClick={() => decide(request.id, "approve")}>
-              <span>Allow</span>
-            </button>
-            <button type="button" className="sc-button" onClick={() => decide(request.id, "deny")}>
-              <span>Deny</span>
-            </button>
-          </div>
-        </div>
+        </Notice>
       ))}
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && <Notice tone="danger">{error}</Notice>}
     </div>
   );
 }

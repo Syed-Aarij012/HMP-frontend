@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import { Fragment, useState, type FormEvent } from "react";
 import { useApplyRoutingRule, useRoutingRules } from "@/hooks/useRoutingRules";
 import { ROUTING_RULE_CHANNELS, ROUTING_RULE_FIELDS, ROUTING_RULE_OPERATORS, type RoutingRuleCondition } from "@/types/routingRules";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Badge, Card, DataTable, EmptyState, ErrorNotice, LoadingRows, Notice, humanize } from "@/components/ui/kit";
 
 type ConditionRow = { field: RoutingRuleCondition["field"]; operator: RoutingRuleCondition["operator"]; value: string };
 
@@ -42,135 +43,124 @@ export default function RoutingRulesAdmin() {
   }
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Auto-routing rules</h1>
-                  <p className="text-color-2 mb-3">
-                    Rules are evaluated in priority order (lowest first); the first fully-matching active rule wins.
-                  </p>
+    <DashboardPage title="Auto-routing rules" description="Rules are evaluated in priority order (lowest first); the first fully-matching active rule wins.">
+      <Card className="mb-4" title="Rules">
+        {loading && <LoadingRows rows={3} label="Loading rules" />}
+        {error && <ErrorNotice message={error} />}
+        {!loading && rules.length === 0 && <EmptyState icon="icon-carus-arrowsleftright" title="No rules defined yet" text="Create the first rule below." />}
+        {rules.length > 0 && (
+          <DataTable caption="Auto-routing rules, in evaluation order">
+              <thead>
+                <tr>
+                  <th scope="col" className="is-num">Priority</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Conditions</th>
+                  <th scope="col">Action</th>
+                  <th scope="col">Active</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rules.map((r) => (
+                  <tr key={r.id}>
+                    <td data-label="Priority" className="is-num">{r.priority}</td>
+                    <td data-label="Name" className="ha-primary-text">{r.name}</td>
+                    <td data-label="Conditions">
+                      <div className="ha-chips">
+                        {r.conditions.map((c, i) => (
+                          <code key={i}>
+                            {c.field} {c.operator} {c.value}
+                          </code>
+                        ))}
+                      </div>
+                    </td>
+                    <td data-label="Action">
+                      <Badge plain>{humanize(r.action.channel)}</Badge>
+                      {r.action.reserveDiscountPct !== null && <div className="ha-sub">Reserve −{(r.action.reserveDiscountPct * 100).toFixed(0)}%</div>}
+                    </td>
+                    <td data-label="Active">
+                      <Badge tone={r.isActive ? "success" : "neutral"}>{r.isActive ? "Active" : "Inactive"}</Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </DataTable>
+        )}
+      </Card>
 
-                  <div className="tfcl-card p-3 mb-3">
-                    <h4 className="mb-2">Active rules</h4>
-                    {loading && <p>Loading...</p>}
-                    {error && <div className="alert alert-danger">{error}</div>}
-                    {!loading && rules.length === 0 && <p className="tfcl-empty-data">No rules defined yet.</p>}
-                    {rules.length > 0 && (
-                      <div className="table-responsive">
-                        <table className="table">
-                          <thead>
-                            <tr>
-                              <th>Priority</th>
-                              <th>Name</th>
-                              <th>Conditions</th>
-                              <th>Action</th>
-                              <th>Active</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {rules.map((r) => (
-                              <tr key={r.id}>
-                                <td>{r.priority}</td>
-                                <td>{r.name}</td>
-                                <td>{r.conditions.map((c) => `${c.field} ${c.operator} ${c.value}`).join(" AND ")}</td>
-                                <td>
-                                  {r.action.channel}
-                                  {r.action.reserveDiscountPct !== null ? ` (reserve -${(r.action.reserveDiscountPct * 100).toFixed(0)}%)` : ""}
-                                </td>
-                                <td>{r.isActive ? "Yes" : "No"}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-
-                  <form onSubmit={handleCreate} className="tfcl-card p-3 mb-3">
-                    <h4 className="mb-2">New rule</h4>
-                    {createError && <div className="alert alert-danger">{createError}</div>}
-                    <div className="row">
-                      <div className="col-md-8 form-group">
-                        <label>Name</label>
-                        <input type="text" className="form-control" value={name} onChange={(e) => setName(e.target.value)} required />
-                      </div>
-                      <div className="col-md-4 form-group">
-                        <label>Priority (lower runs first)</label>
-                        <input type="number" className="form-control" value={priority} onChange={(e) => setPriority(e.target.value)} required />
-                      </div>
-                    </div>
-
-                    <h5 className="mb-2">Conditions (all must match)</h5>
-                    {conditions.map((c, i) => (
-                      <div className="row" key={i}>
-                        <div className="col-md-4 form-group">
-                          <select className="form-control" value={c.field} onChange={(e) => updateCondition(i, "field", e.target.value)}>
-                            {ROUTING_RULE_FIELDS.map((f) => <option key={f} value={f}>{f}</option>)}
-                          </select>
-                        </div>
-                        <div className="col-md-4 form-group">
-                          <select className="form-control" value={c.operator} onChange={(e) => updateCondition(i, "operator", e.target.value)}>
-                            {ROUTING_RULE_OPERATORS.map((o) => <option key={o} value={o}>{o}</option>)}
-                          </select>
-                        </div>
-                        <div className="col-md-4 form-group">
-                          <input type="text" className="form-control" value={c.value} onChange={(e) => updateCondition(i, "value", e.target.value)} required />
-                        </div>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="sc-button mb-2"
-                      onClick={() => setConditions((prev) => [...prev, { field: "vehicle_age_years", operator: ">", value: "" }])}
-                    >
-                      <span>Add condition</span>
-                    </button>
-
-                    <h5 className="mb-2">Action</h5>
-                    <div className="row">
-                      <div className="col-md-6 form-group">
-                        <label>Route to</label>
-                        <select className="form-control" value={channel} onChange={(e) => setChannel(e.target.value as typeof channel)}>
-                          {ROUTING_RULE_CHANNELS.map((ch) => <option key={ch} value={ch}>{ch}</option>)}
-                        </select>
-                      </div>
-                      <div className="col-md-6 form-group">
-                        <label>Reserve discount off valuation (0-0.95, blank = none)</label>
-                        <input type="number" step="0.01" min="0" max="0.95" className="form-control" value={reserveDiscountPct} onChange={(e) => setReserveDiscountPct(e.target.value)} />
-                      </div>
-                    </div>
-
-                    <button type="submit" className="sc-button" disabled={creating}>
-                      <span>{creating ? "Creating..." : "Create rule"}</span>
-                    </button>
-                  </form>
-
-                  <form onSubmit={handleTrigger} className="tfcl-card p-3">
-                    <h4 className="mb-2">Auto-route a vehicle now</h4>
-                    {applyError && <div className="alert alert-danger">{applyError}</div>}
-                    {result && (
-                      <div className="alert alert-success">
-                        Routed to {result.routedToChannel} #{result.routedToId}
-                      </div>
-                    )}
-                    <div className="flex gap-10">
-                      <input type="text" className="form-control" placeholder="Vehicle ID" value={triggerVehicleId} onChange={(e) => setTriggerVehicleId(e.target.value)} required />
-                      <button type="submit" className="sc-button" disabled={applying}>
-                        <span>{applying ? "Routing..." : "Auto-route"}</span>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </main>
-            </div>
+      <div className="ha-grid is-2" style={{ alignItems: "start" }}>
+      <Card title="New rule">
+      <form onSubmit={handleCreate} className="ha-card-body">
+        {createError && <Notice tone="danger">{createError}</Notice>}
+        <div className="ha-form-grid">
+          <div className="ha-field">
+            <label htmlFor="routin-name">Name</label>
+            <input id="routin-name" type="text" className="ha-input" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="routin-priority-lower-runs-first">Priority (lower runs first)</label>
+            <input id="routin-priority-lower-runs-first" type="number" className="ha-input" value={priority} onChange={(e) => setPriority(e.target.value)} required />
           </div>
         </div>
+
+        <fieldset className="ha-field">
+        <legend>Conditions (all must match)</legend>
+        <div className="ha-row-editor" style={{ gridTemplateColumns: "minmax(0, 1.4fr) 90px minmax(0, 1fr)" }}>
+        {conditions.map((c, i) => (
+          <Fragment key={i}>
+              <select className="ha-select" aria-label={`Field, condition ${i + 1}`} value={c.field} onChange={(e) => updateCondition(i, "field", e.target.value)}>
+                {ROUTING_RULE_FIELDS.map((f) => <option key={f} value={f}>{f}</option>)}
+              </select>
+              <select className="ha-select" aria-label={`Operator, condition ${i + 1}`} value={c.operator} onChange={(e) => updateCondition(i, "operator", e.target.value)}>
+                {ROUTING_RULE_OPERATORS.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+              <input type="text" className="ha-input" aria-label={`Value, condition ${i + 1}`} value={c.value} onChange={(e) => updateCondition(i, "value", e.target.value)} required />
+          </Fragment>
+        ))}
+        </div>
+        <button
+          type="button"
+          className="ha-btn is-sm mt-2"
+          onClick={() => setConditions((prev) => [...prev, { field: "vehicle_age_years", operator: ">", value: "" }])}
+        >
+          <i className="icon-carus-plus" aria-hidden="true" /> Add condition
+        </button>
+        </fieldset>
+
+        <fieldset className="ha-field">
+        <legend>Action</legend>
+        <div className="ha-form-grid">
+          <div className="ha-field">
+            <label htmlFor="routin-route-to">Route to</label>
+            <select id="routin-route-to" className="ha-select" value={channel} onChange={(e) => setChannel(e.target.value as typeof channel)}>
+              {ROUTING_RULE_CHANNELS.map((ch) => <option key={ch} value={ch}>{ch}</option>)}
+            </select>
+          </div>
+          <div className="ha-field">
+            <label htmlFor="routin-reserve-discount-off-valuati">Reserve discount off valuation (0-0.95, blank = none)</label>
+            <input id="routin-reserve-discount-off-valuati" type="number" step="0.01" min="0" max="0.95" className="ha-input" value={reserveDiscountPct} onChange={(e) => setReserveDiscountPct(e.target.value)} />
+          </div>
+        </div>
+        </fieldset>
+
+        <button type="submit" className="ha-btn is-primary" disabled={creating} aria-busy={creating}>{creating ? "Creating…" : "Create rule"}</button>
+      </form>
+      </Card>
+
+      <Card title="Auto-route a vehicle now" description="Runs the rules against one vehicle immediately.">
+      <form onSubmit={handleTrigger} className="ha-card-body">
+        {applyError && <Notice tone="danger">{applyError}</Notice>}
+        {result && (
+          <Notice tone="success">
+            Routed to {result.routedToChannel} #{result.routedToId}
+          </Notice>
+        )}
+        <div className="ha-actions is-start" style={{ flexWrap: "nowrap" }}>
+          <input type="text" className="ha-input" placeholder="Vehicle ID" aria-label="Vehicle ID" value={triggerVehicleId} onChange={(e) => setTriggerVehicleId(e.target.value)} required />
+          <button type="submit" className="ha-btn is-primary" disabled={applying} aria-busy={applying}>{applying ? "Routing…" : "Auto-route"}</button>
+        </div>
+      </form>
+      </Card>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

@@ -1,20 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useAdCampaigns } from "@/hooks/useAdCampaigns";
 import { useDealerAnalytics } from "@/hooks/useDealerAnalytics";
 import { useMyListings } from "@/hooks/useMyListings";
 import DealerAnalyticsChart from "./DealerAnalyticsChart";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Badge, Card, DataTable, EmptyState, LoadingRows, Notice, StatCard, Stats, StatusBadge, formatMoney } from "@/components/ui/kit";
 
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="tfcl-card p-3">
-      <div className="text-color-2 mb-1">{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 600 }}>{value}</div>
-    </div>
-  );
-}
+const pct = (rate: number | null) => (rate !== null ? `${(rate * 100).toFixed(1)}%` : "—");
 
 function AdCampaignsPanel() {
   const { products, campaigns, loading, error, actionError, submitting, launch, setStatus } = useAdCampaigns();
@@ -47,36 +41,39 @@ function AdCampaignsPanel() {
     }
   }
 
-  if (loading) return <p>Loading your ad campaigns...</p>;
-  if (error) return <div className="alert alert-danger">{error}</div>;
+  if (loading) return <LoadingRows rows={3} label="Loading your ad campaigns" />;
+  if (error) return <Notice tone="danger">{error}</Notice>;
 
   return (
-    <div className="mt-4">
-      <h4 className="mb-2">Ad campaigns</h4>
-      {actionError && <div className="alert alert-danger">{actionError}</div>}
+    <Card title="Ad campaigns" description="Promote a live listing or sponsor a make's model page.">
+      {actionError && (
+        <div className="ha-card-body" style={{ paddingBottom: 0 }}>
+          <Notice tone="danger">{actionError}</Notice>
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="tfcl-card p-3 mb-3">
-        <div className="row">
-          <div className="col-md-3 form-group">
-            <label>Ad product</label>
-            <select className="form-control" value={productId} onChange={(e) => setProductId(e.target.value)} required>
+      <form onSubmit={handleSubmit} className="ha-card-body" aria-label="Launch a campaign" style={{ borderBottom: "1px solid var(--hmp-border)" }}>
+        <div className="ha-form-grid">
+          <div className="ha-field">
+            <label htmlFor="ad-product">Ad product</label>
+            <select id="ad-product" className="ha-select" value={productId} onChange={(e) => setProductId(e.target.value)} required>
               <option value="">Choose...</option>
               {products.map((product) => (
                 <option key={product.id} value={product.id}>
-                  {product.name} (£{product.price.toLocaleString()})
+                  {product.name} ({formatMoney(product.price)})
                 </option>
               ))}
             </select>
           </div>
           {isModelPage ? (
-            <div className="col-md-3 form-group">
-              <label>Target make</label>
-              <input type="text" className="form-control" value={targetMake} onChange={(e) => setTargetMake(e.target.value)} placeholder="e.g. Volvo" />
+            <div className="ha-field">
+              <label htmlFor="ad-target-make">Target make</label>
+              <input id="ad-target-make" type="text" className="ha-input" value={targetMake} onChange={(e) => setTargetMake(e.target.value)} placeholder="e.g. Volvo" />
             </div>
           ) : (
-            <div className="col-md-3 form-group">
-              <label>Listing to promote</label>
-              <select className="form-control" value={listingId} onChange={(e) => setListingId(e.target.value)}>
+            <div className="ha-field">
+              <label htmlFor="ad-listing">Listing to promote</label>
+              <select id="ad-listing" className="ha-select" value={listingId} onChange={(e) => setListingId(e.target.value)}>
                 <option value="">Choose a live listing...</option>
                 {liveListings.map((listing) => (
                   <option key={listing.publicId} value={listing.publicId}>
@@ -86,69 +83,70 @@ function AdCampaignsPanel() {
               </select>
             </div>
           )}
-          <div className="col-md-3 form-group">
-            <label>Starts</label>
-            <input type="datetime-local" className="form-control" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required />
+          <div className="ha-field">
+            <label htmlFor="ad-starts">Starts</label>
+            <input id="ad-starts" type="datetime-local" className="ha-input" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required />
           </div>
-          <div className="col-md-3 form-group">
-            <label>Ends</label>
-            <input type="datetime-local" className="form-control" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} required />
+          <div className="ha-field">
+            <label htmlFor="ad-ends">Ends</label>
+            <input id="ad-ends" type="datetime-local" className="ha-input" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} required />
           </div>
         </div>
-        <button type="submit" className="sc-button" disabled={submitting || !productId}>
-          <span>{submitting ? "Launching..." : "Launch campaign"}</span>
-        </button>
+        <button type="submit" className="ha-btn is-primary" disabled={submitting || !productId}>{submitting ? "Launching…" : "Launch campaign"}</button>
       </form>
 
-      {campaigns.length === 0 && <p className="tfcl-empty-data">No campaigns yet.</p>}
+      {campaigns.length === 0 && <EmptyState icon="icon-carus-sliders" title="No campaigns yet" text="Campaigns you launch appear here with their performance." />}
 
       {campaigns.length > 0 && (
-        <div className="table-responsive">
-          <table className="table">
+        <DataTable caption="Your ad campaigns">
             <thead>
               <tr>
-                <th>Product</th>
-                <th>Status</th>
-                <th>Impressions</th>
-                <th>Clicks</th>
-                <th>Leads</th>
-                <th>CTR</th>
-                <th />
+                <th scope="col">Product</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="is-num">Impressions</th>
+                <th scope="col" className="is-num">Clicks</th>
+                <th scope="col" className="is-num">Leads</th>
+                <th scope="col" className="is-num">CTR</th>
+                <th scope="col"><span className="ha-visually-hidden">Actions</span></th>
               </tr>
             </thead>
             <tbody>
               {campaigns.map((campaign) => (
                 <tr key={campaign.id}>
-                  <td>{campaign.product.name}</td>
-                  <td className="text-capitalize">{campaign.status}{campaign.running ? " · live" : ""}</td>
-                  <td>{campaign.impressions.toLocaleString()}</td>
-                  <td>{campaign.clicks.toLocaleString()}</td>
-                  <td>{campaign.leads.toLocaleString()}</td>
-                  <td>{campaign.clickThroughRate !== null ? `${(campaign.clickThroughRate * 100).toFixed(1)}%` : "-"}</td>
-                  <td className="flex gap-10">
+                  <td data-label="Product" className="ha-primary-text">{campaign.product.name}</td>
+                  <td data-label="Status">
+                    <div className="ha-chips">
+                      <StatusBadge status={campaign.status} />
+                      {campaign.running && <Badge tone="success" plain>Live now</Badge>}
+                    </div>
+                  </td>
+                  <td data-label="Impressions" className="is-num">{campaign.impressions.toLocaleString("en-GB")}</td>
+                  <td data-label="Clicks" className="is-num">{campaign.clicks.toLocaleString("en-GB")}</td>
+                  <td data-label="Leads" className="is-num">{campaign.leads.toLocaleString("en-GB")}</td>
+                  <td data-label="CTR" className="is-num">{pct(campaign.clickThroughRate)}</td>
+                  <td data-label=""><div className="ha-row-actions">
                     {campaign.status === "active" && (
-                      <button type="button" className="sc-button" onClick={() => setStatus(campaign.id, "paused")}>
-                        <span>Pause</span>
+                      <button type="button" className="ha-btn is-sm" onClick={() => setStatus(campaign.id, "paused")}>
+                        Pause
                       </button>
                     )}
                     {campaign.status === "paused" && (
-                      <button type="button" className="sc-button" onClick={() => setStatus(campaign.id, "active")}>
-                        <span>Resume</span>
+                      <button type="button" className="ha-btn is-sm" onClick={() => setStatus(campaign.id, "active")}>
+                        Resume
                       </button>
                     )}
                     {campaign.status !== "ended" && (
-                      <button type="button" className="sc-button" onClick={() => setStatus(campaign.id, "ended")}>
-                        <span>End</span>
+                      <button type="button" className="ha-btn is-sm is-danger" onClick={() => setStatus(campaign.id, "ended")}>
+                        End
                       </button>
                     )}
-                  </td>
+                  </div></td>
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+          </DataTable>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -156,77 +154,70 @@ export default function Dashboard() {
   const { analytics, loading, error, isDealer } = useDealerAnalytics(30);
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Dealer analytics</h1>
+    <DashboardPage title="Dealer analytics" description={isDealer ? "How your stock is performing over the last 30 days." : undefined}>
+      {!isDealer && (
+        <Card>
+          <EmptyState icon="icon-carus-checkcircle" title="Dealer accounts only" text="This page is for dealer accounts only." />
+        </Card>
+      )}
+      {isDealer && loading && <LoadingRows rows={4} label="Loading your analytics" />}
+      {isDealer && error && <Notice tone="danger">{error}</Notice>}
 
-                  {!isDealer && <p className="tfcl-empty-data">This page is for dealer accounts only.</p>}
-                  {isDealer && loading && <p>Loading your analytics...</p>}
-                  {isDealer && error && <div className="alert alert-danger">{error}</div>}
+      {analytics && (
+        <>
+          <Stats>
+            <StatCard label="Active listings" icon="icon-carus-car" value={analytics.activeListingsCount.toLocaleString("en-GB")} />
+            <StatCard label="Search impressions" icon="icon-carus-search" value={analytics.searchImpressions.toLocaleString("en-GB")} note={`Last ${analytics.periodDays} days`} />
+            <StatCard label="Detail views" icon="icon-carus-listings" value={analytics.periodDetailViews.toLocaleString("en-GB")} note={`Last ${analytics.periodDays} days`} />
+            <StatCard label="Avg days to sell" icon="icon-carus-clock" value={analytics.averageDaysToSell !== null ? String(analytics.averageDaysToSell) : "—"} />
+          </Stats>
 
-                  {analytics && (
-                    <>
-                      <div className="row mb-4">
-                        <div className="col-md-3 mb-3">
-                          <StatTile label="Active listings" value={analytics.activeListingsCount.toLocaleString()} />
-                        </div>
-                        <div className="col-md-3 mb-3">
-                          <StatTile label={`Search impressions (${analytics.periodDays}d)`} value={analytics.searchImpressions.toLocaleString()} />
-                        </div>
-                        <div className="col-md-3 mb-3">
-                          <StatTile label={`Detail views (${analytics.periodDays}d)`} value={analytics.periodDetailViews.toLocaleString()} />
-                        </div>
-                        <div className="col-md-3 mb-3">
-                          <StatTile label="Avg days to sell" value={analytics.averageDaysToSell !== null ? String(analytics.averageDaysToSell) : "-"} />
-                        </div>
-                      </div>
-
-                      <div className="tfcl-card p-3 mb-4">
-                        <h4 className="mb-2">Activity, last {analytics.periodDays} days</h4>
-                        <DealerAnalyticsChart series={analytics.series} />
-                      </div>
-
-                      <div className="tfcl-card p-3 mb-4">
-                        <h4 className="mb-2">Leads</h4>
-                        <p className="mb-1">
-                          {analytics.leads.total} total ·{" "}
-                          {analytics.leads.conversionRate !== null ? `${(analytics.leads.conversionRate * 100).toFixed(1)}% converted` : "no conversions yet"}
-                        </p>
-                        <p className="text-color-2 mb-0">
-                          New {analytics.leads.byStatus.new} · Contacted {analytics.leads.byStatus.contacted} · Converted{" "}
-                          {analytics.leads.byStatus.converted} · Lost {analytics.leads.byStatus.lost}
-                        </p>
-                      </div>
-
-                      {/* FR-C-033 no-show tracking. */}
-                      <div className="tfcl-card p-3 mb-4">
-                        <h4 className="mb-2">Test drives, last {analytics.periodDays} days</h4>
-                        <p className="mb-1">
-                          {analytics.appointments.noShowRate !== null
-                            ? `${(analytics.appointments.noShowRate * 100).toFixed(1)}% no-show rate`
-                            : "No completed or missed test drives yet"}
-                        </p>
-                        <p className="text-color-2 mb-0">
-                          Booked {analytics.appointments.booked} · Completed {analytics.appointments.completed} · No-show{" "}
-                          {analytics.appointments.noShow} · Cancelled {analytics.appointments.cancelled}
-                        </p>
-                      </div>
-
-                      <AdCampaignsPanel />
-                    </>
-                  )}
-                </div>
-              </main>
+          <Card className="mb-4" title={`Activity, last ${analytics.periodDays} days`}>
+            <div className="ha-card-body">
+              <DealerAnalyticsChart series={analytics.series} />
             </div>
+          </Card>
+
+          <div className="ha-grid is-2 mb-4">
+            <Card title="Leads">
+              <div className="ha-card-body">
+                <dl className="ha-dl">
+                  <div>
+                    <dt>Total</dt>
+                    <dd className="ha-num">{analytics.leads.total}</dd>
+                  </div>
+                  <div>
+                    <dt>Converted</dt>
+                    <dd className="ha-num">{analytics.leads.conversionRate !== null ? pct(analytics.leads.conversionRate) : "No conversions yet"}</dd>
+                  </div>
+                </dl>
+                <p className="ha-sub mt-3 mb-0">
+                  New {analytics.leads.byStatus.new} · Contacted {analytics.leads.byStatus.contacted} · Converted {analytics.leads.byStatus.converted} · Lost{" "}
+                  {analytics.leads.byStatus.lost}
+                </p>
+              </div>
+            </Card>
+
+            {/* FR-C-033 no-show tracking. */}
+            <Card title={`Test drives, last ${analytics.periodDays} days`}>
+              <div className="ha-card-body">
+                <dl className="ha-dl">
+                  <div>
+                    <dt>No-show rate</dt>
+                    <dd className="ha-num">{analytics.appointments.noShowRate !== null ? pct(analytics.appointments.noShowRate) : "No completed or missed test drives yet"}</dd>
+                  </div>
+                </dl>
+                <p className="ha-sub mt-3 mb-0">
+                  Booked {analytics.appointments.booked} · Completed {analytics.appointments.completed} · No-show {analytics.appointments.noShow} · Cancelled{" "}
+                  {analytics.appointments.cancelled}
+                </p>
+              </div>
+            </Card>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <AdCampaignsPanel />
+        </>
+      )}
+    </DashboardPage>
   );
 }

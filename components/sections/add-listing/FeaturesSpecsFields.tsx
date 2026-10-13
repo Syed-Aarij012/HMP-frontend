@@ -127,22 +127,22 @@ export default function FeaturesSpecsFields({
   }
 
   return (
-    <div className="tfcl-card p-3 mb-3">
+    <div className="ha-card ha-card-body mb-4">
       <fieldset disabled={disabled} style={{ border: 0, padding: 0, margin: 0 }}>
-        <h4 className="mb-1">Additional specifications</h4>
-        <p className="text-color-2 fs-13 mb-3">Optional, but buyers look for these. They&apos;re shown on your listing.</p>
+        <h2 className="hd-card-title">Additional specifications</h2>
+        <p className="ha-sub mb-3">Optional, but buyers look for these. They&apos;re shown on your listing.</p>
         <div className="row">
           <div className="col-md-6 col-lg-3 mb-3">
             <label htmlFor="extras_engine" className="mb-1">Engine size (cc)</label>
-            <input id="extras_engine" type="number" min={50} max={10000} className="form-control" placeholder="e.g. 1998" value={value.engine_capacity_cc} onChange={set("engine_capacity_cc")} />
+            <input id="extras_engine" type="number" min={50} max={10000} className="ha-input" placeholder="e.g. 1998" value={value.engine_capacity_cc} onChange={set("engine_capacity_cc")} />
           </div>
           <div className="col-md-6 col-lg-3 mb-3">
             <label htmlFor="extras_power" className="mb-1">Power (bhp)</label>
-            <input id="extras_power" type="number" min={1} max={2000} className="form-control" placeholder="e.g. 148" value={value.power_bhp} onChange={set("power_bhp")} />
+            <input id="extras_power" type="number" min={1} max={2000} className="ha-input" placeholder="e.g. 148" value={value.power_bhp} onChange={set("power_bhp")} />
           </div>
           <div className="col-md-6 col-lg-3 mb-3">
             <label htmlFor="extras_drivetrain" className="mb-1">Drivetrain</label>
-            <select id="extras_drivetrain" className="form-control" value={value.drivetrain} onChange={set("drivetrain")}>
+            <select id="extras_drivetrain" className="ha-select" value={value.drivetrain} onChange={set("drivetrain")}>
               <option value="">Not specified</option>
               {DRIVETRAIN_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -151,15 +151,15 @@ export default function FeaturesSpecsFields({
           </div>
           <div className="col-md-6 col-lg-3 mb-3">
             <label htmlFor="extras_co2" className="mb-1">CO₂ (g/km)</label>
-            <input id="extras_co2" type="number" min={0} max={600} className="form-control" value={value.co2_gpkm} onChange={set("co2_gpkm")} />
+            <input id="extras_co2" type="number" min={0} max={600} className="ha-input" value={value.co2_gpkm} onChange={set("co2_gpkm")} />
           </div>
           <div className="col-md-6 col-lg-3 mb-3">
             <label htmlFor="extras_owners" className="mb-1">Previous owners</label>
-            <input id="extras_owners" type="number" min={0} max={30} className="form-control" placeholder="0 = first owner" value={value.previous_owners} onChange={set("previous_owners")} />
+            <input id="extras_owners" type="number" min={0} max={30} className="ha-input" placeholder="0 = first owner" value={value.previous_owners} onChange={set("previous_owners")} />
           </div>
           <div className="col-md-6 col-lg-3 mb-3">
             <label htmlFor="extras_service" className="mb-1">Service history</label>
-            <select id="extras_service" className="form-control" value={value.service_history} onChange={set("service_history")}>
+            <select id="extras_service" className="ha-select" value={value.service_history} onChange={set("service_history")}>
               <option value="">Not specified</option>
               {SERVICE_HISTORY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -168,13 +168,13 @@ export default function FeaturesSpecsFields({
           </div>
           <div className="col-md-6 col-lg-3 mb-3">
             <label htmlFor="extras_mot" className="mb-1">MOT expires</label>
-            <input id="extras_mot" type="date" className="form-control" value={value.mot_expiry_at} onChange={set("mot_expiry_at")} />
+            <input id="extras_mot" type="date" className="ha-input" value={value.mot_expiry_at} onChange={set("mot_expiry_at")} />
           </div>
         </div>
 
         <div className="flex justify-space align-center mt-2 mb-1" style={{ flexWrap: "wrap", gap: 8 }}>
-          <h4 className="mb-0">Features</h4>
-          <div className="flex gap-10">
+          <h2 className="hd-card-title">Features</h2>
+          <div className="ha-actions is-start">
             <button
               type="button"
               onClick={selectAllCommon}
@@ -193,7 +193,7 @@ export default function FeaturesSpecsFields({
             </button>
           </div>
         </div>
-        <p className="text-color-2 fs-13 mb-2">
+        <p className="ha-sub mb-2">
           Tick everything the car has. {value.features.length > 0 ? `${value.features.length} selected.` : ""}
         </p>
         <div className="row">
@@ -227,7 +227,7 @@ export default function FeaturesSpecsFields({
         <div className="d-flex gap-2 mt-3" style={{ maxWidth: 420 }}>
           <input
             type="text"
-            className="form-control"
+            className="ha-input"
             placeholder="Add another feature (e.g. Rear spoiler)"
             aria-label="Add a custom feature"
             maxLength={60}
@@ -241,11 +241,9 @@ export default function FeaturesSpecsFields({
               }
             }}
           />
-          <button type="button" className="sc-button" disabled={!custom.trim() || atLimit} onClick={addCustom}>
-            <span>Add</span>
-          </button>
+          <button type="button" className="ha-btn" disabled={!custom.trim() || atLimit} onClick={addCustom}>Add</button>
         </div>
-        {atLimit && <p className="text-color-2 fs-13 mt-1 mb-0">That&apos;s the maximum of {MAX_FEATURES} features.</p>}
+        {atLimit && <p className="ha-sub mt-1 mb-0">That&apos;s the maximum of {MAX_FEATURES} features.</p>}
       </fieldset>
     </div>
   );

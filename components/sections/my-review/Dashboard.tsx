@@ -1,61 +1,36 @@
 "use client";
 
-import Pagination from "@/components/common/Pagination";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import Image from "@/components/common/AppImage";
 import { useMemo, useState } from "react";
 import { useMyReviews, type MyReview } from "@/hooks/useMyReviews";
 import { useReceivedReviews } from "@/hooks/useReceivedReviews";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Card, EmptyState, ErrorNotice, LoadingRows, Pager } from "@/components/ui/kit";
 
 const REVIEWS_PER_PAGE = 5;
 
 function StarRatingReview({ rating }: { rating: number }) {
   return (
-    <div className="star-rating-review">
+    <span className="ha-stars" role="img" aria-label={`${rating} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((star) => (
-        <i
-          key={star}
-          className={`star disabled-click icon-carus-star${
-            star <= rating ? " active" : ""
-          }`}
-          data-rating={star}
-        />
+        <i key={star} className={`icon-carus-star${star <= rating ? " is-on" : ""}`} aria-hidden="true" />
       ))}
-    </div>
+    </span>
   );
 }
 
 function ReviewItem({ review }: { review: MyReview }) {
   return (
-    <li className="comment-by-user">
-      <div className="group-author">
-        <Image
-          loading="lazy"
-          className="avatar"
-          width={56}
-          height={56}
-          src={review.avatar}
-          alt={review.author}
-        />
-        <div className="group-name">
-          <div className="review-name">
-            <b>{review.author}</b>
-            <span className="review-date">{review.date}</span>
-          </div>
-          <div className="rating-wrap">
-            <div className="form-group">
-              <StarRatingReview rating={review.rating} />
-            </div>
-          </div>
+    <li className="ha-review">
+      <Image loading="lazy" className="ha-review-avatar" width={40} height={40} src={review.avatar} alt="" />
+      <div className="ha-review-body">
+        <div className="ha-review-head">
+          <b>{review.author}</b>
+          <StarRatingReview rating={review.rating} />
+          <span className="ha-sub">{review.date}</span>
         </div>
-      </div>
-      <div className="content">
-        {review.listingTitle && (
-          <p className="mb-1">
-            <b>Review for:</b> {review.listingTitle}
-          </p>
-        )}
-        <p>{review.text || "No comment left for this review."}</p>
+        {review.listingTitle && <div className="ha-sub">Review for {review.listingTitle}</div>}
+        <p>{review.text || <span className="ha-muted">No comment left for this review.</span>}</p>
       </div>
     </li>
   );
@@ -82,32 +57,25 @@ function ReviewList({
   }, [reviews, currentPage]);
 
   if (loading) {
-    return <p className="tfcl-empty-data">Loading reviews...</p>;
+    return <LoadingRows rows={3} label="Loading reviews" />;
   }
 
   if (error) {
-    return <p className="tfcl-empty-data">{error}</p>;
+    return <ErrorNotice message={error} />;
   }
 
   if (reviews.length === 0) {
-    return <p className="tfcl-empty-data">{emptyMessage}</p>;
+    return <EmptyState icon="icon-carus-chatcircledots" title="No reviews yet" text={emptyMessage} />;
   }
 
   return (
     <>
-      <ul>
+      <ul className="ha-review-list">
         {paginatedReviews.map((review) => (
           <ReviewItem key={review.id} review={review} />
         ))}
       </ul>
-      {totalPages > 1 && (
-        <Pagination
-          variant="tfcl"
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      )}
+      {totalPages > 1 && <Pager page={currentPage} lastPage={totalPages} total={reviews.length} onChange={setCurrentPage} />}
     </>
   );
 }
@@ -117,46 +85,25 @@ function Dashboard() {
   const written = useMyReviews();
 
   return (
-    <>
-      <div id="themesflat-content">
-        <DashboardToggle />
-        <div className="container">
-          <div className="row">
-            <div className="col-md-12">
-              <div className="content-area">
-                <main id="main" className="main-content">
-                  <div className="tfcl-dashboard">
-                    <h1 className="admin-title mb-3">Reviews on my listings</h1>
-                    <div className="tfcl-dashboard-middle-right mb-4">
-                      <div className="tfcl-card tfcl-dashboard-reviews">
-                        <ReviewList
-                          reviews={received.reviews}
-                          loading={received.loading}
-                          error={received.error}
-                          emptyMessage="No one has reviewed your listings yet."
-                        />
-                      </div>
-                    </div>
+    <DashboardPage title="Reviews" description="What buyers say about your listings, and the reviews you've written.">
+      <Card className="mb-4" title="Reviews on my listings">
+        <ReviewList
+          reviews={received.reviews}
+          loading={received.loading}
+          error={received.error}
+          emptyMessage="No one has reviewed your listings yet."
+        />
+      </Card>
 
-                    <h1 className="admin-title mb-3">Reviews I&apos;ve written</h1>
-                    <div className="tfcl-dashboard-middle-right">
-                      <div className="tfcl-card tfcl-dashboard-reviews">
-                        <ReviewList
-                          reviews={written.reviews}
-                          loading={written.loading}
-                          error={written.error}
-                          emptyMessage="You haven't left any reviews yet."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </main>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+      <Card title="Reviews I've written">
+        <ReviewList
+          reviews={written.reviews}
+          loading={written.loading}
+          error={written.error}
+          emptyMessage="You haven't left any reviews yet."
+        />
+      </Card>
+    </DashboardPage>
   );
 }
 

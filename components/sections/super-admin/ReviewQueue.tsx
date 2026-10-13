@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import SuperAdminShell from "./SuperAdminShell";
-import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, Tabs, useDebouncedValue } from "@/components/admin/ui";
+import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, Tabs, useDebouncedValue, FilterChips } from "@/components/admin/ui";
 import { useAdminResource } from "@/hooks/useSuperAdmin";
 import { formatWhen, humanize, pageInfo, type ModerationQueueItem, type Paginated } from "@/lib/superAdmin";
 
@@ -40,6 +40,10 @@ export default function ReviewQueue() {
           <Tabs label="Queue" value={view} options={VIEWS} onChange={(next) => { setView(next); setPage(1); }} />
           <SearchInput label="Search listings" placeholder="Make, model, VRM or id" value={q} onChange={(v) => { setQ(v); setPage(1); }} />
         </div>
+        <FilterChips
+          filters={[q.trim() !== "" && { key: "q", label: `“${q.trim()}”`, onRemove: () => { setQ(""); setPage(1); } }]}
+          onClearAll={() => { setQ(""); setPage(1); }}
+        />
         {loading && !data && <LoadingRows />}
         {error && <ErrorNotice message={error} />}
         {data && data.data.length === 0 && (
@@ -47,14 +51,14 @@ export default function ReviewQueue() {
         )}
         {data && data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Listings to review</caption>
               <thead>
                 <tr>
-                  <th>Listing</th>
-                  <th>Seller</th>
-                  <th>Evidence</th>
-                  <th>Status</th>
-                  <th className="ha-right">Action</th>
+                  <th scope="col">Listing</th>
+                  <th scope="col">Seller</th>
+                  <th scope="col">Evidence</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="ha-right">Action</th>
                 </tr>
               </thead>
               <tbody>

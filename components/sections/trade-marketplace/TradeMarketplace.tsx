@@ -1,10 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { can, useAuth } from "@/contexts/AuthContext";
 import { useBuyTradeFixedPriceListing } from "@/hooks/useBuyTradeFixedPriceListing";
 import { useTradeFixedPriceListings } from "@/hooks/useTradeFixedPriceListings";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import {
+  Badge,
+  Card,
+  DataTable,
+  DataToolbar,
+  EmptyState,
+  ErrorNotice,
+  LoadingTable,
+  NoMatches,
+  Notice,
+  formatMoney,
+  useListControls,
+} from "@/components/ui/kit";
+import type { TradeFixedPriceListing } from "@/types/tradeFixedPrice";
+
+const vehicleName = (listing: TradeFixedPriceListing) =>
+  listing.vehicle ? [listing.vehicle.year, listing.vehicle.make, listing.vehicle.model].filter(Boolean).join(" ") : "—";
 
 /**
  * FR-A-030 (M): the Fixed-Price Trade ("Buy Now") marketplace — a trade buyer purchases a
@@ -33,82 +50,90 @@ function TradeMarketplace() {
     }
   }
 
+  const controls = useListControls<TradeFixedPriceListing>({
+    items: listings,
+    search: (listing) => [vehicleName(listing)],
+    filters: [
+      { key: "make", label: "Make", get: (listing) => listing.vehicle?.make ?? null, format: (value) => value },
+      { key: "grade", label: "Condition grade", get: (listing) => (listing.conditionReport?.conditionGrade != null ? String(listing.conditionReport.conditionGrade) : null), format: (value) => `Grade ${value}` },
+    ],
+    sorts: [
+      { value: "price-low", label: "Lowest price", compare: (a, b) => a.askingPrice - b.askingPrice },
+      { value: "price-high", label: "Highest price", compare: (a, b) => b.askingPrice - a.askingPrice },
+      { value: "mileage", label: "Lowest mileage", compare: (a, b) => (a.vehicle?.mileage ?? Infinity) - (b.vehicle?.mileage ?? Infinity) },
+    ],
+  });
+
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Trade marketplace — Buy Now</h1>
-                  <p className="text-color-2 mb-3">
-                    Fixed-price trade stock — purchase instantly at the seller&apos;s asking
-                    price, no bidding.
-                  </p>
+    <DashboardPage title="Trade marketplace" description="Fixed-price trade stock — buy instantly at the seller's asking price, no bidding.">
+      {buyError && <Notice tone="danger">{buyError}</Notice>}
+      {confirmation && <Notice tone="success">{confirmation}</Notice>}
 
-                  {loading && <p>Loading listings...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
-                  {buyError && <div className="alert alert-danger">{buyError}</div>}
-                  {confirmation && <div className="alert alert-success">{confirmation}</div>}
+      <Card>
+        {loading && <LoadingTable label="Loading listings" />}
+        {error && <ErrorNotice message={error} />}
 
-                  {!loading && !error && listings.length === 0 && (
-                    <p className="tfcl-empty-data">No fixed-price listings are available right now.</p>
-                  )}
+        {!loading && !error && listings.length === 0 && (
+          <EmptyState icon="icon-carus-car" title="Nothing for sale right now" text="No fixed-price listings are available right now." />
+        )}
 
-                  {!loading && !error && listings.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Vehicle</th>
-                            <th>Mileage</th>
-                            <th>Condition grade</th>
-                            <th>Asking price</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {listings.map((listing) => (
-                            <tr key={listing.id}>
-                              <td>
-                                {listing.vehicle
-                                  ? [listing.vehicle.year, listing.vehicle.make, listing.vehicle.model]
-                                      .filter(Boolean)
-                                      .join(" ")
-                                  : "-"}
-                              </td>
-                              <td>{listing.vehicle ? `${listing.vehicle.mileage.toLocaleString()} mi` : "-"}</td>
-                              <td>{listing.conditionReport?.conditionGrade ?? "-"}</td>
-                              <td>£{listing.askingPrice.toLocaleString()}</td>
-                              <td>
-                                {canBuy ? (
-                                  <button
-                                    type="button"
-                                    className="sc-button"
-                                    disabled={submitting && buyingId === listing.id}
-                                    onClick={() => handleBuy(listing.id)}
-                                  >
-                                    <span>{submitting && buyingId === listing.id ? "Buying..." : "Buy now"}</span>
-                                  </button>
-                                ) : (
-                                  <span className="text-color-2">View only</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        {!loading && !error && listings.length > 0 && (
+          <>
+            <DataToolbar controls={controls} searchPlaceholder="Search make or model" noun="vehicle" />
+            {controls.results.length === 0 ? (
+              <NoMatches onClear={controls.clearAll} />
+            ) : (
+              <DataTable caption="Fixed-price trade listings">
+                <thead>
+                  <tr>
+                    <th scope="col">Vehicle</th>
+                    <th scope="col" className="is-num">Mileage</th>
+                    <th scope="col">Condition</th>
+                    <th scope="col" className="is-num">Asking price</th>
+                    <th scope="col">
+                      <span className="ha-visually-hidden">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {controls.results.map((listing) => (
+                    <tr key={listing.id}>
+                      <td data-label="Vehicle" className="ha-primary-text">
+                        {vehicleName(listing)}
+                      </td>
+                      <td data-label="Mileage" className="is-num">
+                        {listing.vehicle ? `${listing.vehicle.mileage.toLocaleString("en-GB")} mi` : "—"}
+                      </td>
+                      <td data-label="Condition">
+                        {listing.conditionReport?.conditionGrade != null ? <Badge plain>Grade {listing.conditionReport.conditionGrade}</Badge> : "—"}
+                      </td>
+                      <td data-label="Asking price" className="is-num ha-primary-text">
+                        {formatMoney(listing.askingPrice)}
+                      </td>
+                      <td data-label="" className="ha-right">
+                        {canBuy ? (
+                          <button
+                            type="button"
+                            className="ha-btn is-sm is-primary"
+                            disabled={submitting && buyingId === listing.id}
+                            aria-busy={submitting && buyingId === listing.id}
+                            onClick={() => handleBuy(listing.id)}
+                          >
+                            {submitting && buyingId === listing.id ? "Buying…" : "Buy now"}
+                          </button>
+                        ) : (
+                          <span className="ha-sub">View only</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+          </>
+        )}
+      </Card>
+    </DashboardPage>
   );
 }
 

@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useTradeOrder } from "@/hooks/useTradeOrder";
 import PostSalePanel from "./PostSalePanel";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Badge, Card, DataTable, LoadingRows, Notice, StatusBadge, formatDate, formatMoney } from "@/components/ui/kit";
 
 export default function TradeOrderDetail({ id }: { id: number }) {
   const { tradeOrder, loading, error, payError, paying, pay, reload } = useTradeOrder(id);
@@ -20,77 +21,83 @@ export default function TradeOrderDetail({ id }: { id: number }) {
     }
   }
 
+  const title = tradeOrder
+    ? tradeOrder.vehicle
+      ? [tradeOrder.vehicle.year, tradeOrder.vehicle.make, tradeOrder.vehicle.model, tradeOrder.vehicle.derivative].filter(Boolean).join(" ")
+      : `Trade order #${tradeOrder.id}`
+    : "Trade order";
+
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  {loading && <p>Loading this trade order...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
+    <DashboardPage
+      eyebrow={<Link href="/my-trade-orders">← My trade orders</Link>}
+      title={title}
+      description={
+        tradeOrder ? (
+          <>
+            <StatusBadge status={tradeOrder.status} /> · <Link href={`/auction/${tradeOrder.lotId}`}>View lot</Link>
+          </>
+        ) : undefined
+      }
+    >
+      {loading && <LoadingRows label="Loading this trade order" />}
+      {error && <Notice tone="danger">{error}</Notice>}
 
-                  {!loading && !error && tradeOrder && (
-                    <>
-                      <h1 className="admin-title mb-1">
-                        {tradeOrder.vehicle
-                          ? [tradeOrder.vehicle.year, tradeOrder.vehicle.make, tradeOrder.vehicle.model, tradeOrder.vehicle.derivative]
-                              .filter(Boolean)
-                              .join(" ")
-                          : `Trade order #${tradeOrder.id}`}
-                      </h1>
-                      <p className="text-color-2 mb-3">
-                        <Link href={`/auction/${tradeOrder.lotId}`}>View lot</Link> &middot; Status:{" "}
-                        <span className="text-capitalize">{tradeOrder.status.replace("_", " ")}</span>
-                      </p>
+      {!loading && !error && tradeOrder && (
+        <>
+          {notice && <Notice tone="success">{notice}</Notice>}
+          {payError && <Notice tone="danger">{payError}</Notice>}
 
-                      {notice && <div className="alert alert-success mb-3">{notice}</div>}
-                      {payError && <div className="alert alert-danger mb-3">{payError}</div>}
+          <Card
+            className="mb-4"
+            title="What you owe"
+            actions={
+              tradeOrder.status === "pending_payment" ? (
+                <button type="button" className="ha-btn is-primary" disabled={paying} aria-busy={paying} onClick={handlePay}>
+                  {paying ? "Paying…" : `Pay ${formatMoney(tradeOrder.invoice?.total ?? tradeOrder.hammerPrice)}`}
+                </button>
+              ) : tradeOrder.status === "paid" ? (
+                <Badge tone="success">Paid{tradeOrder.paidAt ? ` on ${formatDate(tradeOrder.paidAt)}` : ""}</Badge>
+              ) : undefined
+            }
+          >
+            <DataTable caption="Charges on this trade order" stacked={false}>
+              <thead>
+                <tr>
+                  <th scope="col">Item</th>
+                  <th scope="col" className="is-num">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Hammer price</td>
+                  <td className="is-num">{formatMoney(tradeOrder.hammerPrice)}</td>
+                </tr>
+                {tradeOrder.feeLines.map((line) => (
+                  <tr key={line.feeType}>
+                    <td className="text-capitalize">{line.feeType.replace(/_/g, " ")}</td>
+                    <td className="is-num">
+                      {formatMoney(line.amount)}
+                      {line.vatAmount > 0 && <span className="ha-sub"> (+{formatMoney(line.vatAmount)} VAT)</span>}
+                    </td>
+                  </tr>
+                ))}
+                {tradeOrder.invoice && (
+                  <tr>
+                    <td className="ha-primary-text">Total owed</td>
+                    <td className="is-num ha-primary-text">{formatMoney(tradeOrder.invoice.total)}</td>
+                  </tr>
+                )}
+              </tbody>
+            </DataTable>
+          </Card>
 
-                      <div className="table-responsive mb-4">
-                        <table className="table">
-                          <tbody>
-                            <tr><td>Hammer price</td><td>£{tradeOrder.hammerPrice.toLocaleString()}</td></tr>
-                            {tradeOrder.feeLines.map((line) => (
-                              <tr key={line.feeType}>
-                                <td className="text-capitalize">{line.feeType.replace(/_/g, " ")}</td>
-                                <td>£{line.amount.toLocaleString()}{line.vatAmount > 0 && ` (+£${line.vatAmount.toLocaleString()} VAT)`}</td>
-                              </tr>
-                            ))}
-                            {tradeOrder.invoice && (
-                              <tr className="fw-6">
-                                <td>Total owed</td>
-                                <td>£{tradeOrder.invoice.total.toLocaleString()}</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {tradeOrder.status === "pending_payment" && (
-                        <button type="button" className="sc-button" disabled={paying} onClick={handlePay}>
-                          <span>{paying ? "Paying..." : `Pay £${tradeOrder.invoice?.total.toLocaleString() ?? tradeOrder.hammerPrice.toLocaleString()}`}</span>
-                        </button>
-                      )}
-
-                      {tradeOrder.status === "paid" && (
-                        <>
-                          <p className="tfcl-empty-data">
-                            Paid{tradeOrder.paidAt ? ` on ${new Date(tradeOrder.paidAt).toLocaleDateString()}` : ""}.
-                          </p>
-                          <PostSalePanel order={tradeOrder} onChanged={reload} />
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
-              </main>
+          {tradeOrder.status === "paid" && (
+            <div className="ha-card ha-card-body">
+              <PostSalePanel order={tradeOrder} onChanged={reload} />
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          )}
+        </>
+      )}
+    </DashboardPage>
   );
 }

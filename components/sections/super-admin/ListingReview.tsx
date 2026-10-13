@@ -211,7 +211,7 @@ export default function ListingReview({ listingId }: { listingId: string }) {
               <EmptyState icon="icon-carus-listings" title="No documents uploaded" text="The seller hasn't attached a V5C, MOT or service history." />
             ) : (
               <div className="ha-table-wrap">
-                <table className="ha-table">
+                <table className="ha-table"><caption className="ha-visually-hidden">Listing details</caption>
                   <tbody>
                     {d.documents.map((doc) => (
                       <tr key={doc.id}>
@@ -254,7 +254,7 @@ export default function ListingReview({ listingId }: { listingId: string }) {
               <EmptyState icon="icon-carus-shieldcheck" title="No checks run yet" />
             ) : (
               <div className="ha-table-wrap">
-                <table className="ha-table">
+                <table className="ha-table"><caption className="ha-visually-hidden">Listing details</caption>
                   <tbody>
                     {d.provenance_checks.map((c) => (
                       <tr key={c.check_type}>

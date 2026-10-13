@@ -73,14 +73,14 @@ export default function InspectionAssignments() {
         {!loading && !error && assignments.length === 0 && <EmptyState icon="icon-carus-checkcircle" title={`No ${view} inspections`} />}
         {assignments.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Inspection assignments</caption>
               <thead>
                 <tr>
-                  <th>Vehicle</th>
-                  <th>Inspector</th>
-                  <th>Assigned</th>
-                  <th>Status</th>
-                  <th className="ha-right">Action</th>
+                  <th scope="col">Vehicle</th>
+                  <th scope="col">Inspector</th>
+                  <th scope="col">Assigned</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="ha-right">Action</th>
                 </tr>
               </thead>
               <tbody>

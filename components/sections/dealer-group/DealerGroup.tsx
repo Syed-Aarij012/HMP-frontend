@@ -2,9 +2,24 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useDealerGroup, useGroupAds, type GroupDealership } from "@/hooks/useDealerGroup";
 import { pageInfo } from "@/lib/superAdmin";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import {
+  Badge,
+  Card,
+  DataTable,
+  EmptyState,
+  ErrorNotice,
+  LoadingRows,
+  LoadingTable,
+  Notice,
+  Pager,
+  StatCard,
+  Stats,
+  StatusBadge,
+  formatMoney,
+} from "@/components/ui/kit";
 
 const EMPTY = { name: "", admin_name: "", admin_email: "", admin_password: "", admin_password_confirmation: "" };
 
@@ -31,20 +46,37 @@ function OpenDealership({ onOpen }: { onOpen: (body: Record<string, unknown>) =>
   }
 
   return (
-    <form onSubmit={submit} className="tfcl-card p-3 mb-4">
-      <h4 className="mb-1">Open a new dealership</h4>
-      <p className="text-color-2 fs-13 mb-3">It joins your group with its own public page. Give it an Org Admin who then sets up rooftops and staff. KYB starts as pending.</p>
-      <div className="row">
-        <div className="col-md-6 mb-2"><input className="form-control" placeholder="Dealership name" aria-label="Dealership name" value={form.name} onChange={set("name")} required /></div>
-        <div className="col-md-6 mb-2"><input className="form-control" placeholder="Org Admin's full name" aria-label="Org Admin name" value={form.admin_name} onChange={set("admin_name")} required /></div>
-        <div className="col-md-6 mb-2"><input type="email" className="form-control" placeholder="Org Admin's email" aria-label="Org Admin email" value={form.admin_email} onChange={set("admin_email")} required /></div>
-        <div className="col-md-3 mb-2"><input type="password" className="form-control" placeholder="Initial password" aria-label="Initial password" value={form.admin_password} onChange={set("admin_password")} required autoComplete="new-password" /></div>
-        <div className="col-md-3 mb-2"><input type="password" className="form-control" placeholder="Confirm" aria-label="Confirm password" value={form.admin_password_confirmation} onChange={set("admin_password_confirmation")} required autoComplete="new-password" /></div>
-      </div>
-      {error && <div className="alert alert-danger py-1">{error}</div>}
-      {done && <div className="text-success fs-13 mb-2">Dealership opened. Share the initial password with its Org Admin.</div>}
-      <button type="submit" className="sc-button" disabled={busy}><span>{busy ? "Opening..." : "Open dealership"}</span></button>
-    </form>
+    <Card className="mb-4" title="Open a new dealership" description="It joins your group with its own public page. Give it an Org Admin who then sets up rooftops and staff. KYB starts as pending.">
+      <form onSubmit={submit} className="ha-card-body">
+        <div className="ha-form-grid">
+          <div className="ha-field">
+            <label htmlFor="og-name">Dealership name</label>
+            <input id="og-name" className="ha-input" value={form.name} onChange={set("name")} required />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="og-admin-name">Org Admin&apos;s full name</label>
+            <input id="og-admin-name" className="ha-input" value={form.admin_name} onChange={set("admin_name")} required autoComplete="off" />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="og-admin-email">Org Admin&apos;s email</label>
+            <input id="og-admin-email" type="email" className="ha-input" value={form.admin_email} onChange={set("admin_email")} required autoComplete="off" />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="og-password">Initial password</label>
+            <input id="og-password" type="password" className="ha-input" value={form.admin_password} onChange={set("admin_password")} required autoComplete="new-password" />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="og-password-confirm">Confirm password</label>
+            <input id="og-password-confirm" type="password" className="ha-input" value={form.admin_password_confirmation} onChange={set("admin_password_confirmation")} required autoComplete="new-password" />
+          </div>
+        </div>
+        {error && <Notice tone="danger">{error}</Notice>}
+        {done && <Notice tone="success">Dealership opened. Share the initial password with its Org Admin.</Notice>}
+        <button type="submit" className="ha-btn is-primary" disabled={busy} aria-busy={busy}>
+          {busy ? "Opening…" : "Open dealership"}
+        </button>
+      </form>
+    </Card>
   );
 }
 
@@ -65,16 +97,16 @@ function AppointAdmin({ dealership, onAppoint, onClose }: {
   }
 
   return (
-    <form onSubmit={submit} className="mt-2 p-2" style={{ background: "#F4F6FB", borderRadius: 8 }}>
-      <div className="fs-13 fw-bold mb-1">New Org Admin for {dealership.name}</div>
-      <input className="form-control mb-1" placeholder="Full name" aria-label="Name" value={form.name} onChange={set("name")} required />
-      <input type="email" className="form-control mb-1" placeholder="Email" aria-label="Email" value={form.email} onChange={set("email")} required />
-      <input type="password" className="form-control mb-1" placeholder="Initial password" aria-label="Password" value={form.password} onChange={set("password")} required autoComplete="new-password" />
-      <input type="password" className="form-control mb-2" placeholder="Confirm password" aria-label="Confirm password" value={form.password_confirmation} onChange={set("password_confirmation")} required autoComplete="new-password" />
-      {error && <div className="alert alert-danger py-1">{error}</div>}
-      <div className="d-flex gap-2">
-        <button type="submit" className="sc-button"><span>Appoint</span></button>
-        <button type="button" className="sc-button" onClick={onClose}><span>Cancel</span></button>
+    <form onSubmit={submit} className="ha-inline-edit mt-3" aria-label={`New Org Admin for ${dealership.name}`}>
+      <div className="ha-primary-text mb-2">New Org Admin for {dealership.name}</div>
+      <input className="ha-input mb-2" placeholder="Full name" aria-label="Full name" value={form.name} onChange={set("name")} required />
+      <input type="email" className="ha-input mb-2" placeholder="Email" aria-label="Email" value={form.email} onChange={set("email")} required />
+      <input type="password" className="ha-input mb-2" placeholder="Initial password" aria-label="Initial password" value={form.password} onChange={set("password")} required autoComplete="new-password" />
+      <input type="password" className="ha-input mb-3" placeholder="Confirm password" aria-label="Confirm password" value={form.password_confirmation} onChange={set("password_confirmation")} required autoComplete="new-password" />
+      {error && <Notice tone="danger">{error}</Notice>}
+      <div className="ha-actions is-start">
+        <button type="submit" className="ha-btn is-sm is-primary">Appoint</button>
+        <button type="button" className="ha-btn is-sm is-ghost" onClick={onClose}>Cancel</button>
       </div>
     </form>
   );
@@ -94,123 +126,169 @@ export default function DealerGroup() {
   const { ads, loading: adsLoading, error: adsError } = useGroupAds(organizationId, status, q, page);
   const info = ads ? pageInfo(ads) : null;
 
+  const dealershipName = overview?.dealerships.find((d) => String(d.id) === organizationId)?.name;
+  const STATUS_LABELS: Record<string, string> = { live: "Live", pending_checks: "Awaiting review", draft: "Draft", sold: "Sold" };
+  const filtered = organizationId !== "" || status !== "" || q.trim() !== "";
+
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-1">{overview ? overview.group.name : "Dealer group"}</h1>
-                  <p className="text-color-2 mb-3">Your dealerships, their stock and their Org Admins in one place. Each dealership still manages its own ads, rooftops and staff.</p>
+    <DashboardPage
+      eyebrow="Dealer group"
+      title={overview ? overview.group.name : "Dealer group"}
+      description="Your dealerships, their stock and their Org Admins in one place. Each dealership still manages its own ads, rooftops and staff."
+    >
+      {loading && <LoadingRows rows={4} label="Loading your group" />}
+      {error && <Notice tone="danger">{error}</Notice>}
 
-                  {loading && <p>Loading your group...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
+      {overview && (
+        <>
+          <Stats>
+            <StatCard label="Dealerships" icon="icon-carus-usercheck" value={overview.totals.dealerships} />
+            <StatCard label="Rooftops" icon="icon-carus-mappinline" value={overview.totals.rooftops} />
+            <StatCard label="Staff" icon="icon-carus-user" value={overview.totals.staff} />
+            <StatCard label="Live ads" icon="icon-carus-car" value={overview.totals.live_ads} />
+            <StatCard
+              label="Awaiting review"
+              icon="icon-carus-pending"
+              value={overview.totals.awaiting_review}
+              attention={overview.totals.awaiting_review > 0}
+              note={overview.totals.awaiting_review > 0 ? "With moderators" : undefined}
+            />
+          </Stats>
 
-                  {overview && (
-                    <>
-                      <div className="row mb-3">
-                        {[
-                          ["Dealerships", overview.totals.dealerships],
-                          ["Rooftops", overview.totals.rooftops],
-                          ["Staff", overview.totals.staff],
-                          ["Live ads", overview.totals.live_ads],
-                          ["Awaiting review", overview.totals.awaiting_review],
-                        ].map(([label, value]) => (
-                          <div key={label} className="col-6 col-md-4 col-xl mb-2">
-                            <div className="tfcl-card p-3">
-                              <div className="text-color-2 fs-13">{label}</div>
-                              <div style={{ fontSize: 26, fontWeight: 700 }}>{value}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="row mb-2">
-                        {overview.dealerships.map((d) => (
-                          <div key={d.id} className="col-md-6 col-xl-4 mb-3">
-                            <div className="tfcl-card p-3 h-100">
-                              <h5 className="mb-1">{d.name}</h5>
-                              <div className="fs-13 text-color-2 mb-2">
-                                KYB {d.kyb_status} · {d.status}
-                              </div>
-                              <div className="fs-14 mb-2">
-                                {d.live_ads_count} live ads{d.awaiting_review_count > 0 ? ` (+${d.awaiting_review_count} awaiting review)` : ""} · {d.rooftops_count} rooftop{d.rooftops_count === 1 ? "" : "s"} · {d.staff_count} staff
-                              </div>
-                              <div className="fs-13 mb-2">
-                                <b>Org Admin{d.org_admins.length === 1 ? "" : "s"}:</b>{" "}
-                                {d.org_admins.length === 0 ? "none" : d.org_admins.map((a) => a.name).join(", ")}
-                              </div>
-                              <div className="d-flex flex-wrap gap-2">
-                                {d.storefront_slug && (
-                                  <Link href={`/dealer-detail/${d.storefront_slug}`} className="sc-button"><span>Public page</span></Link>
-                                )}
-                                <button type="button" className="sc-button" onClick={() => setOrganizationId(String(d.id))}><span>View its ads</span></button>
-                                <button type="button" className="sc-button" onClick={() => setAppointing(appointing === d.id ? null : d.id)}><span>Add Org Admin</span></button>
-                              </div>
-                              {appointing === d.id && <AppointAdmin dealership={d} onAppoint={appointAdmin} onClose={() => setAppointing(null)} />}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <OpenDealership onOpen={openDealership} />
-
-                      <h4 className="mb-2">Group-wide ads</h4>
-                      <div className="d-flex flex-wrap gap-2 mb-2">
-                        <select className="form-control" style={{ maxWidth: 240 }} aria-label="Dealership" value={organizationId} onChange={(e) => { setOrganizationId(e.target.value); setPage(1); }}>
-                          <option value="">All dealerships</option>
-                          {overview.dealerships.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                        </select>
-                        <select className="form-control" style={{ maxWidth: 180 }} aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
-                          <option value="">Any status</option>
-                          <option value="live">Live</option>
-                          <option value="pending_checks">Awaiting review</option>
-                          <option value="draft">Draft</option>
-                          <option value="sold">Sold</option>
-                        </select>
-                        <input className="form-control" style={{ maxWidth: 240 }} placeholder="Make, model or VRM" aria-label="Search ads" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-                      </div>
-                      {adsLoading && !ads && <p>Loading ads...</p>}
-                      {adsError && <div className="alert alert-danger">{adsError}</div>}
-                      {ads && ads.data.length === 0 && <p className="tfcl-empty-data">No ads match.</p>}
-                      {ads && ads.data.length > 0 && (
-                        <div className="table-responsive">
-                          <table className="table">
-                            <thead>
-                              <tr><th>Ad</th><th>Dealership</th><th>Rooftop</th><th>Price</th><th>Status</th></tr>
-                            </thead>
-                            <tbody>
-                              {ads.data.map((ad) => (
-                                <tr key={ad.id}>
-                                  <td><Link href={`/listing-detail-v1/${ad.id}`}>{ad.title || "Ad"}</Link><div className="fs-13 text-color-2">{ad.vrm ?? ""}</div></td>
-                                  <td>{ad.dealership ?? "-"}</td>
-                                  <td>{ad.rooftop ?? "Whole dealership"}</td>
-                                  <td>£{Number(ad.price).toLocaleString("en-GB")}</td>
-                                  <td className="text-capitalize">{ad.status.replace(/_/g, " ")}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                      {info && info.lastPage > 1 && (
-                        <div className="d-flex gap-2 align-items-center">
-                          <button type="button" className="sc-button" disabled={info.page <= 1} onClick={() => setPage(info.page - 1)}><span>Previous</span></button>
-                          <span className="fs-13">Page {info.page} of {info.lastPage}</span>
-                          <button type="button" className="sc-button" disabled={info.page >= info.lastPage} onClick={() => setPage(info.page + 1)}><span>Next</span></button>
-                        </div>
-                      )}
-                    </>
+          <h2 className="hd-section-title" style={{ marginTop: 0 }}>Dealerships</h2>
+          <div className="ha-grid mb-4">
+            {overview.dealerships.map((d) => (
+              <section key={d.id} className="ha-card ha-card-body" aria-label={d.name}>
+                <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <h3 className="hd-card-title mb-0">{d.name}</h3>
+                  <StatusBadge status={d.status} />
+                </div>
+                <div className="ha-chips mb-3">
+                  <Badge tone={d.kyb_status === "verified" ? "success" : "warning"} plain>
+                    KYB {d.kyb_status.replace(/_/g, " ")}
+                  </Badge>
+                </div>
+                <dl className="ha-dl mb-3" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+                  <div>
+                    <dt>Live ads</dt>
+                    <dd className="ha-num">
+                      {d.live_ads_count}
+                      {d.awaiting_review_count > 0 && <span className="ha-sub"> +{d.awaiting_review_count} in review</span>}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Rooftops</dt>
+                    <dd className="ha-num">{d.rooftops_count}</dd>
+                  </div>
+                  <div>
+                    <dt>Staff</dt>
+                    <dd className="ha-num">{d.staff_count}</dd>
+                  </div>
+                </dl>
+                <div className="ha-sub mb-3">
+                  Org Admin{d.org_admins.length === 1 ? "" : "s"}: {d.org_admins.length === 0 ? <span className="ha-inline-error">none</span> : d.org_admins.map((a) => a.name).join(", ")}
+                </div>
+                <div className="ha-actions is-start">
+                  <button type="button" className="ha-btn is-sm" onClick={() => setOrganizationId(String(d.id))}>
+                    View its ads
+                  </button>
+                  <button type="button" className="ha-btn is-sm" aria-expanded={appointing === d.id} onClick={() => setAppointing(appointing === d.id ? null : d.id)}>
+                    Add Org Admin
+                  </button>
+                  {d.storefront_slug && (
+                    <Link href={`/dealer-detail/${d.storefront_slug}`} className="ha-btn is-sm is-ghost">
+                      Public page
+                    </Link>
                   )}
                 </div>
-              </main>
-            </div>
+                {appointing === d.id && <AppointAdmin dealership={d} onAppoint={appointAdmin} onClose={() => setAppointing(null)} />}
+              </section>
+            ))}
           </div>
-        </div>
-      </div>
-    </div>
+
+          <OpenDealership onOpen={openDealership} />
+
+          <Card title="Group-wide ads">
+            <div className="ha-toolbar">
+              <div className="ha-search" role="search">
+                <i className="icon-carus-search" aria-hidden="true" />
+                <input className="ha-input" type="search" placeholder="Make, model or VRM" aria-label="Search ads" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+              </div>
+              <select className="ha-select ha-inline-select" aria-label="Dealership" value={organizationId} onChange={(e) => { setOrganizationId(e.target.value); setPage(1); }}>
+                <option value="">All dealerships</option>
+                {overview.dealerships.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+              <select className="ha-select ha-inline-select" aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+                <option value="">Any status</option>
+                <option value="live">Live</option>
+                <option value="pending_checks">Awaiting review</option>
+                <option value="draft">Draft</option>
+                <option value="sold">Sold</option>
+              </select>
+            </div>
+            {filtered && (
+              <div className="ha-filterbar" aria-label="Active filters">
+                {q.trim() !== "" && (
+                  <span className="ha-chip">
+                    “{q.trim()}”
+                    <button type="button" aria-label="Clear search" onClick={() => { setQ(""); setPage(1); }}>×</button>
+                  </span>
+                )}
+                {organizationId !== "" && (
+                  <span className="ha-chip">
+                    Dealership: {dealershipName ?? organizationId}
+                    <button type="button" aria-label="Remove dealership filter" onClick={() => { setOrganizationId(""); setPage(1); }}>×</button>
+                  </span>
+                )}
+                {status !== "" && (
+                  <span className="ha-chip">
+                    Status: {STATUS_LABELS[status] ?? status}
+                    <button type="button" aria-label="Remove status filter" onClick={() => { setStatus(""); setPage(1); }}>×</button>
+                  </span>
+                )}
+                <button type="button" className="ha-link-btn" onClick={() => { setQ(""); setOrganizationId(""); setStatus(""); setPage(1); }}>
+                  Clear all
+                </button>
+              </div>
+            )}
+            {adsLoading && !ads && <LoadingTable label="Loading ads" columns={5} />}
+            {adsError && <ErrorNotice message={adsError} />}
+            {ads && ads.data.length === 0 && <EmptyState icon="icon-carus-search" title="No ads match" text="Try a different dealership, status or search." />}
+            {ads && ads.data.length > 0 && (
+              <DataTable caption="Group-wide ads">
+                <thead>
+                  <tr>
+                    <th scope="col">Ad</th>
+                    <th scope="col">Dealership</th>
+                    <th scope="col">Rooftop</th>
+                    <th scope="col" className="is-num">Price</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ads.data.map((ad) => (
+                    <tr key={ad.id}>
+                      <td data-label="Ad">
+                        <Link href={`/listing-detail-v1/${ad.id}`} className="ha-primary-text">
+                          {ad.title || "Ad"}
+                        </Link>
+                        {ad.vrm && <div className="ha-sub">{ad.vrm}</div>}
+                      </td>
+                      <td data-label="Dealership">{ad.dealership ?? "—"}</td>
+                      <td data-label="Rooftop">{ad.rooftop ?? <span className="ha-muted">Whole dealership</span>}</td>
+                      <td data-label="Price" className="is-num">{formatMoney(Number(ad.price))}</td>
+                      <td data-label="Status">
+                        <StatusBadge status={ad.status} label={STATUS_LABELS[ad.status]} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+            {info && <Pager page={info.page} lastPage={info.lastPage} total={info.total} onChange={setPage} />}
+          </Card>
+        </>
+      )}
+    </DashboardPage>
   );
 }

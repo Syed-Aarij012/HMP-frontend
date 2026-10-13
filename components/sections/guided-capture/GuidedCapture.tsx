@@ -2,11 +2,12 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePhotoGuidance } from "@/hooks/useListingTools";
 import { useGuidedCapture } from "@/hooks/useGuidedCapture";
 import { useBackgroundReplacement } from "@/hooks/useBackgroundReplacement";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { LoadingRows, Notice } from "@/components/ui/kit";
 
 type ShotState = { status: "pending" | "passed" | "failed"; message: string | null; photoId: number | null };
 
@@ -30,19 +31,17 @@ function BackgroundReplacementControl({ vehiclePublicId, photoId }: { vehiclePub
   return (
     <div className="mt-2">
       <div className="flex gap-10" style={{ alignItems: "center" }}>
-        <select className="form-control" value={color} onChange={(e) => setColor(e.target.value)} style={{ maxWidth: 180 }}>
+        <select className="ha-select" value={color} onChange={(e) => setColor(e.target.value)} style={{ maxWidth: 180 }}>
           {BACKGROUND_COLOR_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <button type="button" className="sc-button" disabled={processing} onClick={handleReplace}>
-          <span>{processing ? "Processing..." : "Try background replacement"}</span>
-        </button>
+        <button type="button" className="ha-btn" disabled={processing} onClick={handleReplace}>{processing ? "Processing…" : "Try background replacement"}</button>
       </div>
-      {error && <div className="alert alert-danger mt-2">{error}</div>}
+      {error && <Notice tone="danger">{error}</Notice>}
       {previewUrl && (
         <div className="mt-2">
-          <p className="text-color-2 mb-1">Preview (the original photo is kept either way):</p>
+          <p className="ha-muted mb-1">Preview (the original photo is kept either way):</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={previewUrl} alt="Background-replaced preview" style={{ maxWidth: 320, borderRadius: 6 }} />
         </div>
@@ -70,12 +69,9 @@ export default function GuidedCapture({ vehiclePublicId }: { vehiclePublicId: st
 
   if (loading || !guidance) {
     return (
-      <div id="themesflat-content">
-        <DashboardToggle />
-        <div className="container">
-          <p className="mt-3">Loading shot guide...</p>
-        </div>
-      </div>
+      <DashboardPage title="Guided photo capture">
+        <LoadingRows rows={4} label="Loading the shot guide" />
+      </DashboardPage>
     );
   }
 
@@ -107,89 +103,70 @@ export default function GuidedCapture({ vehiclePublicId }: { vehiclePublicId: st
   const currentState = currentShot ? shotStates[currentShot.key] : undefined;
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Guided photo capture</h1>
-                  <p className="text-color-2 mb-3">
-                    {requiredPassedCount} of {requiredCount} required shots done.
-                  </p>
+    <DashboardPage
+      eyebrow={<Link href="/my-listing">← My listings</Link>}
+      title="Guided photo capture"
+      description={`${requiredPassedCount} of ${requiredCount} required shots done.`}
+    >
+      {allRequiredDone && (
+        <Notice tone="success">
+          All required shots are captured. You can retake any shot below, or{" "}
+          <Link href="/my-listing">go back to My listing</Link>.
+        </Notice>
+      )}
 
-                  {allRequiredDone && (
-                    <div className="alert alert-success mb-3">
-                      All required shots are captured. You can retake any shot below, or{" "}
-                      <Link href="/my-listing">go back to My listing</Link>.
-                    </div>
-                  )}
-
-                  <div className="row mb-3">
-                    {shots.map((shot, i) => {
-                      const state = shotStates[shot.key];
-                      return (
-                        <div className="col-md-4 mb-2" key={shot.key}>
-                          <button
-                            type="button"
-                            className="tfcl-card p-2"
-                            style={{
-                              width: "100%",
-                              textAlign: "left",
-                              border: i === shotIndex ? "2px solid #2a78d6" : undefined,
-                            }}
-                            onClick={() => setShotIndex(i)}
-                          >
-                            <div className="flex gap-10" style={{ justifyContent: "space-between" }}>
-                              <span>
-                                {shot.label}
-                                {shot.required ? " *" : ""}
-                              </span>
-                              {state?.status === "passed" && <span style={{ color: "#1baf7a" }}>✓</span>}
-                              {state?.status === "failed" && <span style={{ color: "#e74c3c" }}>✕</span>}
-                            </div>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {currentShot && (
-                    <div className="tfcl-card p-3">
-                      <h4 className="mb-2">{currentShot.label}</h4>
-                      <p className="text-color-2 mb-2">{currentShot.tip}</p>
-
-                      {currentState?.status === "failed" && currentState.message && (
-                        <div className="alert alert-danger mb-2">{currentState.message}</div>
-                      )}
-                      {currentState?.status === "passed" && (
-                        <div className="alert alert-success mb-2">{currentState.message ?? "Looks good."}</div>
-                      )}
-
-                      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" hidden onChange={handleFileSelected} />
-                      <button type="button" className="sc-button" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
-                        <span>
-                          {uploading
-                            ? "Checking..."
-                            : currentState?.status === "failed"
-                              ? "Retake this shot"
-                              : "Capture this shot"}
-                        </span>
-                      </button>
-
-                      {isDealer && currentState?.status === "passed" && currentState.photoId && (
-                        <BackgroundReplacementControl vehiclePublicId={vehiclePublicId} photoId={currentState.photoId} />
-                      )}
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
+      <div className="ha-meter mb-4" role="progressbar" aria-label="Required shots captured" aria-valuenow={requiredPassedCount} aria-valuemin={0} aria-valuemax={requiredCount}>
+        <span style={{ width: `${requiredCount ? (requiredPassedCount / requiredCount) * 100 : 0}%` }} />
       </div>
-    </div>
+
+      <ol className="ha-shot-list" aria-label="Shots">
+        {shots.map((shot, i) => {
+          const state = shotStates[shot.key];
+          const label = state?.status === "passed" ? "done" : state?.status === "failed" ? "needs a retake" : state?.status === "pending" ? "checking" : "not taken";
+          return (
+            <li key={shot.key}>
+              <button
+                type="button"
+                className={`ha-shot${i === shotIndex ? " is-current" : ""}${state?.status ? ` is-${state.status}` : ""}`}
+                aria-current={i === shotIndex ? "step" : undefined}
+                onClick={() => setShotIndex(i)}
+              >
+                <span className="ha-shot-mark" aria-hidden="true">
+                  {state?.status === "passed" ? "✓" : state?.status === "failed" ? "!" : i + 1}
+                </span>
+                <span className="ha-shot-label">
+                  {shot.label}
+                  {shot.required ? <span className="ha-sub"> · required</span> : null}
+                </span>
+                <span className="ha-visually-hidden">, {label}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+
+      {currentShot && (
+        <div className="ha-card ha-card-body">
+          <h2 className="hd-card-title">{currentShot.label}</h2>
+          <p className="ha-muted mb-2">{currentShot.tip}</p>
+
+          {currentState?.status === "failed" && currentState.message && (
+            <Notice tone="danger">{currentState.message}</Notice>
+          )}
+          {currentState?.status === "passed" && (
+            <Notice tone="success">{currentState.message ?? "Looks good."}</Notice>
+          )}
+
+          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" hidden onChange={handleFileSelected} />
+          <button type="button" className="ha-btn is-primary" disabled={uploading} aria-busy={uploading} onClick={() => fileInputRef.current?.click()}>
+            {uploading ? "Checking…" : currentState?.status === "failed" ? "Retake this shot" : "Capture this shot"}
+          </button>
+
+          {isDealer && currentState?.status === "passed" && currentState.photoId && (
+            <BackgroundReplacementControl vehiclePublicId={vehiclePublicId} photoId={currentState.photoId} />
+          )}
+        </div>
+      )}
+    </DashboardPage>
   );
 }

@@ -21,7 +21,7 @@ export default function DashboardListingTableBody({
   onPublish,
 }: DashboardListingTableBodyProps) {
   return (
-    <tbody className="tfcl-table-content">
+    <tbody>
       {listings.map((listing) => (
         <DashboardListingTableRow
           key={listing.id}

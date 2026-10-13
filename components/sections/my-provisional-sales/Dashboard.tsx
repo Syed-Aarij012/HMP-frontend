@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import Link from "next/link";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useProvisionalSales } from "@/hooks/useProvisionalSales";
 import type { ProvisionalSale } from "@/types/auction";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Badge, Card, DataTable, EmptyState, ErrorNotice, LoadingTable, Notice, StatusBadge, formatMoney } from "@/components/ui/kit";
 
 function SellerDecisionRow({
   sale,
@@ -16,6 +17,7 @@ function SellerDecisionRow({
   onDecide: (id: number, decision: "accept" | "decline" | "counter", counterAmount?: string) => void;
 }) {
   const [counterAmount, setCounterAmount] = useState("");
+  const counterId = useId();
 
   function handleCounter(event: FormEvent) {
     event.preventDefault();
@@ -24,47 +26,59 @@ function SellerDecisionRow({
 
   return (
     <tr>
-      <td>{sale.vehicleLabel ?? "-"}</td>
-      <td>{sale.highestBidAmount !== null ? `£${sale.highestBidAmount.toLocaleString()}` : "-"}</td>
-      <td>{sale.reservePrice !== null ? `£${sale.reservePrice.toLocaleString()}` : "Not shown"}</td>
-      <td>
+      <td data-label="Vehicle" className="ha-primary-text">
+        {sale.vehicleLabel ?? "—"}
+      </td>
+      <td data-label="Highest bid" className="is-num">
+        {sale.highestBidAmount !== null ? formatMoney(sale.highestBidAmount) : "—"}
+      </td>
+      <td data-label="Reserve" className="is-num">
+        {sale.reservePrice !== null ? formatMoney(sale.reservePrice) : <span className="ha-sub">Not shown</span>}
+      </td>
+      <td data-label="Decision">
         {sale.isAwaitingSeller ? (
-          <div className="flex gap-10" style={{ flexDirection: "column" }}>
-            <div className="flex gap-10">
-              <button type="button" className="sc-button" disabled={submitting} onClick={() => onDecide(sale.id, "accept")}>
-                <span>Accept £{sale.highestBidAmount?.toLocaleString()}</span>
+          <div style={{ minWidth: 260 }}>
+            <Badge tone="warning">Awaiting your decision</Badge>
+            <div className="ha-row-actions" style={{ justifyContent: "flex-start", marginTop: 8 }}>
+              <button type="button" className="ha-btn is-sm is-primary" disabled={submitting} onClick={() => onDecide(sale.id, "accept")}>
+                Accept {formatMoney(sale.highestBidAmount)}
               </button>
-              <button type="button" className="sc-button" disabled={submitting} onClick={() => onDecide(sale.id, "decline")}>
-                <span>Decline</span>
+              <button type="button" className="ha-btn is-sm is-danger" disabled={submitting} onClick={() => onDecide(sale.id, "decline")}>
+                Decline
               </button>
             </div>
-            <form onSubmit={handleCounter} className="flex gap-10">
+            <form onSubmit={handleCounter} className="ha-row-actions" style={{ justifyContent: "flex-start", marginTop: 8 }}>
+              <label htmlFor={counterId} className="ha-visually-hidden">
+                Counter amount in pounds
+              </label>
               <input
+                id={counterId}
                 type="number"
                 step="0.01"
                 min="0"
-                className="form-control"
-                placeholder="Counter amount (£)"
+                className="ha-input"
+                style={{ height: 30, maxWidth: 150 }}
+                placeholder="Counter (£)"
                 value={counterAmount}
                 onChange={(e) => setCounterAmount(e.target.value)}
                 required
               />
-              <button type="submit" className="sc-button" disabled={submitting}>
-                <span>Counter</span>
+              <button type="submit" className="ha-btn is-sm" disabled={submitting}>
+                Counter
               </button>
             </form>
           </div>
-        ) : (
-          <span className="text-capitalize">
-            {sale.sellerDecision === "counter"
-              ? `Countered at £${sale.counterAmount?.toLocaleString()} — ${sale.buyerResponse ?? "awaiting buyer"}`
-              : sale.sellerDecision}
+        ) : sale.sellerDecision === "counter" ? (
+          <span>
+            Countered at <b>{formatMoney(sale.counterAmount)}</b> — <StatusBadge status={sale.buyerResponse ?? "awaiting buyer"} tone={sale.buyerResponse ? undefined : "warning"} />
           </span>
+        ) : (
+          <StatusBadge status={sale.sellerDecision} />
         )}
       </td>
-      <td>
-        <Link href={`/auction/${sale.lotId}`} className="sc-button">
-          <span>View lot</span>
+      <td data-label="" className="ha-right">
+        <Link href={`/auction/${sale.lotId}`} className="ha-btn is-sm is-ghost">
+          View lot
         </Link>
       </td>
     </tr>
@@ -82,29 +96,35 @@ function BuyerResponseRow({
 }) {
   return (
     <tr>
-      <td>{sale.vehicleLabel ?? "-"}</td>
-      <td>{sale.highestBidAmount !== null ? `£${sale.highestBidAmount.toLocaleString()}` : "-"}</td>
-      <td className="text-capitalize">{sale.sellerDecision}</td>
-      <td>
+      <td data-label="Vehicle" className="ha-primary-text">
+        {sale.vehicleLabel ?? "—"}
+      </td>
+      <td data-label="Your bid" className="is-num">
+        {sale.highestBidAmount !== null ? formatMoney(sale.highestBidAmount) : "—"}
+      </td>
+      <td data-label="Seller decision">
+        <StatusBadge status={sale.sellerDecision} />
+      </td>
+      <td data-label="Your response">
         {sale.isAwaitingBuyer ? (
-          <div className="flex gap-10">
-            <span className="fw-6">Counter: £{sale.counterAmount?.toLocaleString()}</span>
-            <button type="button" className="sc-button" disabled={submitting} onClick={() => onRespond(sale.id, "accepted")}>
-              <span>Accept</span>
+          <div className="ha-row-actions" style={{ justifyContent: "flex-start" }}>
+            <span className="ha-primary-text">Counter: {formatMoney(sale.counterAmount)}</span>
+            <button type="button" className="ha-btn is-sm is-primary" disabled={submitting} onClick={() => onRespond(sale.id, "accepted")}>
+              Accept
             </button>
-            <button type="button" className="sc-button" disabled={submitting} onClick={() => onRespond(sale.id, "declined")}>
-              <span>Decline</span>
+            <button type="button" className="ha-btn is-sm is-danger" disabled={submitting} onClick={() => onRespond(sale.id, "declined")}>
+              Decline
             </button>
           </div>
+        ) : sale.sellerDecision === "pending" ? (
+          <Badge tone="warning">Awaiting seller decision</Badge>
         ) : (
-          <span className="text-capitalize">
-            {sale.sellerDecision === "pending" ? "Awaiting seller decision" : sale.buyerResponse ?? "-"}
-          </span>
+          <StatusBadge status={sale.buyerResponse} />
         )}
       </td>
-      <td>
-        <Link href={`/auction/${sale.lotId}`} className="sc-button">
-          <span>View lot</span>
+      <td data-label="" className="ha-right">
+        <Link href={`/auction/${sale.lotId}`} className="ha-btn is-sm is-ghost">
+          View lot
         </Link>
       </td>
     </tr>
@@ -114,85 +134,87 @@ function BuyerResponseRow({
 function Dashboard() {
   const seller = useProvisionalSales("seller");
   const buyer = useProvisionalSales("buyer");
+  const sellerWaiting = seller.sales.filter((sale) => sale.isAwaitingSeller).length;
+  const buyerWaiting = buyer.sales.filter((sale) => sale.isAwaitingBuyer).length;
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Provisional sales</h1>
-                  <p className="text-color-2 mb-3">
-                    When a lot you consign hammers below reserve, it lands here for you to
-                    accept, decline, or counter — and when you&apos;re the highest bidder on a
-                    lot like that, any counter-offer you need to respond to shows up here too.
-                  </p>
-
-                  <h4 className="mb-2">On vehicles I&apos;ve consigned</h4>
-                  {seller.loading && <p>Loading...</p>}
-                  {seller.error && <div className="alert alert-danger">{seller.error}</div>}
-                  {seller.actionError && <div className="alert alert-danger mb-3">{seller.actionError}</div>}
-                  {!seller.loading && !seller.error && seller.sales.length === 0 && (
-                    <p className="tfcl-empty-data mb-4">No provisional sales awaiting your decision.</p>
-                  )}
-                  {!seller.loading && !seller.error && seller.sales.length > 0 && (
-                    <div className="table-responsive mb-4">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Vehicle</th>
-                            <th>Highest bid</th>
-                            <th>Reserve</th>
-                            <th>Decision</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {seller.sales.map((sale) => (
-                            <SellerDecisionRow key={sale.id} sale={sale} submitting={seller.submitting} onDecide={seller.decide} />
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  <h4 className="mb-2">Where I&apos;m the highest bidder</h4>
-                  {buyer.loading && <p>Loading...</p>}
-                  {buyer.error && <div className="alert alert-danger">{buyer.error}</div>}
-                  {buyer.actionError && <div className="alert alert-danger mb-3">{buyer.actionError}</div>}
-                  {!buyer.loading && !buyer.error && buyer.sales.length === 0 && (
-                    <p className="tfcl-empty-data">No provisional sales on lots you&apos;ve bid on.</p>
-                  )}
-                  {!buyer.loading && !buyer.error && buyer.sales.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Vehicle</th>
-                            <th>Your bid</th>
-                            <th>Seller decision</th>
-                            <th />
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {buyer.sales.map((sale) => (
-                            <BuyerResponseRow key={sale.id} sale={sale} submitting={buyer.submitting} onRespond={buyer.respond} />
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
+    <DashboardPage
+      title="Provisional sales"
+      description="When a lot you consign hammers below reserve, it lands here for you to accept, decline, or counter — and when you're the highest bidder on a lot like that, any counter-offer you need to respond to shows up here too."
+    >
+      <Card
+        className="mb-4"
+        title="On vehicles I've consigned"
+        actions={sellerWaiting > 0 ? <Badge tone="warning">{sellerWaiting} need your decision</Badge> : undefined}
+      >
+        {seller.loading && <LoadingTable label="Loading provisional sales" />}
+        {seller.error && <ErrorNotice message={seller.error} />}
+        {seller.actionError && (
+          <div className="ha-card-body" style={{ paddingBottom: 0 }}>
+            <Notice tone="danger">{seller.actionError}</Notice>
           </div>
-        </div>
-      </div>
-    </div>
+        )}
+        {!seller.loading && !seller.error && seller.sales.length === 0 && (
+          <EmptyState icon="icon-carus-pending" title="Nothing to decide" text="No provisional sales awaiting your decision." />
+        )}
+        {!seller.loading && !seller.error && seller.sales.length > 0 && (
+          <DataTable caption="Provisional sales on vehicles you consigned">
+            <thead>
+              <tr>
+                <th scope="col">Vehicle</th>
+                <th scope="col" className="is-num">Highest bid</th>
+                <th scope="col" className="is-num">Reserve</th>
+                <th scope="col">Decision</th>
+                <th scope="col">
+                  <span className="ha-visually-hidden">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {seller.sales.map((sale) => (
+                <SellerDecisionRow key={sale.id} sale={sale} submitting={seller.submitting} onDecide={seller.decide} />
+              ))}
+            </tbody>
+          </DataTable>
+        )}
+      </Card>
+
+      <Card
+        title="Where I'm the highest bidder"
+        actions={buyerWaiting > 0 ? <Badge tone="warning">{buyerWaiting} need your response</Badge> : undefined}
+      >
+        {buyer.loading && <LoadingTable label="Loading provisional sales" />}
+        {buyer.error && <ErrorNotice message={buyer.error} />}
+        {buyer.actionError && (
+          <div className="ha-card-body" style={{ paddingBottom: 0 }}>
+            <Notice tone="danger">{buyer.actionError}</Notice>
+          </div>
+        )}
+        {!buyer.loading && !buyer.error && buyer.sales.length === 0 && (
+          <EmptyState icon="icon-carus-checkcircle" title="Nothing to respond to" text="No provisional sales on lots you've bid on." />
+        )}
+        {!buyer.loading && !buyer.error && buyer.sales.length > 0 && (
+          <DataTable caption="Provisional sales where you are the highest bidder">
+            <thead>
+              <tr>
+                <th scope="col">Vehicle</th>
+                <th scope="col" className="is-num">Your bid</th>
+                <th scope="col">Seller decision</th>
+                <th scope="col">Your response</th>
+                <th scope="col">
+                  <span className="ha-visually-hidden">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {buyer.sales.map((sale) => (
+                <BuyerResponseRow key={sale.id} sale={sale} submitting={buyer.submitting} onRespond={buyer.respond} />
+              ))}
+            </tbody>
+          </DataTable>
+        )}
+      </Card>
+    </DashboardPage>
   );
 }
 

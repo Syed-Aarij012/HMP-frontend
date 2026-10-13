@@ -149,14 +149,14 @@ export default function Brands() {
         )}
         {data && data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Brands</caption>
               <thead>
                 <tr>
-                  <th>Logo</th>
-                  <th>Name</th>
-                  <th>Order</th>
-                  <th>Status</th>
-                  <th className="ha-right">Actions</th>
+                  <th scope="col">Logo</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Order</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="ha-right">Actions</th>
                 </tr>
               </thead>
               <tbody>

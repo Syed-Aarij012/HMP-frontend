@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import SuperAdminShell from "./SuperAdminShell";
-import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Modal, Pager, SearchInput, Tabs, useDebouncedValue, useToast } from "@/components/admin/ui";
+import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Modal, Pager, SearchInput, Tabs, useDebouncedValue, useToast, FilterChips } from "@/components/admin/ui";
 import { useAdminResource } from "@/hooks/useSuperAdmin";
 import { apiFetch, describeApiError } from "@/lib/api-client";
 import { pageInfo, roleLabel, type AdminUser, type Paginated } from "@/lib/superAdmin";
@@ -55,18 +55,22 @@ export default function Bans() {
           <Tabs label="Status" value={view} options={VIEWS} onChange={(next) => { setView(next); setPage(1); }} />
           <SearchInput label="Search accounts" placeholder="Name or email" value={q} onChange={(v) => { setQ(v); setPage(1); }} />
         </div>
+        <FilterChips
+          filters={[q.trim() !== "" && { key: "q", label: `“${q.trim()}”`, onRemove: () => { setQ(""); setPage(1); } }]}
+          onClearAll={() => { setQ(""); setPage(1); }}
+        />
         {loading && !data && <LoadingRows />}
         {error && <ErrorNotice message={error} />}
         {data && data.data.length === 0 && <EmptyState icon="icon-carus-shieldcheck" title="No accounts match" />}
         {data && data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Accounts</caption>
               <thead>
                 <tr>
-                  <th>Account</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th className="ha-right">Action</th>
+                  <th scope="col">Account</th>
+                  <th scope="col">Role</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="ha-right">Action</th>
                 </tr>
               </thead>
               <tbody>

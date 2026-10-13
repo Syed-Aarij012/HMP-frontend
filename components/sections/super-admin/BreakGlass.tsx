@@ -106,7 +106,7 @@ export default function BreakGlass() {
           {data && data.data.length === 0 && <EmptyState icon="icon-carus-clock" title="None yet" />}
           {data && data.data.length > 0 && (
             <div className="ha-table-wrap">
-              <table className="ha-table">
+              <table className="ha-table"><caption className="ha-visually-hidden">Elevations</caption>
                 <tbody>
                   {data.data.map((e) => (
                     <tr key={e.id}>

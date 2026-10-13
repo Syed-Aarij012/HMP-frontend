@@ -1,9 +1,10 @@
 "use client";
 
 import { Fragment, useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useMyTransportJobs } from "@/hooks/useDriverTransportJobs";
 import type { TransportJob } from "@/types/postSale";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Notice, LoadingTable, EmptyState, DataTable, StatusBadge } from "@/components/ui/kit";
 
 const EXCEPTION_CODES = [
   { value: "vehicle_not_ready", label: "Vehicle not ready" },
@@ -63,209 +64,177 @@ export default function Dashboard() {
   }
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">My transport jobs</h1>
-                  <p className="text-color-2 mb-3">
-                    Collections and deliveries assigned to you. Record collection and delivery with photos, and let us know
-                    straight away if something goes wrong.
-                  </p>
+    <DashboardPage title="My transport jobs" description="Collections and deliveries assigned to you. Record collection and delivery with photos, and let us know straight away if something goes wrong.">
+      {loading && <LoadingTable label="Loading your transport jobs" />}
+      {error && <Notice tone="danger">{error}</Notice>}
+      {actionError && <Notice tone="danger">{actionError}</Notice>}
 
-                  {loading && <p>Loading your transport jobs...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
-                  {actionError && <div className="alert alert-danger">{actionError}</div>}
+      {!loading && !error && jobs.length === 0 && (
+        <EmptyState icon="icon-carus-map" title="No jobs right now" text="Collections and deliveries assigned to you will appear here." />
+      )}
 
-                  {!loading && !error && jobs.length === 0 && (
-                    <p className="tfcl-empty-data">No transport jobs assigned to you right now.</p>
+      {jobs.length > 0 && (
+        <DataTable caption="Your transport jobs">
+            <thead>
+              <tr>
+                <th scope="col">Job</th>
+                <th scope="col">Pickup</th>
+                <th scope="col">Dropoff</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span className="ha-visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {jobs.map((job) => (
+                <Fragment key={job.id}>
+                  <tr key={job.id}>
+                    <td data-label="Job" className="ha-num">#{job.id}</td>
+                    <td data-label="Pickup">{addressLine(job.pickup_address)}</td>
+                    <td data-label="Dropoff">{addressLine(job.dropoff_address)}</td>
+                    <td data-label="Status"><StatusBadge status={job.status} /></td>
+                    <td data-label=""><div className="ha-row-actions">
+                      {job.status === "assigned" && (
+                        <button
+                          type="button"
+                          className="ha-btn is-sm is-primary"
+                          disabled={busyId === job.id}
+                          onClick={() => setPanel({ jobId: job.id, kind: "collect" })}
+                        >
+                          <span>Record collection</span>
+                        </button>
+                      )}
+                      {job.status === "in_transit" && (
+                        <>
+                          <button
+                            type="button"
+                            className="ha-btn is-sm"
+                            disabled={busyId === job.id}
+                            onClick={() => updatePosition(job.id)}
+                          >
+                            <span>Update position</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="ha-btn is-sm is-primary"
+                            disabled={busyId === job.id}
+                            onClick={() => setPanel({ jobId: job.id, kind: "deliver" })}
+                          >
+                            <span>Record delivery</span>
+                          </button>
+                        </>
+                      )}
+                      {(job.status === "assigned" || job.status === "in_transit") && (
+                        <button
+                          type="button"
+                          className="ha-btn is-sm is-danger"
+                          disabled={busyId === job.id}
+                          onClick={() => setPanel({ jobId: job.id, kind: "exception" })}
+                        >
+                          <span>Report an issue</span>
+                        </button>
+                      )}
+                      </div>
+                    </td>
+                  </tr>
+                  {panel?.jobId === job.id && (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className="ha-inline-edit">
+                          {panel.kind === "collect" && (
+                            <form onSubmit={(e) => handleCollect(e, job.id)}>
+                              <h3 className="ha-primary-text mb-3" style={{ fontSize: 15 }}>Record collection</h3>
+                              <div className="ha-field">
+                                <label htmlFor={`collect-photos-${job.id}`}>Collection condition photos</label>
+                                <input
+                                  id={`collect-photos-${job.id}`}
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  className="ha-input"
+                                  onChange={(e) => setPhotoFiles(Array.from(e.target.files ?? []))}
+                                />
+                              </div>
+                              <p className="ha-sub mb-3">Your current location will be recorded automatically.</p>
+                              <div className="ha-actions is-start">
+                                <button type="submit" className="ha-btn is-primary" disabled={busyId === job.id} aria-busy={busyId === job.id}>{busyId === job.id ? "Saving…" : "Confirm collection"}</button>
+                                <button type="button" className="ha-btn is-ghost" onClick={closePanel}>Cancel</button>
+                              </div>
+                            </form>
+                          )}
+                          {panel.kind === "deliver" && (
+                            <form onSubmit={(e) => handleDeliver(e, job.id)}>
+                              <h3 className="ha-primary-text mb-3" style={{ fontSize: 15 }}>Record delivery</h3>
+                              <div className="ha-field">
+                                <label htmlFor={`deliver-photos-${job.id}`}>Delivery condition photos</label>
+                                <input
+                                  id={`deliver-photos-${job.id}`}
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  className="ha-input"
+                                  onChange={(e) => setPhotoFiles(Array.from(e.target.files ?? []))}
+                                />
+                              </div>
+                              <div className="ha-field">
+                                <label htmlFor={`signed-by-${job.id}`}>Signed by</label>
+                                <input
+                                  id={`signed-by-${job.id}`}
+                                  type="text"
+                                  className="ha-input"
+                                  placeholder="Recipient's name"
+                                  value={signedBy}
+                                  onChange={(e) => setSignedBy(e.target.value)}
+                                  required
+                                />
+                              </div>
+                              <div className="ha-actions is-start">
+                                <button type="submit" className="ha-btn is-primary" disabled={busyId === job.id} aria-busy={busyId === job.id}>{busyId === job.id ? "Saving…" : "Confirm delivery"}</button>
+                                <button type="button" className="ha-btn is-ghost" onClick={closePanel}>Cancel</button>
+                              </div>
+                            </form>
+                          )}
+                          {panel.kind === "exception" && (
+                            <form onSubmit={(e) => handleException(e, job.id)}>
+                              <h3 className="ha-primary-text mb-3" style={{ fontSize: 15 }}>Report an issue</h3>
+                              <div className="ha-field">
+                                <label htmlFor={`exception-code-${job.id}`}>What happened?</label>
+                                <select
+                                  id={`exception-code-${job.id}`}
+                                  className="ha-select"
+                                  value={exceptionCode}
+                                  onChange={(e) => setExceptionCode(e.target.value)}
+                                >
+                                  {EXCEPTION_CODES.map((code) => (
+                                    <option key={code.value} value={code.value}>
+                                      {code.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="ha-field">
+                                <label htmlFor={`exception-notes-${job.id}`}>Notes (optional)</label>
+                                <textarea
+                                  id={`exception-notes-${job.id}`}
+                                  className="ha-textarea"
+                                  value={exceptionNotes}
+                                  onChange={(e) => setExceptionNotes(e.target.value)}
+                                />
+                              </div>
+                              <div className="ha-actions is-start">
+                                <button type="submit" className="ha-btn is-primary" disabled={busyId === job.id} aria-busy={busyId === job.id}>{busyId === job.id ? "Sending…" : "Report issue"}</button>
+                                <button type="button" className="ha-btn is-ghost" onClick={closePanel}>Cancel</button>
+                              </div>
+                            </form>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
                   )}
-
-                  {jobs.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>Pickup</th>
-                            <th>Dropoff</th>
-                            <th>Status</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {jobs.map((job) => (
-                            <Fragment key={job.id}>
-                              <tr key={job.id}>
-                                <td>{job.id}</td>
-                                <td>{addressLine(job.pickup_address)}</td>
-                                <td>{addressLine(job.dropoff_address)}</td>
-                                <td className="text-capitalize">{job.status.replace("_", " ")}</td>
-                                <td className="flex gap-10" style={{ flexWrap: "wrap" }}>
-                                  {job.status === "assigned" && (
-                                    <button
-                                      type="button"
-                                      className="sc-button"
-                                      disabled={busyId === job.id}
-                                      onClick={() => setPanel({ jobId: job.id, kind: "collect" })}
-                                    >
-                                      <span>Record collection</span>
-                                    </button>
-                                  )}
-                                  {job.status === "in_transit" && (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className="sc-button"
-                                        disabled={busyId === job.id}
-                                        onClick={() => updatePosition(job.id)}
-                                      >
-                                        <span>Update position</span>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="sc-button"
-                                        disabled={busyId === job.id}
-                                        onClick={() => setPanel({ jobId: job.id, kind: "deliver" })}
-                                      >
-                                        <span>Record delivery</span>
-                                      </button>
-                                    </>
-                                  )}
-                                  {(job.status === "assigned" || job.status === "in_transit") && (
-                                    <button
-                                      type="button"
-                                      className="sc-button"
-                                      disabled={busyId === job.id}
-                                      onClick={() => setPanel({ jobId: job.id, kind: "exception" })}
-                                    >
-                                      <span>Report an issue</span>
-                                    </button>
-                                  )}
-                                </td>
-                              </tr>
-                              {panel?.jobId === job.id && (
-                                <tr>
-                                  <td colSpan={5}>
-                                    <div className="tfcl-card p-3">
-                                      {panel.kind === "collect" && (
-                                        <form onSubmit={(e) => handleCollect(e, job.id)}>
-                                          <h4 className="mb-2">Record collection</h4>
-                                          <div className="form-group mb-2">
-                                            <label htmlFor={`collect-photos-${job.id}`}>Collection condition photos</label>
-                                            <input
-                                              id={`collect-photos-${job.id}`}
-                                              type="file"
-                                              accept="image/*"
-                                              multiple
-                                              className="form-control"
-                                              onChange={(e) => setPhotoFiles(Array.from(e.target.files ?? []))}
-                                            />
-                                          </div>
-                                          <p className="fs-13 text-color-2 mb-2">Your current location will be recorded automatically.</p>
-                                          <div className="flex gap-10">
-                                            <button type="submit" className="sc-button" disabled={busyId === job.id}>
-                                              <span>{busyId === job.id ? "Saving..." : "Confirm collection"}</span>
-                                            </button>
-                                            <button type="button" className="sc-button" onClick={closePanel}>
-                                              <span>Cancel</span>
-                                            </button>
-                                          </div>
-                                        </form>
-                                      )}
-                                      {panel.kind === "deliver" && (
-                                        <form onSubmit={(e) => handleDeliver(e, job.id)}>
-                                          <h4 className="mb-2">Record delivery</h4>
-                                          <div className="form-group mb-2">
-                                            <label htmlFor={`deliver-photos-${job.id}`}>Delivery condition photos</label>
-                                            <input
-                                              id={`deliver-photos-${job.id}`}
-                                              type="file"
-                                              accept="image/*"
-                                              multiple
-                                              className="form-control"
-                                              onChange={(e) => setPhotoFiles(Array.from(e.target.files ?? []))}
-                                            />
-                                          </div>
-                                          <div className="form-group mb-2">
-                                            <label htmlFor={`signed-by-${job.id}`}>Signed by</label>
-                                            <input
-                                              id={`signed-by-${job.id}`}
-                                              type="text"
-                                              className="form-control"
-                                              placeholder="Recipient's name"
-                                              value={signedBy}
-                                              onChange={(e) => setSignedBy(e.target.value)}
-                                              required
-                                            />
-                                          </div>
-                                          <div className="flex gap-10">
-                                            <button type="submit" className="sc-button" disabled={busyId === job.id}>
-                                              <span>{busyId === job.id ? "Saving..." : "Confirm delivery"}</span>
-                                            </button>
-                                            <button type="button" className="sc-button" onClick={closePanel}>
-                                              <span>Cancel</span>
-                                            </button>
-                                          </div>
-                                        </form>
-                                      )}
-                                      {panel.kind === "exception" && (
-                                        <form onSubmit={(e) => handleException(e, job.id)}>
-                                          <h4 className="mb-2">Report an issue</h4>
-                                          <div className="form-group mb-2">
-                                            <label htmlFor={`exception-code-${job.id}`}>What happened?</label>
-                                            <select
-                                              id={`exception-code-${job.id}`}
-                                              className="form-control"
-                                              value={exceptionCode}
-                                              onChange={(e) => setExceptionCode(e.target.value)}
-                                            >
-                                              {EXCEPTION_CODES.map((code) => (
-                                                <option key={code.value} value={code.value}>
-                                                  {code.label}
-                                                </option>
-                                              ))}
-                                            </select>
-                                          </div>
-                                          <div className="form-group mb-2">
-                                            <label htmlFor={`exception-notes-${job.id}`}>Notes (optional)</label>
-                                            <textarea
-                                              id={`exception-notes-${job.id}`}
-                                              className="form-control"
-                                              value={exceptionNotes}
-                                              onChange={(e) => setExceptionNotes(e.target.value)}
-                                            />
-                                          </div>
-                                          <div className="flex gap-10">
-                                            <button type="submit" className="sc-button" disabled={busyId === job.id}>
-                                              <span>{busyId === job.id ? "Sending..." : "Report issue"}</span>
-                                            </button>
-                                            <button type="button" className="sc-button" onClick={closePanel}>
-                                              <span>Cancel</span>
-                                            </button>
-                                          </div>
-                                        </form>
-                                      )}
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </Fragment>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+                </Fragment>
+              ))}
+            </tbody>
+          </DataTable>
+      )}
+    </DashboardPage>
   );
 }

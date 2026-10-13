@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api-client";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Card, Notice } from "@/components/ui/kit";
 
 function ChangePassword() {
   const { changePassword } = useAuth();
@@ -40,91 +41,78 @@ function ChangePassword() {
     }
   }
 
+  // Live feedback on the password rules (the server still validates on submit).
+  const rules = [
+    { label: "One number", met: /\d/.test(password) },
+    { label: "One lowercase character", met: /[a-z]/.test(password) },
+    { label: "One uppercase character", met: /[A-Z]/.test(password) },
+    { label: "8 characters minimum", met: password.length >= 8 },
+  ];
+
   return (
-    <>
-      <div id="themesflat-content">
-        <DashboardToggle />
-        <div className="container">
-          <div className="row">
-            <div className="col-md-12">
-              <div className="content-area">
-                <main id="main" className="main-content">
-                  <div className="tfcl-dashboard">
-                    <h1 className="admin-title mb-3">Change Password</h1>
-                    <div className="tfcl-add-listing profile-inner">
-                      <h3>Change passwords</h3>
-                      <form className="tfcl-add-listing profile-password" onSubmit={handleSubmit}>
-                        {error && <p className="text-danger mb-3">{error}</p>}
-                        {success && <p className="text-success mb-3">Password updated.</p>}
-                        <div className="form-group">
-                          <label htmlFor="current_password">Old password</label>
-                          <input
-                            type="password"
-                            className="form-control"
-                            id="current_password"
-                            name="current_password"
-                            placeholder="Old password"
-                            value={currentPassword}
-                            onChange={(event) => setCurrentPassword(event.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="new_password">New password</label>
-                          <input
-                            type="password"
-                            className="form-control"
-                            id="new_password"
-                            name="new_password"
-                            placeholder="New password"
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
-                            minLength={8}
-                            required
-                          />
-                        </div>
-                        <ul className="list-check-req mb-3">
-                          <li className="check">
-                            <span>One number</span>
-                          </li>
-                          <li>
-                            <span>One lowercase character</span>
-                          </li>
-                          <li>
-                            <span>One uppercase character</span>
-                          </li>
-                          <li>
-                            <span>8 characters minimum</span>
-                          </li>
-                        </ul>
-                        <div className="form-group">
-                          <label htmlFor="confirm_password">Confirm password</label>
-                          <input
-                            type="password"
-                            className="form-control"
-                            id="confirm_password"
-                            name="confirm_password"
-                            placeholder="Confirm password"
-                            value={passwordConfirmation}
-                            onChange={(event) => setPasswordConfirmation(event.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className="group-button-submit left mb-0">
-                          <button className="pre-btn" type="submit" disabled={submitting}>
-                            {submitting ? "Changing..." : "Change passwords"}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </main>
-              </div>
-            </div>
+    <DashboardPage title="Change password" description="Use a password you don't use anywhere else.">
+      <Card className="ha-form-card">
+        <form className="ha-card-body" onSubmit={handleSubmit}>
+          {error && <Notice tone="danger">{error}</Notice>}
+          {success && <Notice tone="success">Password updated.</Notice>}
+          <div className="ha-field">
+            <label htmlFor="current_password">Current password</label>
+            <input
+              type="password"
+              className="ha-input"
+              id="current_password"
+              name="current_password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              required
+            />
           </div>
-        </div>
-      </div>
-    </>
+          <div className="ha-field">
+            <label htmlFor="new_password">New password</label>
+            <input
+              type="password"
+              className="ha-input"
+              id="new_password"
+              name="new_password"
+              autoComplete="new-password"
+              aria-describedby="password-rules"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              minLength={8}
+              required
+            />
+            <ul id="password-rules" className="ha-rules">
+              {rules.map((rule) => (
+                <li key={rule.label} className={rule.met ? "is-met" : undefined}>
+                  <span aria-hidden="true">{rule.met ? "✓" : "•"}</span>
+                  {rule.label}
+                  <span className="ha-visually-hidden">{rule.met ? " (met)" : " (not met yet)"}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="ha-field">
+            <label htmlFor="confirm_password">Confirm new password</label>
+            <input
+              type="password"
+              className="ha-input"
+              id="confirm_password"
+              name="confirm_password"
+              autoComplete="new-password"
+              aria-invalid={passwordConfirmation !== "" && passwordConfirmation !== password}
+              value={passwordConfirmation}
+              onChange={(event) => setPasswordConfirmation(event.target.value)}
+              required
+            />
+            {passwordConfirmation !== "" && passwordConfirmation !== password && <div className="ha-error-text">Passwords don&apos;t match yet.</div>}
+          </div>
+          <button className="ha-btn is-primary" type="submit" disabled={submitting} aria-busy={submitting}>
+            {submitting ? "Changing…" : "Change password"}
+          </button>
+        </form>
+      </Card>
+    </DashboardPage>
   );
 }
 

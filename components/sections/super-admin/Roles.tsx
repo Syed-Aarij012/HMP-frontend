@@ -111,12 +111,12 @@ export default function Roles() {
         {error && <ErrorNotice message={error} />}
         {data && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Roles and permissions</caption>
               <thead>
                 <tr>
-                  <th>Role</th>
-                  <th>Permissions</th>
-                  <th className="ha-right">Actions</th>
+                  <th scope="col">Role</th>
+                  <th scope="col">Permissions</th>
+                  <th scope="col" className="ha-right">Actions</th>
                 </tr>
               </thead>
               <tbody>

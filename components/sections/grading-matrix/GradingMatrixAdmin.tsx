@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import { Fragment, useState, type FormEvent } from "react";
 import { useGradingMatrixAdmin } from "@/hooks/useInspection";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Badge, Card, DataTable, EmptyState, ErrorNotice, LoadingRows, Notice, formatDate } from "@/components/ui/kit";
 
 type ThresholdRow = { maxPoints: string; grade: string };
 type EntryRow = { damageType: string; panel: string; severity: "minor" | "moderate" | "severe"; repairCostBand: string; points: string };
@@ -58,132 +59,116 @@ export default function GradingMatrixAdmin() {
   }
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Grading matrix</h1>
-                  <p className="text-color-2 mb-3">
-                    Draft a new version, then have a different Quality Supervisor approve it before it takes effect.
-                  </p>
+    <DashboardPage title="Grading matrix" description="Draft a new version, then have a different Quality Supervisor approve it before it takes effect.">
+      <Card className="mb-4" title="Pending approval" actions={pending.length > 0 ? <Badge tone="warning">{pending.length} waiting</Badge> : undefined}>
+        {loading && <LoadingRows rows={2} label="Loading versions" />}
+        {error && <ErrorNotice message={error} />}
+        {approveError && <ErrorNotice message={approveError} />}
+        {!loading && pending.length === 0 && <EmptyState icon="icon-carus-checkcircle" title="Nothing awaiting approval" />}
+        {pending.length > 0 && (
+          <DataTable caption="Grading matrix versions awaiting approval">
+            <thead>
+              <tr>
+                <th scope="col">Label</th>
+                <th scope="col">Effective from</th>
+                <th scope="col" className="is-num">Entries</th>
+                <th scope="col">
+                  <span className="ha-visually-hidden">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {pending.map((version) => (
+                <tr key={version.id}>
+                  <td data-label="Label" className="ha-primary-text">{version.versionLabel}</td>
+                  <td data-label="Effective from">{formatDate(version.effectiveFrom, { time: true })}</td>
+                  <td data-label="Entries" className="is-num">{version.entries.length}</td>
+                  <td data-label="" className="ha-right">
+                    <button type="button" className="ha-btn is-sm is-primary" disabled={approvingId === version.id} aria-busy={approvingId === version.id} onClick={() => approve(version.id)}>
+                      {approvingId === version.id ? "Approving…" : "Approve"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </DataTable>
+        )}
+      </Card>
 
-                  <div className="tfcl-card p-3 mb-3">
-                    <h4 className="mb-2">Pending approval</h4>
-                    {loading && <p>Loading...</p>}
-                    {error && <div className="alert alert-danger">{error}</div>}
-                    {approveError && <div className="alert alert-danger">{approveError}</div>}
-                    {!loading && pending.length === 0 && <p className="tfcl-empty-data">Nothing awaiting approval.</p>}
-                    {pending.length > 0 && (
-                      <div className="table-responsive">
-                        <table className="table">
-                          <thead>
-                            <tr>
-                              <th>Label</th>
-                              <th>Effective from</th>
-                              <th>Entries</th>
-                              <th />
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {pending.map((version) => (
-                              <tr key={version.id}>
-                                <td>{version.versionLabel}</td>
-                                <td>{new Date(version.effectiveFrom).toLocaleString()}</td>
-                                <td>{version.entries.length}</td>
-                                <td>
-                                  <button
-                                    type="button"
-                                    className="sc-button"
-                                    disabled={approvingId === version.id}
-                                    onClick={() => approve(version.id)}
-                                  >
-                                    <span>{approvingId === version.id ? "Approving..." : "Approve"}</span>
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
+      <Card title="Draft a new version">
+        <form onSubmit={handleSubmit} className="ha-card-body">
+          {draftError && <Notice tone="danger">{draftError}</Notice>}
 
-                  <form onSubmit={handleSubmit} className="tfcl-card p-3">
-                    <h4 className="mb-2">Draft a new version</h4>
-                    {draftError && <div className="alert alert-danger">{draftError}</div>}
-
-                    <div className="row">
-                      <div className="col-md-6 form-group">
-                        <label>Version label</label>
-                        <input type="text" className="form-control" value={versionLabel} onChange={(e) => setVersionLabel(e.target.value)} required />
-                      </div>
-                      <div className="col-md-6 form-group">
-                        <label>Effective from</label>
-                        <input type="datetime-local" className="form-control" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} required />
-                      </div>
-                    </div>
-
-                    <h5 className="mb-2 mt-2">Grade thresholds</h5>
-                    {thresholds.map((row, i) => (
-                      <div className="row" key={i}>
-                        <div className="col-md-4 form-group">
-                          <input type="number" className="form-control" placeholder="Max points (blank = no cap)" value={row.maxPoints} onChange={(e) => updateThreshold(i, "maxPoints", e.target.value)} />
-                        </div>
-                        <div className="col-md-4 form-group">
-                          <input type="number" min="1" max="5" className="form-control" placeholder="Grade (1-5)" value={row.grade} onChange={(e) => updateThreshold(i, "grade", e.target.value)} required />
-                        </div>
-                        <div className="col-md-4 form-group">
-                          <button type="button" className="sc-button" onClick={() => removeThreshold(i)}><span>Remove</span></button>
-                        </div>
-                      </div>
-                    ))}
-                    <button type="button" className="sc-button mb-2" onClick={addThreshold}><span>Add threshold</span></button>
-
-                    <h5 className="mb-2 mt-2">Matrix entries</h5>
-                    {entries.map((row, i) => (
-                      <div className="row" key={i}>
-                        <div className="col-md-2 form-group">
-                          <input type="text" className="form-control" placeholder="Panel" value={row.panel} onChange={(e) => updateEntry(i, "panel", e.target.value)} required />
-                        </div>
-                        <div className="col-md-2 form-group">
-                          <input type="text" className="form-control" placeholder="Damage type" value={row.damageType} onChange={(e) => updateEntry(i, "damageType", e.target.value)} required />
-                        </div>
-                        <div className="col-md-2 form-group">
-                          <select className="form-control" value={row.severity} onChange={(e) => updateEntry(i, "severity", e.target.value)}>
-                            <option value="minor">Minor</option>
-                            <option value="moderate">Moderate</option>
-                            <option value="severe">Severe</option>
-                          </select>
-                        </div>
-                        <div className="col-md-2 form-group">
-                          <input type="text" className="form-control" placeholder="Repair cost band" value={row.repairCostBand} onChange={(e) => updateEntry(i, "repairCostBand", e.target.value)} required />
-                        </div>
-                        <div className="col-md-2 form-group">
-                          <input type="number" className="form-control" placeholder="Points" value={row.points} onChange={(e) => updateEntry(i, "points", e.target.value)} required />
-                        </div>
-                        <div className="col-md-2 form-group">
-                          <button type="button" className="sc-button" onClick={() => removeEntry(i)}><span>Remove</span></button>
-                        </div>
-                      </div>
-                    ))}
-                    <button type="button" className="sc-button mb-3" onClick={addEntry}><span>Add entry</span></button>
-
-                    <div>
-                      <button type="submit" className="sc-button" disabled={drafting}>
-                        <span>{drafting ? "Drafting..." : "Draft version"}</span>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </main>
+          <div className="ha-form-grid">
+            <div className="ha-field">
+              <label htmlFor="gm-label">Version label</label>
+              <input id="gm-label" type="text" className="ha-input" value={versionLabel} onChange={(e) => setVersionLabel(e.target.value)} required />
+            </div>
+            <div className="ha-field">
+              <label htmlFor="gm-effective">Effective from</label>
+              <input id="gm-effective" type="datetime-local" className="ha-input" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} required />
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <fieldset className="ha-field">
+            <legend>Grade thresholds</legend>
+            <div className="ha-row-editor" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) auto" }}>
+              <span className="ha-row-editor-head">Max points</span>
+              <span className="ha-row-editor-head">Grade (1–5)</span>
+              <span className="ha-row-editor-head"><span className="ha-visually-hidden">Remove</span></span>
+              {thresholds.map((row, i) => (
+                <Fragment key={i}>
+                  <input type="number" className="ha-input" placeholder="Blank = no cap" aria-label={`Max points, threshold ${i + 1}`} value={row.maxPoints} onChange={(e) => updateThreshold(i, "maxPoints", e.target.value)} />
+                  <input type="number" min="1" max="5" className="ha-input" aria-label={`Grade, threshold ${i + 1}`} value={row.grade} onChange={(e) => updateThreshold(i, "grade", e.target.value)} required />
+                  <button type="button" className="ha-btn is-icon is-ghost" aria-label={`Remove threshold ${i + 1}`} onClick={() => removeThreshold(i)}>
+                    ×
+                  </button>
+                </Fragment>
+              ))}
+            </div>
+            <button type="button" className="ha-btn is-sm mt-2" onClick={addThreshold}>
+              <i className="icon-carus-plus" aria-hidden="true" /> Add threshold
+            </button>
+          </fieldset>
+
+          <fieldset className="ha-field">
+            <legend>Matrix entries</legend>
+            <div className="ha-table-wrap">
+              <div className="ha-row-editor" style={{ gridTemplateColumns: "minmax(120px, 1fr) minmax(120px, 1fr) 120px minmax(120px, 1fr) 90px auto", minWidth: 680 }}>
+                <span className="ha-row-editor-head">Panel</span>
+                <span className="ha-row-editor-head">Damage type</span>
+                <span className="ha-row-editor-head">Severity</span>
+                <span className="ha-row-editor-head">Repair cost band</span>
+                <span className="ha-row-editor-head">Points</span>
+                <span className="ha-row-editor-head"><span className="ha-visually-hidden">Remove</span></span>
+                {entries.map((row, i) => (
+                  <Fragment key={i}>
+                    <input type="text" className="ha-input" aria-label={`Panel, entry ${i + 1}`} value={row.panel} onChange={(e) => updateEntry(i, "panel", e.target.value)} required />
+                    <input type="text" className="ha-input" aria-label={`Damage type, entry ${i + 1}`} value={row.damageType} onChange={(e) => updateEntry(i, "damageType", e.target.value)} required />
+                    <select className="ha-select" aria-label={`Severity, entry ${i + 1}`} value={row.severity} onChange={(e) => updateEntry(i, "severity", e.target.value)}>
+                      <option value="minor">Minor</option>
+                      <option value="moderate">Moderate</option>
+                      <option value="severe">Severe</option>
+                    </select>
+                    <input type="text" className="ha-input" aria-label={`Repair cost band, entry ${i + 1}`} value={row.repairCostBand} onChange={(e) => updateEntry(i, "repairCostBand", e.target.value)} required />
+                    <input type="number" className="ha-input" aria-label={`Points, entry ${i + 1}`} value={row.points} onChange={(e) => updateEntry(i, "points", e.target.value)} required />
+                    <button type="button" className="ha-btn is-icon is-ghost" aria-label={`Remove entry ${i + 1}`} onClick={() => removeEntry(i)}>
+                      ×
+                    </button>
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+            <button type="button" className="ha-btn is-sm mt-2" onClick={addEntry}>
+              <i className="icon-carus-plus" aria-hidden="true" /> Add entry
+            </button>
+          </fieldset>
+
+          <button type="submit" className="ha-btn is-primary" disabled={drafting} aria-busy={drafting}>
+            {drafting ? "Drafting…" : "Draft version"}
+          </button>
+        </form>
+      </Card>
+    </DashboardPage>
   );
 }

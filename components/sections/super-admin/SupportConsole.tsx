@@ -82,7 +82,7 @@ export default function SupportConsole() {
         {found.data && found.data.data.length === 0 && <EmptyState icon="icon-carus-profile" title="No one matches" />}
         {found.data && found.data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Customers</caption>
               <tbody>
                 {found.data.data.map((u) => (
                   <tr key={u.id}>
@@ -114,13 +114,13 @@ export default function SupportConsole() {
         {sessions.data && sessions.data.data.length === 0 && <EmptyState icon="icon-carus-usercheck" title="No requests yet" />}
         {sessions.data && sessions.data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Customers</caption>
               <thead>
                 <tr>
-                  <th>Customer</th>
-                  <th>Reason</th>
-                  <th>Status</th>
-                  <th className="ha-right">Action</th>
+                  <th scope="col">Customer</th>
+                  <th scope="col">Reason</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="ha-right">Action</th>
                 </tr>
               </thead>
               <tbody>

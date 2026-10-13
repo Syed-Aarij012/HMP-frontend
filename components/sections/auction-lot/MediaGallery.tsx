@@ -58,7 +58,7 @@ export default function MediaGallery({ vehicle }: { vehicle: AuctionLotVehicle |
             style={{ width: "100%", maxWidth: 720, display: "block" }}
             aria-label="Rotate vehicle"
           />
-          <p className="text-color-2">Drag the slider to rotate.</p>
+          <p className="ha-muted">Drag the slider to rotate.</p>
         </div>
       )}
     </div>

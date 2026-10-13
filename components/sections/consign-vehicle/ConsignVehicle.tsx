@@ -1,9 +1,8 @@
 "use client";
 
+import DashboardPage from "@/components/dashboard/DashboardPage";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
-import NiceSelect from "@/components/common/NiceSelect";
 import UploadPhotoSection from "@/components/sections/add-listing/UploadPhotoSection";
 import UploadVideoSpinSection, {
   type VideoSelection,
@@ -18,6 +17,7 @@ import {
   ADD_LISTING_YEAR_OPTIONS,
   VAT_STATUS_OPTIONS,
 } from "@/data/niceSelectOptions";
+import { Card, Notice, Select } from "@/components/ui/kit";
 
 function ConsignVehicle() {
   const router = useRouter();
@@ -99,169 +99,156 @@ function ConsignVehicle() {
   }
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <form className="tfcl-dashboard add-list" onSubmit={handleSubmit}>
-                  <h1 className="admin-title mb-3">Consign a vehicle to auction</h1>
-                  <p className="text-color-2 mb-3">
-                    Describe your vehicle and choose an upcoming sale still accepting
-                    consignments. It enters the catalog in a &quot;cataloged&quot; state, and goes
-                    live once the VAT and V5C details below are in, an inspector has published a
-                    condition report, and the auction team publishes it.
-                  </p>
+    <DashboardPage
+      title="Consign a vehicle to auction"
+      description={<>Describe your vehicle and choose an upcoming sale still accepting consignments. It enters the catalogue as &quot;cataloged&quot;, and goes live once the VAT and V5C details below are in, an inspector has published a condition report, and the auction team publishes it.</>}
+    >
+      <form onSubmit={handleSubmit} className="ha-form-flow">
+        <Card title="Photos and video" className="mb-4">
+          <div className="ha-card-body hd-template-section">
+            <UploadPhotoSection onPhotosChange={handlePhotosChange} />
+            <UploadVideoSpinSection onVideoChange={setVideo} onSpinFramesChange={setSpinFrames} />
+          </div>
+        </Card>
 
-                  <UploadPhotoSection onPhotosChange={handlePhotosChange} />
-                  <UploadVideoSpinSection onVideoChange={setVideo} onSpinFramesChange={setSpinFrames} />
-
-                  <div className="tfcl-add-listing car-details">
-                    <div className="form-group-4">
-                      <div className="form-group">
+        <Card title="Vehicle and sale" description="Fields marked * are required." className="mb-4">
+<div className="ha-card-body">
+                    <div className="ha-form-grid">
+                      <div className="ha-field">
                         <label htmlFor="consign_sale">Sale *</label>
                         {salesLoading ? (
-                          <p>Loading sales...</p>
+                          <p className="ha-sub" role="status">Loading sales…</p>
                         ) : openSales.length === 0 ? (
-                          <p className="tfcl-empty-data">No sales are currently accepting consignments.</p>
+                          <Notice tone="warning">No sales are currently accepting consignments.</Notice>
                         ) : (
-                          <NiceSelect
+                          <Select
                             options={[
                               { label: "Select a sale", value: "" },
                               ...openSales.map((sale) => ({ label: sale.name, value: sale.id })),
                             ]}
                             defaultValue=""
-                            className="form-control"
                             onChange={(value) => setSaleId(value === "" ? "" : Number(value))}
                           />
                         )}
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="consign_make">Make *</label>
                         <input
                           id="consign_make"
                           type="text"
-                          className="form-control"
+                          className="ha-input"
                           placeholder="e.g. BMW"
                           value={make}
                           onChange={(e) => setMake(e.target.value)}
                           required
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="consign_model">Model *</label>
                         <input
                           id="consign_model"
                           type="text"
-                          className="form-control"
+                          className="ha-input"
                           placeholder="e.g. X5"
                           value={model}
                           onChange={(e) => setModel(e.target.value)}
                           required
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="consign_derivative">Trim / derivative</label>
                         <input
                           id="consign_derivative"
                           type="text"
-                          className="form-control"
+                          className="ha-input"
                           placeholder="e.g. M Sport"
                           value={derivative}
                           onChange={(e) => setDerivative(e.target.value)}
                         />
                       </div>
                     </div>
-                    <div className="form-group-4">
-                      <div className="form-group">
+                    <div className="ha-form-grid">
+                      <div className="ha-field">
                         <label htmlFor="consign_body">Body *</label>
-                        <NiceSelect
+                        <Select id="consign_body"
                           options={ADD_LISTING_BODY_TYPE_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setBodyType(String(value))}
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="consign_year">Year *</label>
-                        <NiceSelect
+                        <Select id="consign_year"
                           options={ADD_LISTING_YEAR_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setYear(String(value))}
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="consign_fuel">Fuel type *</label>
-                        <NiceSelect
+                        <Select id="consign_fuel"
                           options={ADD_LISTING_FUEL_TYPE_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setFuelType(String(value))}
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="consign_transmission">Transmission *</label>
-                        <NiceSelect
+                        <Select id="consign_transmission"
                           options={ADD_LISTING_TRANSMISSION_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setTransmission(String(value))}
                         />
                       </div>
                     </div>
-                    <div className="form-group-4">
-                      <div className="form-group">
+                    <div className="ha-form-grid">
+                      <div className="ha-field">
                         <label htmlFor="consign_colour">Colour</label>
                         <input
                           id="consign_colour"
                           type="text"
-                          className="form-control"
+                          className="ha-input"
                           value={colour}
                           onChange={(e) => setColour(e.target.value)}
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="consign_mileage">Mileage *</label>
                         <input
                           id="consign_mileage"
                           type="number"
                           min="0"
-                          className="form-control"
+                          className="ha-input"
                           value={mileage}
                           onChange={(e) => setMileage(e.target.value)}
                           required
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="consign_v5c">V5C (logbook) *</label>
-                        <NiceSelect
+                        <Select id="consign_v5c"
                           options={ADD_LISTING_V5C_STATUS_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setV5cStatus(String(value))}
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="ha-field">
                         <label htmlFor="consign_vat">VAT status *</label>
-                        <NiceSelect
+                        <Select id="consign_vat"
                           options={VAT_STATUS_OPTIONS}
                           defaultValue=""
-                          className="form-control"
                           onChange={(value) => setVatStatus(String(value))}
                         />
                       </div>
                       {vatStatus === "margin_scheme" && (
-                        <div className="form-group">
+                        <div className="ha-field">
                           <label htmlFor="consign_acquisition">Acquisition cost (£) *</label>
                           <input
                             id="consign_acquisition"
                             type="number"
                             min="0"
                             step="0.01"
-                            className="form-control"
+                            className="ha-input"
                             value={acquisitionCost}
                             onChange={(e) => setAcquisitionCost(e.target.value)}
                             required
@@ -270,25 +257,23 @@ function ConsignVehicle() {
                       )}
                     </div>
                   </div>
+        </Card>
 
-                  {/* Next to the button, not at the top of this long form: after clicking Consign the
-                      reason for a refusal has to be on screen, not scrolled out of sight. */}
-                  {(error || formError) && (
-                    <div ref={errorRef} className="alert alert-danger mb-3" role="alert">
-                      {error ?? formError}
-                    </div>
-                  )}
-
-                  <button type="submit" className="sc-button" disabled={submitting}>
-                    <span>{submitting ? (stage ?? "Consigning...") : "Consign vehicle"}</span>
-                  </button>
-                </form>
-              </main>
-            </div>
+        {/* Next to the button, not at the top of this long form: after clicking Consign the
+            reason for a refusal has to be on screen, not scrolled out of sight. */}
+        {(error || formError) && (
+          <div ref={errorRef}>
+            <Notice tone="danger">{error ?? formError}</Notice>
           </div>
+        )}
+
+        <div className="ha-form-footer">
+          <button type="submit" className="ha-btn is-primary" disabled={submitting} aria-busy={submitting}>
+            {submitting ? (stage ?? "Consigning…") : "Consign vehicle"}
+          </button>
         </div>
-      </div>
-    </div>
+      </form>
+    </DashboardPage>
   );
 }
 

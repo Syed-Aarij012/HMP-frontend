@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import SuperAdminShell from "./SuperAdminShell";
 import JustifiedAction from "./JustifiedAction";
-import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, useDebouncedValue, type Tone } from "@/components/admin/ui";
+import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, useDebouncedValue, type Tone, FilterChips } from "@/components/admin/ui";
 import { useAdminResource } from "@/hooks/useSuperAdmin";
 import { formatWhen, pageInfo, type AdminListing, type Paginated } from "@/lib/superAdmin";
 
@@ -42,19 +42,27 @@ export default function Listings() {
             <input type="checkbox" checked={takenDown} onChange={(e) => { setTakenDown(e.target.checked); setPage(1); }} /> Taken down only
           </label>
         </div>
+        <FilterChips
+          filters={[
+            q.trim() !== "" && { key: "q", label: `“${q.trim()}”`, onRemove: () => { setQ(""); setPage(1); } },
+            status !== "" && { key: "status", label: `Status: ${status.replace(/_/g, " ")}`, onRemove: () => { setStatus(""); setPage(1); } },
+            takenDown && { key: "taken", label: "Taken down only", onRemove: () => { setTakenDown(false); setPage(1); } },
+          ]}
+          onClearAll={() => { setQ(""); setStatus(""); setTakenDown(false); setPage(1); }}
+        />
         {loading && !data && <LoadingRows />}
         {error && <ErrorNotice message={error} />}
         {data && data.data.length === 0 && <EmptyState icon="icon-carus-car" title="No listings match" />}
         {data && data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Listings</caption>
               <thead>
                 <tr>
-                  <th>Listing</th>
-                  <th>Seller</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th className="ha-right">Actions</th>
+                  <th scope="col">Listing</th>
+                  <th scope="col">Seller</th>
+                  <th scope="col">Price</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="ha-right">Actions</th>
                 </tr>
               </thead>
               <tbody>

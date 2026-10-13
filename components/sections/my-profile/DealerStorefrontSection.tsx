@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import ProfileImageUpload from "@/components/sections/my-profile/ProfileImageUpload";
 import { useDealerStorefrontProfile } from "@/hooks/useDealerStorefrontProfile";
 import { describeApiError } from "@/lib/api-client";
+import { Card, LoadingRows, Notice } from "@/components/ui/kit";
 
 const DEFAULT_LOGO = "/assets/images/section/dealer-list1.webp";
 
@@ -50,10 +51,9 @@ function DealerStorefrontSection() {
 
   if (loading) {
     return (
-      <div className="profile-group mb-3">
-        <h3 className="form-title">Dealer Storefront</h3>
-        <p>Loading your storefront...</p>
-      </div>
+      <Card title="Dealer storefront" className="mb-4">
+        <LoadingRows rows={3} label="Loading your storefront" />
+      </Card>
     );
   }
 
@@ -62,11 +62,8 @@ function DealerStorefrontSection() {
   }
 
   return (
-    <div className="profile-group mb-3">
-      <h3 className="form-title">Dealer Storefront</h3>
-      <p className="fs-14 mb-3">
-        This is what buyers see on your public dealer page.
-      </p>
+    <Card title="Dealer storefront" description="This is what buyers see on your public dealer page." className="mb-4">
+      <div className="ha-card-body">
       <ProfileImageUpload
         currentImageSrc={storefront.logo_url}
         onUpload={uploadLogo}
@@ -76,60 +73,59 @@ function DealerStorefrontSection() {
         defaultImageSrc={DEFAULT_LOGO}
       />
       <form onSubmit={handleSubmit} className="mt-3">
-        <div className="grid-2 gap-30">
-          <div className="form-group">
+        <div className="ha-form-grid">
+          <div className="ha-field">
             <label htmlFor="storefront_name">Storefront name</label>
             <input
               id="storefront_name"
               type="text"
-              className="form-control"
+              className="ha-input"
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
               required
             />
           </div>
-          <div className="form-group">
+          <div className="ha-field">
             <label htmlFor="storefront_phone">Public contact phone</label>
             <input
               id="storefront_phone"
               type="tel"
-              className="form-control"
+              className="ha-input"
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
             />
           </div>
         </div>
-        <div className="form-group">
+        <div className="ha-field">
           <label htmlFor="storefront_description">Description</label>
           <textarea
             id="storefront_description"
-            className="form-control"
+            className="ha-textarea"
             rows={4}
             value={description}
             onChange={(event) => setDescription(event.target.value)}
           />
         </div>
-        <div className="form-group">
+        <div className="ha-field">
           <label htmlFor="storefront_disclosures">Disclosures</label>
           <textarea
             id="storefront_disclosures"
-            className="form-control"
+            className="ha-textarea"
             rows={2}
             value={disclosures}
             onChange={(event) => setDisclosures(event.target.value)}
           />
         </div>
 
-        {error && <p className="text-danger mb-3">{error}</p>}
-        {success && <p className="text-success mb-3">Storefront updated.</p>}
+        {error && <Notice tone="danger">{error}</Notice>}
+        {success && <Notice tone="success">Storefront updated.</Notice>}
 
-        <div className="group-button-submit left">
-          <button className="pre-btn" type="submit" disabled={submitting}>
-            {submitting ? "Saving..." : "Save & Update"}
-          </button>
-        </div>
+        <button className="ha-btn is-primary" type="submit" disabled={submitting} aria-busy={submitting}>
+          {submitting ? "Saving…" : "Save storefront"}
+        </button>
       </form>
-    </div>
+      </div>
+    </Card>
   );
 }
 

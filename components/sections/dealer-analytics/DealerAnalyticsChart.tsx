@@ -56,8 +56,8 @@ export default function DealerAnalyticsChart({ series }: { series: Series }) {
   // activity) rounds two different fractions to the same tick — [0, 1, 1] without this —
   // which would draw an overlapping gridline/label pair and collide as a React key.
   const yTicks = [...new Set([0, 0.5, 1].map((fraction) => Math.round(maxValue * fraction)))];
-  const firstLabel = new Date(series[0].date).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  const lastLabel = new Date(series[series.length - 1].date).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const firstLabel = new Date(series[0].date).toLocaleDateString("en-GB", { month: "short", day: "numeric" });
+  const lastLabel = new Date(series[series.length - 1].date).toLocaleDateString("en-GB", { month: "short", day: "numeric" });
 
   return (
     <div>
@@ -66,17 +66,17 @@ export default function DealerAnalyticsChart({ series }: { series: Series }) {
 
         {yTicks.map((tick) => (
           <g key={tick}>
-            <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={y(tick)} y2={y(tick)} stroke="#d8d7d2" strokeWidth={1} />
-            <text x={PAD_LEFT - 8} y={y(tick)} textAnchor="end" dominantBaseline="middle" fontSize={11} fill="#78776f">
+            <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={y(tick)} y2={y(tick)} style={{ stroke: "var(--hmp-border)" }} strokeWidth={1} />
+            <text x={PAD_LEFT - 8} y={y(tick)} textAnchor="end" dominantBaseline="middle" fontSize={11} style={{ fill: "var(--hmp-text-3)" }}>
               {tick.toLocaleString()}
             </text>
           </g>
         ))}
 
-        <text x={PAD_LEFT} y={HEIGHT - 4} fontSize={11} fill="#78776f">
+        <text x={PAD_LEFT} y={HEIGHT - 4} fontSize={11} style={{ fill: "var(--hmp-text-3)" }}>
           {firstLabel}
         </text>
-        <text x={WIDTH - PAD_RIGHT} y={HEIGHT - 4} textAnchor="end" fontSize={11} fill="#78776f">
+        <text x={WIDTH - PAD_RIGHT} y={HEIGHT - 4} textAnchor="end" fontSize={11} style={{ fill: "var(--hmp-text-3)" }}>
           {lastLabel}
         </text>
 
@@ -87,9 +87,9 @@ export default function DealerAnalyticsChart({ series }: { series: Series }) {
           return (
             <g key={line.key}>
               <path d={path} fill="none" stroke={line.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-              <circle cx={end.x} cy={end.y} r={4} fill={line.color} stroke="#fcfcfb" strokeWidth={2} />
+              <circle cx={end.x} cy={end.y} r={4} fill={line.color} style={{ stroke: "var(--hmp-surface)" }} strokeWidth={2} />
               {/* Direct end-label — required "relief" for the low-contrast series, and consistent across all three per the skill's labeling rule. */}
-              <text x={end.x + 8} y={end.y} dominantBaseline="middle" fontSize={11} fill="#0b0b0b" fontWeight={600}>
+              <text x={end.x + 8} y={end.y} dominantBaseline="middle" fontSize={11} style={{ fill: "var(--hmp-text)" }} fontWeight={600}>
                 {end.value.toLocaleString()}
               </text>
             </g>
@@ -98,14 +98,14 @@ export default function DealerAnalyticsChart({ series }: { series: Series }) {
       </svg>
 
       {/* Legend — always present for 2+ series; text stays in text tokens, identity carried by the swatch. */}
-      <div className="flex gap-20 mt-2" style={{ flexWrap: "wrap" }}>
+      <ul className="ha-legend" aria-label="Legend">
         {lines.map((line) => (
-          <span key={line.key} className="flex gap-10" style={{ alignItems: "center" }}>
-            <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: line.color }} />
-            <span className="text-color-2">{line.label}</span>
-          </span>
+          <li key={line.key}>
+            <span className="ha-legend-swatch" style={{ background: line.color }} aria-hidden="true" />
+            {line.label}
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

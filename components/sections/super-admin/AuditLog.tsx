@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import SuperAdminShell from "./SuperAdminShell";
-import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, Tabs, useDebouncedValue, type Tone } from "@/components/admin/ui";
+import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, Tabs, useDebouncedValue, type Tone, FilterChips } from "@/components/admin/ui";
 import { useAdminResource } from "@/hooks/useSuperAdmin";
 import { formatWhen, pageInfo, type AuditLogRow, type Paginated } from "@/lib/superAdmin";
 
@@ -30,20 +30,24 @@ export default function AuditLog() {
           <SearchInput label="Action prefix" placeholder="Action starts with… e.g. super_admin." value={action} onChange={(v) => { setAction(v); setPage(1); }} />
           <Tabs label="Decision" value={decision} options={DECISIONS} onChange={(next) => { setDecision(next); setPage(1); }} />
         </div>
+        <FilterChips
+          filters={[action.trim() !== "" && { key: "action", label: `Action: ${action.trim()}…`, onRemove: () => { setAction(""); setPage(1); } }]}
+          onClearAll={() => { setAction(""); setPage(1); }}
+        />
         {loading && !data && <LoadingRows />}
         {error && <ErrorNotice message={error} />}
         {data && data.data.length === 0 && <EmptyState icon="icon-carus-listings" title="No entries" />}
         {data && data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Audit log entries</caption>
               <thead>
                 <tr>
-                  <th>When</th>
-                  <th>Actor</th>
-                  <th>Action</th>
-                  <th>Resource</th>
-                  <th>Decision</th>
-                  <th />
+                  <th scope="col">When</th>
+                  <th scope="col">Actor</th>
+                  <th scope="col">Action</th>
+                  <th scope="col">Resource</th>
+                  <th scope="col">Decision</th>
+                  <th scope="col" />
                 </tr>
               </thead>
               <tbody>

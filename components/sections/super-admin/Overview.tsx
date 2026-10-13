@@ -58,7 +58,7 @@ export default function Overview() {
         )}
         {forMe.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Recent activity</caption>
               <tbody>
                 {forMe.map((request) => (
                   <tr key={request.id}>

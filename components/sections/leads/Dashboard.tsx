@@ -2,16 +2,33 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { NEXT_STATUSES, useLeads, type Lead, type LeadStatus } from "@/hooks/useLeads";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import {
+  Badge,
+  Card,
+  DataTable,
+  DataToolbar,
+  EmptyState,
+  ErrorNotice,
+  LoadingTable,
+  NoMatches,
+  Notice,
+  Pager,
+  StatusBadge,
+  Tabs,
+  useListControls,
+  type Tone,
+} from "@/components/ui/kit";
 
 const SOURCE_LABELS: Record<string, string> = { offer: "Offer", message: "Message", test_drive: "Test drive" };
-const STATUS_CLASS: Record<LeadStatus, string> = {
-  new: "bg-primary",
-  contacted: "bg-info text-dark",
-  converted: "bg-success",
-  lost: "bg-secondary",
+const STATUS_TONE: Record<LeadStatus, Tone> = {
+  new: "primary",
+  contacted: "warning",
+  converted: "success",
+  lost: "neutral",
 };
+const STATUS_TABS = ["new", "contacted", "converted", "lost", "all"] as const;
 const ACTION_LABELS: Record<LeadStatus, string> = {
   new: "New",
   contacted: "Mark contacted",
@@ -28,9 +45,9 @@ function OfferCell({ offer }: { offer: Lead["offer"] }) {
 
   return (
     <>
-      {pounds(offer.amount)} <span className="text-color-2 text-capitalize">({offer.status})</span>
+      <span className="ha-num">{pounds(offer.amount)}</span> <StatusBadge status={offer.status} />
       {offer.part_exchange_appraisal && (
-        <div className="fs-13 text-color-2">
+        <div className="ha-sub">
           + part-exchange {range ? `${pounds(range.low)}–${pounds(range.high)}` : "(to be appraised)"} at{" "}
           {offer.part_exchange_appraisal.mileage.toLocaleString("en-GB")} mi
         </div>
@@ -49,141 +66,129 @@ export default function Dashboard() {
   const [page, setPage] = useState(1);
   const { leads, lastPage, total, loading, error, actionError, busyId, updateStatus, isDealer, isOrgAdmin } = useLeads(status, page);
 
+  const controls = useListControls<Lead>({
+    items: leads,
+    search: (lead) => [lead.listing.title, lead.buyer?.name, lead.routed_to?.name],
+    filters: [{ key: "source", label: "Source", get: (lead) => lead.source, format: (value) => SOURCE_LABELS[value] ?? value }],
+    sorts: [
+      { value: "newest", label: "Newest first", compare: (a, b) => b.created_at.localeCompare(a.created_at) },
+      { value: "oldest", label: "Oldest first", compare: (a, b) => a.created_at.localeCompare(b.created_at) },
+    ],
+  });
+
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-1">Leads</h1>
-                  {isDealer && (
-                    <p className="text-color-2 mb-3">
-                      {isOrgAdmin ? "Every lead across your organization." : "Leads routed to you."}
-                    </p>
-                  )}
+    <DashboardPage
+      title="Leads"
+      description={isDealer ? (isOrgAdmin ? "Every buyer enquiry across your organisation — offers, messages and test drives." : "Buyer enquiries routed to you — offers, messages and test drives.") : undefined}
+    >
+      {!isDealer && (
+        <Card>
+          <EmptyState icon="icon-carus-chattext" title="Dealer accounts only" text="The lead inbox is for dealer accounts only." />
+        </Card>
+      )}
 
-                  {!isDealer && <p className="tfcl-empty-data">The lead inbox is for dealer accounts only.</p>}
-
-                  {isDealer && (
-                    <>
-                      <div className="flex gap-10 align-center mb-3" style={{ flexWrap: "wrap" }}>
-                        <label htmlFor="lead-status" className="mb-0">
-                          Show
-                        </label>
-                        <select
-                          id="lead-status"
-                          className="form-control"
-                          style={{ maxWidth: 200 }}
-                          value={status}
-                          onChange={(e) => {
-                            setStatus(e.target.value as LeadStatus | "all");
-                            setPage(1);
-                          }}
-                        >
-                          <option value="new">New</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="converted">Converted</option>
-                          <option value="lost">Lost</option>
-                          <option value="all">All</option>
-                        </select>
-                        <span className="text-color-2">{total} lead(s)</span>
-                      </div>
-
-                      {loading && <p>Loading leads...</p>}
-                      {error && <div className="alert alert-danger">{error}</div>}
-                      {actionError && <div className="alert alert-danger">{actionError}</div>}
-                      {!loading && !error && leads.length === 0 && <p className="tfcl-empty-data">No leads here.</p>}
-
-                      {leads.length > 0 && (
-                        <div className="table-responsive">
-                          <table className="table">
-                            <thead>
-                              <tr>
-                                <th>Received</th>
-                                <th>Vehicle</th>
-                                <th>Buyer</th>
-                                <th>Source</th>
-                                <th>Offer</th>
-                                {isOrgAdmin && <th>Assigned to</th>}
-                                <th>Status</th>
-                                <th />
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {leads.map((lead) => (
-                                <tr key={lead.id}>
-                                  <td>{when(lead.created_at)}</td>
-                                  <td>
-                                    <Link href={`/listing-detail-v1/${lead.listing.id}`}>{lead.listing.title ?? "Listing"}</Link>
-                                    <div className="fs-13 text-color-2">
-                                      {pounds(lead.listing.price)} · <span className="text-capitalize">{lead.listing.status}</span>
-                                    </div>
-                                  </td>
-                                  <td>{lead.buyer?.name ?? "-"}</td>
-                                  <td>{SOURCE_LABELS[lead.source ?? ""] ?? lead.source ?? "-"}</td>
-                                  <td>
-                                    <OfferCell offer={lead.offer} />
-                                  </td>
-                                  {isOrgAdmin && <td>{lead.routed_to?.name ?? <span className="text-color-2">Unassigned</span>}</td>}
-                                  <td>
-                                    <span className={`badge ${STATUS_CLASS[lead.status]} text-capitalize`}>{lead.status}</span>
-                                  </td>
-                                  <td>
-                                    <div className="flex gap-8" style={{ flexWrap: "wrap" }}>
-                                      {lead.conversation_id && (
-                                        <Link href={`/message?conversation=${lead.conversation_id}`} className="sc-button">
-                                          <span>Message</span>
-                                        </Link>
-                                      )}
-                                      {lead.offer && (
-                                        <Link href="/my-offers" className="sc-button">
-                                          <span>Offer</span>
-                                        </Link>
-                                      )}
-                                      {NEXT_STATUSES[lead.status].map((next) => (
-                                        <button
-                                          key={next}
-                                          type="button"
-                                          className="sc-button"
-                                          disabled={busyId === lead.id}
-                                          onClick={() => updateStatus(lead.id, next)}
-                                        >
-                                          <span>{lead.status === "lost" && next === "contacted" ? "Reopen" : ACTION_LABELS[next]}</span>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-
-                      {lastPage > 1 && (
-                        <div className="flex gap-10 align-center">
-                          <button type="button" className="sc-button" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                            <span>Previous</span>
-                          </button>
-                          <span>
-                            Page {page} of {lastPage}
-                          </span>
-                          <button type="button" className="sc-button" disabled={page >= lastPage} onClick={() => setPage(page + 1)}>
-                            <span>Next</span>
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </main>
-            </div>
+      {isDealer && (
+        <>
+          {actionError && <Notice tone="danger">{actionError}</Notice>}
+          <div className="mb-3">
+            <Tabs
+              label="Lead status"
+              value={status}
+              options={STATUS_TABS}
+              onChange={(value) => {
+                setStatus(value);
+                setPage(1);
+              }}
+            />
           </div>
-        </div>
-      </div>
-    </div>
+
+          <Card>
+            {loading && <LoadingTable label="Loading leads" columns={6} />}
+            {error && <ErrorNotice message={error} />}
+            {!loading && !error && leads.length === 0 && (
+              <EmptyState icon="icon-carus-chattext" title="No leads here" text={status === "all" ? "Buyer enquiries about your stock will appear here." : `No ${status} leads right now.`} />
+            )}
+
+            {leads.length > 0 && (
+              <>
+                <DataToolbar controls={controls} searchPlaceholder="Search vehicle, buyer or assignee" noun="lead" />
+                {controls.results.length === 0 ? (
+                  <NoMatches onClear={controls.clearAll} />
+                ) : (
+                  <DataTable caption="Leads">
+                    <thead>
+                      <tr>
+                        <th scope="col">Received</th>
+                        <th scope="col">Vehicle</th>
+                        <th scope="col">Buyer</th>
+                        <th scope="col">Source</th>
+                        <th scope="col">Offer</th>
+                        {isOrgAdmin && <th scope="col">Assigned to</th>}
+                        <th scope="col">Status</th>
+                        <th scope="col">
+                          <span className="ha-visually-hidden">Actions</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {controls.results.map((lead) => (
+                        <tr key={lead.id}>
+                          <td data-label="Received" className="ha-num" style={{ whiteSpace: "nowrap" }}>
+                            {when(lead.created_at)}
+                          </td>
+                          <td data-label="Vehicle">
+                            <Link href={`/listing-detail-v1/${lead.listing.id}`} className="ha-primary-text">
+                              {lead.listing.title ?? "Listing"}
+                            </Link>
+                            <div className="ha-sub">
+                              {pounds(lead.listing.price)} · <span className="text-capitalize">{lead.listing.status.replace(/_/g, " ")}</span>
+                            </div>
+                          </td>
+                          <td data-label="Buyer">{lead.buyer?.name ?? "—"}</td>
+                          <td data-label="Source">{SOURCE_LABELS[lead.source ?? ""] ?? lead.source ?? "—"}</td>
+                          <td data-label="Offer">
+                            <OfferCell offer={lead.offer} />
+                          </td>
+                          {isOrgAdmin && <td data-label="Assigned to">{lead.routed_to?.name ?? <span className="ha-muted">Unassigned</span>}</td>}
+                          <td data-label="Status">
+                            <Badge tone={STATUS_TONE[lead.status]}>{lead.status}</Badge>
+                          </td>
+                          <td data-label="">
+                            <div className="ha-row-actions">
+                              {NEXT_STATUSES[lead.status].map((next, index) => (
+                                <button
+                                  key={next}
+                                  type="button"
+                                  className={`ha-btn is-sm${index === 0 ? " is-primary" : ""}`}
+                                  disabled={busyId === lead.id}
+                                  onClick={() => updateStatus(lead.id, next)}
+                                >
+                                  {lead.status === "lost" && next === "contacted" ? "Reopen" : ACTION_LABELS[next]}
+                                </button>
+                              ))}
+                              {lead.conversation_id && (
+                                <Link href={`/message?conversation=${lead.conversation_id}`} className="ha-btn is-sm is-ghost">
+                                  Message
+                                </Link>
+                              )}
+                              {lead.offer && (
+                                <Link href="/my-offers" className="ha-btn is-sm is-ghost">
+                                  Offer
+                                </Link>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </DataTable>
+                )}
+              </>
+            )}
+            <Pager page={page} lastPage={lastPage} total={total} onChange={setPage} />
+          </Card>
+        </>
+      )}
+    </DashboardPage>
   );
 }

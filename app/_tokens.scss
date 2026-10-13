@@ -1,0 +1,101 @@
+// HMP design tokens — the single source of colour, type, spacing, radius, elevation and motion
+// for every dashboard (the user dashboard under `.hmp-dash` and the Admin Panel under
+// `.hmp-admin`). Both roots carry `.hmp-ui`; nothing here reaches the public marketplace.
+//
+// Contrast: every text/background pair below meets WCAG 2.2 AA (4.5:1 body text, 3:1 large
+// text and UI boundaries). Status colours are always paired with a text label or icon in the
+// components — colour is never the only signal.
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Colour: neutral base
+  --hmp-bg: #f5f6f8; // page canvas
+  --hmp-surface: #ffffff; // cards, tables, inputs
+  --hmp-surface-2: #f8f9fb; // subtle fill: table heads, disabled inputs
+  --hmp-surface-3: #eff1f5; // hover / pressed fill
+  --hmp-border: #e3e6eb; // dividers, card outlines
+  --hmp-border-strong: #c9ced8; // button outlines, hover edges (decorative — buttons carry text)
+  --hmp-input-border: #878f9e; // form-control boundaries: 3:1 on every surface (WCAG 1.4.11)
+  --hmp-text: #111827; // primary text — 17:1 on surface
+  --hmp-text-2: #4b5563; // secondary text — 7.5:1 on surface
+  --hmp-text-3: #616a78; // tertiary / captions — 5.5:1 on surface, 5.1:1 on bg
+
+  // ---------------------------------------------------------------- Colour: accent (actions, focus, selection)
+  --hmp-primary: #3650e0; // 6.2:1 on surface
+  --hmp-primary-hover: #2a41c4;
+  --hmp-primary-soft: #eef1fd;
+  --hmp-primary-on-soft: #2638a8; // text on primary-soft — 8.4:1
+  --hmp-on-primary: #ffffff;
+
+  // ---------------------------------------------------------------- Colour: status (meaning only)
+  --hmp-success: #0f7a3d;
+  --hmp-success-soft: #e7f5ec;
+  --hmp-warning: #8a5300;
+  --hmp-warning-soft: #fdf3df;
+  --hmp-danger: #b91c1c;
+  --hmp-danger-hover: #991b1b;
+  --hmp-danger-soft: #fdecec;
+  --hmp-info: var(--hmp-primary-on-soft);
+  --hmp-info-soft: var(--hmp-primary-soft);
+
+  // ---------------------------------------------------------------- Typography
+  --hmp-font: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --hmp-fs-xs: 12px; // captions, table heads, badges
+  --hmp-fs-sm: 13px; // secondary text, buttons
+  --hmp-fs-base: 14px; // body, table cells
+  --hmp-fs-md: 16px; // card titles
+  --hmp-fs-lg: 20px; // section titles
+  --hmp-fs-xl: 24px; // page titles
+  --hmp-fs-2xl: 32px; // headline numbers (stat cards)
+  --hmp-lh-tight: 1.25;
+  --hmp-lh: 1.5;
+  --hmp-fw-regular: 400;
+  --hmp-fw-medium: 500;
+  --hmp-fw-semibold: 600;
+  --hmp-fw-bold: 700;
+  --hmp-measure: 68ch; // comfortable line length for running text
+
+  // ---------------------------------------------------------------- Spacing (4-pt grid)
+  --hmp-space-1: 4px;
+  --hmp-space-2: 8px;
+  --hmp-space-3: 12px;
+  --hmp-space-4: 16px;
+  --hmp-space-5: 20px;
+  --hmp-space-6: 24px;
+  --hmp-space-8: 32px;
+  --hmp-space-10: 40px;
+  --hmp-space-12: 48px;
+
+  // ---------------------------------------------------------------- Shape & elevation
+  --hmp-radius-sm: 6px;
+  --hmp-radius: 8px;
+  --hmp-radius-lg: 12px;
+  --hmp-radius-pill: 999px;
+  --hmp-elev-1: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --hmp-elev-2: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --hmp-elev-3: 0 16px 40px rgba(16, 24, 40, 0.18);
+
+  // ---------------------------------------------------------------- Interaction
+  --hmp-focus-ring: 0 0 0 3px rgba(54, 80, 224, 0.35);
+  --hmp-control-h: 38px;
+  --hmp-control-h-sm: 30px;
+  --hmp-dur-fast: 120ms;
+  --hmp-dur: 180ms;
+  --hmp-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  // ---------------------------------------------------------------- Layout
+  --hmp-sidebar-w: 256px;
+  --hmp-sidebar-w-collapsed: 72px;
+  --hmp-topbar-h: 60px;
+  --hmp-content-max: 1320px;
+}
+
+// Motion is decoration-free already; for people who ask for less, remove it entirely.
+@media (prefers-reduced-motion: reduce) {
+  .hmp-ui *,
+  .hmp-ui *::before,
+  .hmp-ui *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

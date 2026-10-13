@@ -3,12 +3,27 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { can, useAuth } from "@/contexts/AuthContext";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
-import NiceSelect, { type NiceSelectOption } from "@/components/common/NiceSelect";
+import { type NiceSelectOption } from "@/components/common/NiceSelect";
 import { DEFAULT_AUCTION_LOT_FILTERS, useAuctionLots, type AuctionLotFilters } from "@/hooks/useAuctionLots";
 import { describeBlocker } from "@/lib/auctionPublishBlockers";
 import type { ApiAuctionFacets } from "@/lib/mapApiAuction";
 import type { AuctionLot } from "@/types/auction";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import {
+  Badge,
+  Card,
+  DataTable,
+  DataToolbar,
+  EmptyState,
+  ErrorNotice,
+  LoadingTable,
+  NoMatches,
+  Notice,
+  StatusBadge,
+  Tabs,
+  formatMoney,
+  useListControls,
+} from "@/components/ui/kit";
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -67,44 +82,53 @@ function AuctionFacetFilters({
     })),
   ], [facets?.auction_date]);
 
+  const groups: Array<{ key: keyof AuctionLotFilters; label: string; options: NiceSelectOption[] }> = [
+    { key: "make", label: "Make", options: makeOptions },
+    { key: "model", label: "Model", options: modelOptions },
+    { key: "bodyType", label: "Body type", options: bodyTypeOptions },
+    { key: "fuelType", label: "Fuel type", options: fuelTypeOptions },
+    { key: "transmission", label: "Transmission", options: transmissionOptions },
+    { key: "colour", label: "Colour", options: colourOptions },
+    { key: "doors", label: "Doors", options: doorsOptions },
+    { key: "seats", label: "Seats", options: seatsOptions },
+    { key: "conditionGrade", label: "Condition grade", options: conditionGradeOptions },
+    { key: "taxBand", label: "Tax band", options: taxBandOptions },
+    { key: "saleId", label: "Sale date", options: auctionDateOptions },
+  ];
+  const active = groups.filter((group) => filters[group.key]);
+
   return (
-    <div className="mb-3">
-      <div className="row g-2">
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={makeOptions} value={filters.make} onChange={(v) => set("make", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={modelOptions} value={filters.model} onChange={(v) => set("model", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={bodyTypeOptions} value={filters.bodyType} onChange={(v) => set("bodyType", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={fuelTypeOptions} value={filters.fuelType} onChange={(v) => set("fuelType", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={transmissionOptions} value={filters.transmission} onChange={(v) => set("transmission", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={colourOptions} value={filters.colour} onChange={(v) => set("colour", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={doorsOptions} value={filters.doors} onChange={(v) => set("doors", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={seatsOptions} value={filters.seats} onChange={(v) => set("seats", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={conditionGradeOptions} value={filters.conditionGrade} onChange={(v) => set("conditionGrade", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={taxBandOptions} value={filters.taxBand} onChange={(v) => set("taxBand", String(v))} />
-        </div>
-        <div className="col-6 col-md-3 col-lg-2">
-          <NiceSelect options={auctionDateOptions} value={filters.saleId} onChange={(v) => set("saleId", String(v))} />
-        </div>
+    <>
+      <div className="ha-filter-grid">
+        {groups.map((group) => (
+          <label key={group.key} className="ha-field mb-0">
+            <span className="ha-label">{group.label}</span>
+            <select className="ha-select" value={String(filters[group.key])} onChange={(event) => set(group.key, event.target.value)}>
+              {group.options.map((option) => (
+                <option key={String(option.value)} value={String(option.value)}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
       </div>
-    </div>
+      {active.length > 0 && (
+        <div className="ha-filterbar" aria-label="Active filters">
+          {active.map((group) => (
+            <span key={group.key} className="ha-chip">
+              {group.label}: {group.options.find((option) => String(option.value) === String(filters[group.key]))?.label.replace(/ \(\d+\)$/, "") ?? String(filters[group.key])}
+              <button type="button" onClick={() => set(group.key, "" as AuctionLotFilters[typeof group.key])} aria-label={`Remove ${group.label} filter`}>
+                ×
+              </button>
+            </span>
+          ))}
+          <button type="button" className="ha-link-btn" onClick={() => onChange(DEFAULT_AUCTION_LOT_FILTERS)}>
+            Clear all
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -116,7 +140,7 @@ const STATUS_FILTERS: { label: string; value: string }[] = [
 
 function formatPrice(amount: number | null) {
   if (amount === null) return "No bids yet";
-  return `£${amount.toLocaleString()}`;
+  return formatMoney(amount);
 }
 
 function LotRow({
@@ -138,37 +162,45 @@ function LotRow({
 
   return (
     <tr>
-      <td>
-        <Link href={`/auction/${lot.id}`} className="fw-6">
+      <td data-label="Vehicle">
+        <Link href={`/auction/${lot.id}`} className="ha-primary-text">
           {title}
         </Link>
-        {lot.isHmpAssured && (
-          <span className="ms-2" style={{ color: "#405FF2", fontWeight: 600 }}>
-            HMP Assured
-          </span>
-        )}
+        <div className="ha-chips mt-1">
+          {lot.isHmpAssured && (
+            <Badge tone="primary" plain>
+              HMP Assured
+            </Badge>
+          )}
+          {lot.saleName && <span className="ha-sub">{lot.saleName}</span>}
+        </div>
       </td>
-      <td>{lot.vehicle?.mileage?.toLocaleString() ?? "-"} mi</td>
-      <td className="text-capitalize">{lot.status.replace("_", " ")}</td>
-      <td>{formatPrice(lot.currentPrice)}</td>
-      <td>{lot.saleName ?? "-"}</td>
-      <td>
-        <div className="flex gap-10 align-center" style={{ flexWrap: "wrap" }}>
-          <Link href={`/auction/${lot.id}`} className="sc-button">
-            <span>View lot</span>
-          </Link>
+      <td data-label="Mileage" className="is-num">
+        {lot.vehicle?.mileage != null ? `${lot.vehicle.mileage.toLocaleString("en-GB")} mi` : "—"}
+      </td>
+      <td data-label="Status">
+        <StatusBadge status={lot.status} />
+      </td>
+      <td data-label="Current price" className="is-num">
+        {lot.currentPrice === null ? <span className="ha-sub">{formatPrice(lot.currentPrice)}</span> : formatPrice(lot.currentPrice)}
+      </td>
+      <td data-label="">
+        <div className="ha-row-actions">
           {/* FR-D-003: run-list staff publish a cataloged lot once nothing is blocking it. */}
           {canPublish && lot.status === "cataloged" && lot.publishBlockers !== null && (
             lot.publishBlockers.length === 0 ? (
-              <button type="button" className="sc-button" disabled={publishing} onClick={() => onPublish(lot.id)}>
-                <span>{publishing ? "Publishing..." : "Publish"}</span>
+              <button type="button" className="ha-btn is-sm is-primary" disabled={publishing} aria-busy={publishing} onClick={() => onPublish(lot.id)}>
+                {publishing ? "Publishing…" : "Publish"}
               </button>
             ) : (
-              <span className="fs-13 text-color-2" title="These must be resolved before the lot can be published">
+              <span className="ha-sub" style={{ maxWidth: 220 }} title="These must be resolved before the lot can be published">
                 Not ready: {lot.publishBlockers.map(describeBlocker).join("; ")}
               </span>
             )
           )}
+          <Link href={`/auction/${lot.id}`} className="ha-btn is-sm">
+            View lot
+          </Link>
         </div>
       </td>
     </tr>
@@ -191,77 +223,83 @@ function Dashboard() {
     setPublishingId(null);
   }
 
+  const controls = useListControls<AuctionLot>({
+    items: lots,
+    search: (lot) => [lot.vehicle?.make, lot.vehicle?.model, lot.vehicle?.derivative, lot.saleName],
+    sorts: [
+      { value: "catalogue", label: "Catalogue order", compare: () => 0 },
+      { value: "price-high", label: "Highest price", compare: (a, b) => (b.currentPrice ?? -1) - (a.currentPrice ?? -1) },
+      { value: "price-low", label: "Lowest price", compare: (a, b) => (a.currentPrice ?? Infinity) - (b.currentPrice ?? Infinity) },
+      { value: "mileage", label: "Lowest mileage", compare: (a, b) => (a.vehicle?.mileage ?? Infinity) - (b.vehicle?.mileage ?? Infinity) },
+    ],
+  });
+
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Auction catalog</h1>
-
-                  <div className="mb-3 flex align-center gap-10">
-                    {STATUS_FILTERS.map((filter) => (
-                      <button
-                        key={filter.value}
-                        type="button"
-                        className="sc-button"
-                        style={{
-                          opacity: status === filter.value ? 1 : 0.55,
-                        }}
-                        onClick={() => setStatus(filter.value)}
-                      >
-                        <span>{filter.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <AuctionFacetFilters filters={filters} facets={facets} onChange={setFilters} />
-
-                  {loading && <p>Loading the auction catalog...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
-                  {publishError && <div className="alert alert-danger">{publishError}</div>}
-
-                  {!loading && !error && lots.length === 0 && (
-                    <p className="tfcl-empty-data">No lots match this filter right now.</p>
-                  )}
-
-                  {!loading && !error && lots.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Vehicle</th>
-                            <th>Mileage</th>
-                            <th>Status</th>
-                            <th>Current price</th>
-                            <th>Sale</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {lots.map((lot) => (
-                            <LotRow
-                              key={lot.id}
-                              lot={lot}
-                              canPublish={canPublish}
-                              publishing={publishingId === lot.id}
-                              onPublish={handlePublish}
-                            />
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
+    <DashboardPage title="Auction catalogue" description="Trade stock coming up for sale. Filter by vehicle, condition and sale date.">
+      <div className="mb-3">
+        <Tabs
+          label="Lot status"
+          value={status}
+          options={STATUS_FILTERS.map((filter) => filter.value)}
+          labels={Object.fromEntries(STATUS_FILTERS.map((filter) => [filter.value, filter.label]))}
+          onChange={setStatus}
+        />
       </div>
-    </div>
+
+      <Card className="mb-4" title="Filters">
+        <div className="ha-card-body">
+          <AuctionFacetFilters filters={filters} facets={facets} onChange={setFilters} />
+        </div>
+      </Card>
+
+      {publishError && <Notice tone="danger">{publishError}</Notice>}
+
+      <Card>
+        {loading && <LoadingTable label="Loading the auction catalogue" columns={5} />}
+        {error && <ErrorNotice message={error} />}
+
+        {!loading && !error && lots.length === 0 && (
+          <EmptyState
+            icon="icon-carus-search"
+            title="No lots match"
+            text="No lots match this filter right now."
+            action={
+              <button type="button" className="ha-btn" onClick={() => setFilters(DEFAULT_AUCTION_LOT_FILTERS)}>
+                Clear filters
+              </button>
+            }
+          />
+        )}
+
+        {!loading && !error && lots.length > 0 && (
+          <>
+            <DataToolbar controls={controls} searchPlaceholder="Search make, model or sale" noun="lot" />
+            {controls.results.length === 0 ? (
+              <NoMatches onClear={controls.clearAll} />
+            ) : (
+              <DataTable caption="Auction lots">
+                <thead>
+                  <tr>
+                    <th scope="col">Vehicle</th>
+                    <th scope="col" className="is-num">Mileage</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" className="is-num">Current price</th>
+                    <th scope="col">
+                      <span className="ha-visually-hidden">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {controls.results.map((lot) => (
+                    <LotRow key={lot.id} lot={lot} canPublish={canPublish} publishing={publishingId === lot.id} onPublish={handlePublish} />
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+          </>
+        )}
+      </Card>
+    </DashboardPage>
   );
 }
 

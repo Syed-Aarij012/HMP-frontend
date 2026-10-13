@@ -1,36 +1,39 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Pagination from "@/components/common/Pagination";
+import { useId, useMemo, useState } from "react";
+import Link from "next/link";
 import FavoriteListingCard from "@/components/common/FavoriteListingCard";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
-import NiceSelect from "@/components/common/NiceSelect";
 import { useListingActions } from "@/components/common/ListingActionsContext";
 import { DASHBOARD_SORT_OPTIONS } from "@/data/niceSelectOptions";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Card, EmptyState, NoMatches, Pager, SearchInput } from "@/components/ui/kit";
 
 const FAVORITES_PER_PAGE = 8;
 
 function Dashboard() {
   const { favoriteCars } = useListingActions();
   const [sortBy, setSortBy] = useState<string | number>("new");
+  const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const sortId = useId();
 
   const sortedFavorites = useMemo(() => {
-    const sorted = [...favoriteCars];
+    const needle = query.trim().toLowerCase();
+    const sorted = favoriteCars.filter((car) => !needle || `${car.title}`.toLowerCase().includes(needle));
 
     sorted.sort((a, b) =>
       sortBy === "old" ? a.id - b.id : b.id - a.id,
     );
 
     return sorted;
-  }, [favoriteCars, sortBy]);
+  }, [favoriteCars, sortBy, query]);
 
   const totalPages = Math.max(
     1,
     Math.ceil(sortedFavorites.length / FAVORITES_PER_PAGE),
   );
 
-  const sortKey = String(sortBy);
+  const sortKey = `${sortBy}|${query}`;
   const [prevSortKey, setPrevSortKey] = useState(sortKey);
 
   if (sortKey !== prevSortKey) {
@@ -46,57 +49,61 @@ function Dashboard() {
   }, [sortedFavorites, effectivePage]);
 
   return (
-    <>
-      <div id="themesflat-content">
-        <DashboardToggle />
-        <div className="container">
-          <div className="row">
-            <div className="col-md-12">
-              <div className="content-area">
-                <main id="main" className="main-content">
-                  <div className="tfcl-dashboard">
-                    <h1 className="admin-title mb-3">My favorite</h1>
-                    <div className="tfcl-favorite-listing">
-                      <div className="controller-sorting mb-3">
-                        <span className="result-text fw-7 text-color-2">
-                          <b>{sortedFavorites.length}</b> Car listing
-                        </span>
-                        <div className="sorting-input">
-                          <div className="label">Sort By</div>
-                          <NiceSelect
-                            options={DASHBOARD_SORT_OPTIONS}
-                            value={sortBy}
-                            onChange={setSortBy}
-                            className="form-control"
-                          />
-                        </div>
-                      </div>
-                      <div className="wrap-favorite-listing">
-                        {visibleFavorites.length > 0 ? (
-                          visibleFavorites.map((car) => (
-                            <FavoriteListingCard key={car.id} car={car} />
-                          ))
-                        ) : (
-                          <p>No favorite listings yet.</p>
-                        )}
-                      </div>
-                      {sortedFavorites.length > FAVORITES_PER_PAGE ? (
-                        <Pagination
-                          variant="tfcl"
-                          totalPages={totalPages}
-                          currentPage={effectivePage}
-                          onPageChange={setCurrentPage}
-                        />
-                      ) : null}
-                    </div>
-                  </div>
-                </main>
+    <DashboardPage title="Favourites" description="Cars you've saved to come back to.">
+      {favoriteCars.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon="icon-carus-heartstraight"
+            title="No favourites yet"
+            text="Tap the heart on any car to save it here."
+            action={
+              <Link href="/listing-grid" className="ha-btn is-primary">
+                Browse cars
+              </Link>
+            }
+          />
+        </Card>
+      ) : (
+        <>
+          <Card className="mb-4">
+            <div className="ha-toolbar" style={{ borderBottom: 0 }}>
+              <SearchInput value={query} onChange={setQuery} placeholder="Search favourites" label="Search favourites" />
+              <div className="ha-toolbar-end">
+                <label className="ha-control-label" htmlFor={sortId}>
+                  Sort
+                  <select id={sortId} className="ha-select ha-inline-select" value={String(sortBy)} onChange={(event) => setSortBy(event.target.value)}>
+                    {DASHBOARD_SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.value === "new" ? "Newest first" : option.value === "old" ? "Oldest first" : option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <span className="ha-result-count" aria-live="polite">
+                  {query.trim() ? `${sortedFavorites.length} of ${favoriteCars.length} cars` : `${favoriteCars.length} car${favoriteCars.length === 1 ? "" : "s"}`}
+                </span>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </>
+          </Card>
+          {visibleFavorites.length > 0 ? (
+            <div className="wrap-favorite-listing">
+              {visibleFavorites.map((car) => (
+                <FavoriteListingCard key={car.id} car={car} />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <NoMatches onClear={() => setQuery("")} />
+            </Card>
+          )}
+          {sortedFavorites.length > FAVORITES_PER_PAGE ? (
+            <Card className="mt-4">
+              <Pager page={effectivePage} lastPage={totalPages} total={sortedFavorites.length} onChange={setCurrentPage} />
+            </Card>
+          ) : null}
+        </>
+      )}
+    </DashboardPage>
   );
 }
 

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import ConditionReportSection from "./ConditionReportSection";
 import LotCountdown from "./LotCountdown";
 import MediaGallery from "./MediaGallery";
@@ -12,6 +11,8 @@ import { useFeeEstimate } from "@/hooks/useFeeEstimate";
 import { useStepUp } from "@/hooks/useStepUp";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, downloadFile } from "@/lib/api-client";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Badge, Card, DataTable, EmptyState, LoadingRows, Notice, StatusBadge, formatDate } from "@/components/ui/kit";
 
 // NFR-S-005 / EnsureStepUpVerified: bids at/above this need a fresh 2FA code on top of the
 // standing session. Mirrors config('step_up.thresholds.bid_amount')'s default — there's no
@@ -32,36 +33,33 @@ function TotalCostCalculator({ lotId, amount }: { lotId: string; amount: string 
   const { estimate, loading, error } = useFeeEstimate(lotId, amount);
 
   if (!amount) {
-    return (
-      <p className="tfcl-empty-data">Enter an amount above to see the full cost breakdown.</p>
-    );
+    return <p className="ha-sub mb-0">Enter an amount to see the full cost breakdown.</p>;
   }
 
-  if (loading) return <p>Calculating...</p>;
-  if (error) return <div className="alert alert-danger">{error}</div>;
+  if (loading) return <p className="ha-sub mb-0" role="status">Calculating…</p>;
+  if (error) return <Notice tone="danger">{error}</Notice>;
   if (!estimate) return null;
 
   return (
-    <div className="table-responsive">
-      <table className="table">
-        <tbody>
-          <tr><td>Hammer price</td><td>{money(estimate.hammerPrice)}</td></tr>
-          <tr><td>Buyer&apos;s premium</td><td>{money(estimate.buyersPremium)}</td></tr>
-          <tr><td>VAT on premium</td><td>{money(estimate.vatOnPremium)}</td></tr>
-          {estimate.vatStatus === "qualifying" && (
-            <tr><td>VAT on vehicle (qualifying)</td><td>{money(estimate.vehicleVat)}</td></tr>
-          )}
-          {estimate.isHmpAssured && (
-            <tr><td>HMP Assured fee</td><td>{money(estimate.assuranceFee)}</td></tr>
-          )}
-          <tr><td>Indicative transport (open, running)</td><td>{money(estimate.transportEstimate)}</td></tr>
-          <tr className="fw-6">
-            <td>Total if you win at this price</td>
-            <td>{money(estimate.totalWithTransport)}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <table className="ha-table ha-proration">
+      <caption className="ha-visually-hidden">Full cost if you win at this price</caption>
+      <tbody>
+        <tr><td>Hammer price</td><td className="is-num">{money(estimate.hammerPrice)}</td></tr>
+        <tr><td>Buyer&apos;s premium</td><td className="is-num">{money(estimate.buyersPremium)}</td></tr>
+        <tr><td>VAT on premium</td><td className="is-num">{money(estimate.vatOnPremium)}</td></tr>
+        {estimate.vatStatus === "qualifying" && (
+          <tr><td>VAT on vehicle (qualifying)</td><td className="is-num">{money(estimate.vehicleVat)}</td></tr>
+        )}
+        {estimate.isHmpAssured && (
+          <tr><td>HMP Assured fee</td><td className="is-num">{money(estimate.assuranceFee)}</td></tr>
+        )}
+        <tr><td>Indicative transport (open, running)</td><td className="is-num">{money(estimate.transportEstimate)}</td></tr>
+        <tr className="ha-primary-text">
+          <td>Total if you win at this price</td>
+          <td className="is-num">{money(estimate.totalWithTransport)}</td>
+        </tr>
+      </tbody>
+    </table>
   );
 }
 
@@ -88,42 +86,40 @@ function StepUpPrompt({
 
   if (!user?.mfa_enabled) {
     return (
-      <div className="alert alert-danger">
+      <Notice tone="danger">
         Bids of £{STEP_UP_THRESHOLD.toLocaleString()} or more need a fresh two-factor code, and
         you haven&apos;t enrolled yet. <Link href="/security">Enable two-factor authentication</Link>{" "}
         first, then try again.
         <div className="mt-2">
-          <button type="button" className="sc-button" onClick={onCancel}>
-            <span>Cancel</span>
-          </button>
+          <button type="button" className="ha-btn is-sm" onClick={onCancel}>Cancel</button>
         </div>
-      </div>
+      </Notice>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="tfcl-card mb-3">
-      <h4 className="mb-2">Step-up verification required</h4>
-      <p className="text-color-2 mb-2">Enter a fresh code from your authenticator app to confirm this bid.</p>
-      {error && <div className="alert alert-danger mb-2">{error}</div>}
-      <div className="form-group">
+    <form onSubmit={handleSubmit} className="ha-card ha-card-body ha-form-card mb-4">
+      <h2 className="hd-card-title">Step-up verification required</h2>
+      <p className="ha-muted mb-2">Enter a fresh code from your authenticator app to confirm this bid.</p>
+      {error && <Notice tone="danger">{error}</Notice>}
+      <div className="ha-field">
+        <label htmlFor="stepup-code" className="ha-visually-hidden">6-digit code</label>
         <input
+          id="stepup-code"
           type="text"
           inputMode="numeric"
-          className="form-control"
+          autoComplete="one-time-code"
+          className="ha-input"
+          style={{ maxWidth: 200, letterSpacing: 4, fontSize: 18 }}
           placeholder="6-digit code"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           required
         />
       </div>
-      <div className="flex gap-10">
-        <button type="submit" className="sc-button" disabled={submitting}>
-          <span>{submitting ? "Verifying..." : "Verify and continue"}</span>
-        </button>
-        <button type="button" className="sc-button" onClick={onCancel}>
-          <span>Cancel</span>
-        </button>
+      <div className="ha-actions is-start">
+        <button type="submit" className="ha-btn is-primary" disabled={submitting}>{submitting ? "Verifying…" : "Verify and continue"}</button>
+        <button type="button" className="ha-btn is-ghost" onClick={onCancel}>Cancel</button>
       </div>
     </form>
   );
@@ -224,266 +220,289 @@ export default function LotDetail({ publicId }: { publicId: string }) {
     }
   }
 
+  const title = lot?.vehicle
+    ? [lot.vehicle.year, lot.vehicle.make, lot.vehicle.model, lot.vehicle.derivative].filter(Boolean).join(" ")
+    : "Lot";
+
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  {loading && <p>Loading this lot...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
+    <DashboardPage
+      eyebrow={<Link href="/auction">← Auction catalogue</Link>}
+      title={lot ? title : "Lot"}
+      description={
+        lot ? (
+          <span className="ha-chips" style={{ alignItems: "center" }}>
+            {lot.saleName && <span>{lot.saleName}</span>}
+            <StatusBadge status={lot.status} />
+            {lot.isHmpAssured && (
+              <Badge tone="primary" plain>
+                HMP Assured
+              </Badge>
+            )}
+            <Badge tone={live ? "success" : "neutral"}>{live ? "Live" : "Connecting…"}</Badge>
+          </span>
+        ) : undefined
+      }
+    >
+      {loading && <LoadingRows rows={5} label="Loading this lot" />}
+      {error && <Notice tone="danger">{error}</Notice>}
 
-                  {!loading && !error && lot && (
-                    <>
-                      <h1 className="admin-title mb-1">
-                        {lot.vehicle
-                          ? [lot.vehicle.year, lot.vehicle.make, lot.vehicle.model, lot.vehicle.derivative]
-                              .filter(Boolean)
-                              .join(" ")
-                          : "Lot"}
-                      </h1>
-                      <p className="text-color-2 mb-3">
-                        {lot.saleName} &middot; Status: <span className="text-capitalize">{lot.status.replace("_", " ")}</span>
-                        {lot.isHmpAssured && " · HMP Assured"}
-                        {" · "}
-                        <span style={{ color: live ? "#2ecc71" : "#999" }}>
-                          {live ? "● Live" : "○ Connecting..."}
-                        </span>
-                      </p>
+      {!loading && !error && lot && (
+        <>
+          {snapshot?.laneStatus === "paused" && (
+            <Notice tone="warning">This lane is paused by the auctioneer. Bidding resumes when they restart it.</Notice>
+          )}
 
-                      {snapshot?.laneStatus === "paused" && (
-                        <div className="alert alert-danger mb-3" role="alert" aria-live="assertive">
-                          This lane is paused by the auctioneer. Bidding resumes when they restart it.
-                        </div>
-                      )}
+          {connectionDegraded && (
+            <Notice tone="danger">
+              {connectionDropped
+                ? "Live updates dropped, so the price shown may be out of date. You can still bid, but check the latest price first. We refresh it every few seconds."
+                : "Your connection to the auction is slow right now, so the price shown may be a moment behind. You can still bid, but check the latest price first."}
+            </Notice>
+          )}
 
-                      {connectionDegraded && (
-                        <div className="alert alert-danger mb-3" role="alert" aria-live="assertive">
-                          {connectionDropped
-                            ? "Live updates dropped, so the price shown may be out of date. You can still bid, but check the latest price first. We refresh it every few seconds."
-                            : "Your connection to the auction is slow right now, so the price shown may be a moment behind. You can still bid, but check the latest price first."}
-                        </div>
-                      )}
-
-                      <div className="row mb-4">
-                        <div className="col-md-6">
-                          {/* UX-003: screen-reader announcement on bid events — this region's
-                              text only changes when the price/leader actually changes, so it
-                              self-limits to real events instead of firing on every poll. */}
-                          <p role="status" aria-live="polite"><b>Current price:</b> {formatPrice(snapshot?.currentPrice ?? lot.currentPrice)}
-                            {snapshot?.isLeading && isBiddable && <span style={{ color: "#2ecc71" }}> · You&apos;re the highest bidder</span>}
-                          </p>
-                          <LotCountdown closesAt={closesAt} offsetMs={offsetMs} />
-                          {isBiddable && nextBid && (
-                            <p>
-                              <b>Next minimum bid:</b> £{nextBid.minimum.toLocaleString()}{" "}
-                              <span className="text-color-2">(increment £{nextBid.increment.toLocaleString()})</span>{" "}
-                              <button
-                                type="button"
-                                className="sc-button"
-                                onClick={() => {
-                                  setBidAmount(String(nextBid.minimum));
-                                  setConfirmingBid(false);
-                                }}
-                              >
-                                <span>Use this amount</span>
-                              </button>
-                            </p>
-                          )}
-                          <p>
-                            <b>Reserve:</b>{" "}
-                            {lot.reservePrice !== null
-                              ? `£${lot.reservePrice.toLocaleString()}`
-                              : lot.reserveMet === null
-                                ? "Not visible to you"
-                                : lot.reserveMet
-                                  ? "Met"
-                                  : "Not met"}
-                          </p>
-                        </div>
-                        {lot.vehicle && (
-                          <div className="col-md-6">
-                            <p><b>Mileage:</b> {lot.vehicle.mileage.toLocaleString()} mi</p>
-                            <p><b>Fuel / Transmission:</b> {lot.vehicle.fuelType} / {lot.vehicle.transmission}</p>
-                            {lot.vehicle.colour && <p><b>Colour:</b> {lot.vehicle.colour}</p>}
-                          </div>
-                        )}
+          <div className="ha-lot-layout">
+            <div className="ha-stack">
+              {lot.vehicle && (
+                <Card title="Vehicle">
+                  <div className="ha-card-body">
+                    <dl className="ha-dl">
+                      <div>
+                        <dt>Mileage</dt>
+                        <dd className="ha-num">{lot.vehicle.mileage.toLocaleString("en-GB")} mi</dd>
                       </div>
-
-                      {peerBenchmark && peerBenchmark.sample_size >= 2 && (
-                        <div className="alert alert-info mb-3">
-                          Dealers like you retail this derivative in {peerBenchmark.avg_days_to_retail} days at{" "}
-                          {peerBenchmark.avg_margin !== undefined && peerBenchmark.avg_margin >= 0 ? "+" : ""}
-                          £{peerBenchmark.avg_margin?.toLocaleString()} margin, on average (based on{" "}
-                          {peerBenchmark.sample_size} comparable deals).
-                        </div>
-                      )}
-
-                      <MediaGallery vehicle={lot.vehicle} />
-
-                      {lot.conditionReport && (
-                        <ConditionReportSection report={lot.conditionReport} vehicle={lot.vehicle} />
-                      )}
-
-                      {notice && <div className="alert alert-success mb-3" role="status" aria-live="polite">{notice}</div>}
-                      {actionError && stepUpFor === null && (
-                        <div className="alert alert-danger mb-3" role="alert" aria-live="assertive">{actionError}</div>
-                      )}
-
-                      {stepUpFor && (
-                        <StepUpPrompt
-                          onCancel={() => setStepUpFor(null)}
-                          onVerified={() => (stepUpFor === "bid" ? submitBid() : submitProxy())}
-                        />
-                      )}
-
-                      <div className="row mb-4">
-                        <div className="col-md-6">
-                          <form onSubmit={handleBidSubmit} className="tfcl-card p-3">
-                            <h4 className="mb-2">Place a bid</h4>
-                            <div className="form-group">
-                              <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                className="form-control"
-                                placeholder="Bid amount (£)"
-                                value={bidAmount}
-                                onChange={(e) => {
-                                  setBidAmount(e.target.value);
-                                  setConfirmingBid(false);
-                                }}
-                                required
-                              />
-                            </div>
-
-                            {/* UX-021 (M): total-cost calculator, shown before the bid can be committed. */}
-                            <TotalCostCalculator lotId={lot.id} amount={bidAmount} />
-
-                            {integrityAcknowledged && (
-                              <div className="alert alert-danger my-2">
-                                Your live connection is down, so this price may be stale. Click again to
-                                place the bid anyway.
-                              </div>
-                            )}
-
-                            {confirmingBid && (
-                              <div className="alert alert-danger my-2">
-                                This is a large bid — click again to confirm £{Number(bidAmount).toLocaleString()}.
-                              </div>
-                            )}
-
-                            {/* UX-004 (M): the button shows the exact commit amount, never a bare "Bid". */}
-                            <button type="submit" className="sc-button mt-2" disabled={submitting || !bidAmount}>
-                              <span>
-                                {submitting
-                                  ? "Placing..."
-                                  : confirmingBid
-                                    ? `Confirm bid £${Number(bidAmount || 0).toLocaleString()}`
-                                    : bidAmount
-                                      ? `Bid £${Number(bidAmount).toLocaleString()}`
-                                      : "Enter an amount"}
-                              </span>
-                            </button>
-                          </form>
-                        </div>
-                        <div className="col-md-6">
-                          <form onSubmit={handleProxySubmit} className="tfcl-card p-3">
-                            <h4 className="mb-2">Set a proxy (max) bid</h4>
-                            <div className="form-group">
-                              <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                className="form-control"
-                                placeholder="Maximum amount (£)"
-                                value={proxyAmount}
-                                onChange={(e) => {
-                                  setProxyAmount(e.target.value);
-                                  setConfirmingProxy(false);
-                                }}
-                                required
-                              />
-                            </div>
-
-                            <TotalCostCalculator lotId={lot.id} amount={proxyAmount} />
-
-                            {confirmingProxy && (
-                              <div className="alert alert-danger my-2">
-                                This is a large proxy max — click again to confirm £{Number(proxyAmount).toLocaleString()}.
-                              </div>
-                            )}
-
-                            <button type="submit" className="sc-button mt-2" disabled={submitting || !proxyAmount}>
-                              <span>
-                                {submitting
-                                  ? "Lodging..."
-                                  : confirmingProxy
-                                    ? `Confirm proxy max £${Number(proxyAmount || 0).toLocaleString()}`
-                                    : proxyAmount
-                                      ? `Set proxy max £${Number(proxyAmount).toLocaleString()}`
-                                      : "Enter a maximum"}
-                              </span>
-                            </button>
-                          </form>
-                        </div>
+                      <div>
+                        <dt>Fuel</dt>
+                        <dd className="text-capitalize">{lot.vehicle.fuelType}</dd>
                       </div>
-
-                      <div className="flex gap-10 mb-2" style={{ alignItems: "center" }}>
-                        <h4 className="mb-0">Bid history</h4>
-                        {isConcluded && (
-                          <button type="button" className="sc-button" onClick={handleDownloadBidLog}>
-                            <span>Download bid log (CSV)</span>
-                          </button>
-                        )}
+                      <div>
+                        <dt>Transmission</dt>
+                        <dd className="text-capitalize">{lot.vehicle.transmission}</dd>
                       </div>
-                      {bids.length === 0 && <p className="tfcl-empty-data">No bids on this lot yet.</p>}
-                      {bids.length > 0 && (
-                        <div className="table-responsive">
-                          <table className="table">
-                            <thead>
-                              <tr>
-                                <th>Bidder</th>
-                                <th>Amount</th>
-                                <th>Time</th>
-                                <th />
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {bids.map((bid) => (
-                                <tr key={bid.id}>
-                                  <td>{bid.bidder}</td>
-                                  <td>£{bid.amount.toLocaleString()}</td>
-                                  <td>{new Date(bid.createdAt).toLocaleString()}</td>
-                                  <td>
-                                    {bid.bidder === "you" && bid.status === "accepted" && (
-                                      <button
-                                        type="button"
-                                        className="sc-button"
-                                        disabled={submitting}
-                                        onClick={() => handleRetract(bid.id)}
-                                      >
-                                        <span>Retract</span>
-                                      </button>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                      {lot.vehicle.colour && (
+                        <div>
+                          <dt>Colour</dt>
+                          <dd className="text-capitalize">{lot.vehicle.colour}</dd>
                         </div>
                       )}
-                    </>
-                  )}
+                    </dl>
+                  </div>
+                </Card>
+              )}
+
+              <div className="hd-template-section">
+                <MediaGallery vehicle={lot.vehicle} />
+              </div>
+
+              {lot.conditionReport && (
+                <div className="hd-template-section">
+                  <ConditionReportSection report={lot.conditionReport} vehicle={lot.vehicle} />
                 </div>
-              </main>
+              )}
+
+              {peerBenchmark && peerBenchmark.sample_size >= 2 && (
+                <Notice tone="info">
+                  Dealers like you retail this derivative in {peerBenchmark.avg_days_to_retail} days at{" "}
+                  {peerBenchmark.avg_margin !== undefined && peerBenchmark.avg_margin >= 0 ? "+" : ""}
+                  £{peerBenchmark.avg_margin?.toLocaleString("en-GB")} margin, on average (based on {peerBenchmark.sample_size} comparable deals).
+                </Notice>
+              )}
+            </div>
+
+            <div className="ha-lot-panel ha-stack">
+              <section className="ha-card" aria-label="Bidding">
+                <div className="ha-card-body">
+                  <span className="ha-eyebrow">Current price</span>
+                  {/* UX-003: screen-reader announcement on bid events — this region's
+                      text only changes when the price/leader actually changes, so it
+                      self-limits to real events instead of firing on every poll. */}
+                  <div role="status" aria-live="polite">
+                    <div className="ha-rostrum-price ha-num mb-1">{formatPrice(snapshot?.currentPrice ?? lot.currentPrice)}</div>
+                    {snapshot?.isLeading && isBiddable && <Badge tone="success">You&apos;re the highest bidder</Badge>}
+                  </div>
+                  <div className="mt-3">
+                    <LotCountdown closesAt={closesAt} offsetMs={offsetMs} />
+                  </div>
+                  <dl className="ha-dl mt-3">
+                    {isBiddable && nextBid && (
+                      <div>
+                        <dt>Next minimum bid</dt>
+                        <dd className="ha-num">
+                          £{nextBid.minimum.toLocaleString("en-GB")} <span className="ha-sub">(+£{nextBid.increment.toLocaleString("en-GB")})</span>
+                        </dd>
+                      </div>
+                    )}
+                    <div>
+                      <dt>Reserve</dt>
+                      <dd>
+                        {lot.reservePrice !== null ? (
+                          `£${lot.reservePrice.toLocaleString("en-GB")}`
+                        ) : lot.reserveMet === null ? (
+                          <span className="ha-muted">Not visible to you</span>
+                        ) : lot.reserveMet ? (
+                          <Badge tone="success">Met</Badge>
+                        ) : (
+                          <Badge tone="warning">Not met</Badge>
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </section>
+
+              {notice && <Notice tone="success">{notice}</Notice>}
+              {actionError && stepUpFor === null && <Notice tone="danger">{actionError}</Notice>}
+
+              {stepUpFor && (
+                <StepUpPrompt onCancel={() => setStepUpFor(null)} onVerified={() => (stepUpFor === "bid" ? submitBid() : submitProxy())} />
+              )}
+
+              <Card title="Place a bid">
+                <form onSubmit={handleBidSubmit} className="ha-card-body">
+                  <div className="ha-field">
+                    <label htmlFor="lot-bid-amount">Bid amount (£)</label>
+                    <div className="ha-actions is-start" style={{ flexWrap: "nowrap" }}>
+                      <input
+                        id="lot-bid-amount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="ha-input"
+                        value={bidAmount}
+                        onChange={(e) => {
+                          setBidAmount(e.target.value);
+                          setConfirmingBid(false);
+                        }}
+                        required
+                      />
+                      {isBiddable && nextBid && (
+                        <button
+                          type="button"
+                          className="ha-btn"
+                          onClick={() => {
+                            setBidAmount(String(nextBid.minimum));
+                            setConfirmingBid(false);
+                          }}
+                        >
+                          Use minimum
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* UX-021 (M): total-cost calculator, shown before the bid can be committed. */}
+                  <TotalCostCalculator lotId={lot.id} amount={bidAmount} />
+
+                  {integrityAcknowledged && (
+                    <Notice tone="danger" className="mt-3">
+                      Your live connection is down, so this price may be stale. Click again to place the bid anyway.
+                    </Notice>
+                  )}
+
+                  {confirmingBid && (
+                    <Notice tone="warning" className="mt-3">
+                      This is a large bid — click again to confirm £{Number(bidAmount).toLocaleString("en-GB")}.
+                    </Notice>
+                  )}
+
+                  {/* UX-004 (M): the button shows the exact commit amount, never a bare "Bid". */}
+                  <button type="submit" className="ha-btn is-primary is-block mt-3" style={{ height: 44 }} disabled={submitting || !bidAmount} aria-busy={submitting}>
+                    {submitting
+                      ? "Placing…"
+                      : confirmingBid
+                        ? `Confirm bid £${Number(bidAmount || 0).toLocaleString("en-GB")}`
+                        : bidAmount
+                          ? `Bid £${Number(bidAmount).toLocaleString("en-GB")}`
+                          : "Enter an amount"}
+                  </button>
+                </form>
+              </Card>
+
+              <Card title="Set a proxy (max) bid" description="We bid for you, up to your maximum.">
+                <form onSubmit={handleProxySubmit} className="ha-card-body">
+                  <div className="ha-field">
+                    <label htmlFor="lot-proxy-amount">Maximum amount (£)</label>
+                    <input
+                      id="lot-proxy-amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="ha-input"
+                      value={proxyAmount}
+                      onChange={(e) => {
+                        setProxyAmount(e.target.value);
+                        setConfirmingProxy(false);
+                      }}
+                      required
+                    />
+                  </div>
+
+                  <TotalCostCalculator lotId={lot.id} amount={proxyAmount} />
+
+                  {confirmingProxy && (
+                    <Notice tone="warning" className="mt-3">
+                      This is a large proxy max — click again to confirm £{Number(proxyAmount).toLocaleString("en-GB")}.
+                    </Notice>
+                  )}
+
+                  <button type="submit" className="ha-btn is-block mt-3" disabled={submitting || !proxyAmount} aria-busy={submitting}>
+                    {submitting
+                      ? "Lodging…"
+                      : confirmingProxy
+                        ? `Confirm proxy max £${Number(proxyAmount || 0).toLocaleString("en-GB")}`
+                        : proxyAmount
+                          ? `Set proxy max £${Number(proxyAmount).toLocaleString("en-GB")}`
+                          : "Enter a maximum"}
+                  </button>
+                </form>
+              </Card>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <Card
+            className="mt-4"
+            title="Bid history"
+            actions={
+              isConcluded ? (
+                <button type="button" className="ha-btn is-sm" onClick={handleDownloadBidLog}>
+                  Download bid log (CSV)
+                </button>
+              ) : undefined
+            }
+          >
+            {bids.length === 0 && <EmptyState icon="icon-carus-checkcircle" title="No bids yet" text="Bids on this lot appear here as they happen." />}
+            {bids.length > 0 && (
+              <DataTable caption="Bid history for this lot">
+                <thead>
+                  <tr>
+                    <th scope="col">Bidder</th>
+                    <th scope="col" className="is-num">Amount</th>
+                    <th scope="col">Time</th>
+                    <th scope="col">
+                      <span className="ha-visually-hidden">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bids.map((bid) => (
+                    <tr key={bid.id}>
+                      <td data-label="Bidder">{bid.bidder === "you" ? <Badge tone="primary" plain>You</Badge> : bid.bidder}</td>
+                      <td data-label="Amount" className="is-num">£{bid.amount.toLocaleString("en-GB")}</td>
+                      <td data-label="Time" className="ha-num">{formatDate(bid.createdAt, { time: true })}</td>
+                      <td data-label="" className="ha-right">
+                        {bid.bidder === "you" && bid.status === "accepted" && (
+                          <button type="button" className="ha-btn is-sm is-danger" disabled={submitting} onClick={() => handleRetract(bid.id)}>
+                            Retract
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+          </Card>
+        </>
+      )}
+    </DashboardPage>
   );
 }

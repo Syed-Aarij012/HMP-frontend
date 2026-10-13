@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { can, useAuth } from "@/contexts/AuthContext";
 import { apiFetch, describeApiError } from "@/lib/api-client";
+import { Notice } from "@/components/ui/kit";
 
 type Offer = { valuationId: number; value: string };
 
@@ -61,41 +62,37 @@ export default function InstantOfferSection({ vehiclePublicId, vrm, mileage, lis
   }
 
   return (
-    <div className="tfcl-card p-3 mb-3">
-      <h4 className="mb-1">Sell to the trade instead</h4>
+    <div className="ha-card ha-card-body mb-4">
+      <h2 className="hd-card-title">Sell to the trade instead</h2>
       {done ? (
-        <div className="alert alert-success mb-0">
+        <Notice tone="success">
           Done — your car is entered into the next trade auction with a reserve of £{Number(offer?.value).toLocaleString("en-GB")}. You can follow it
           under My consigned vehicles once it&apos;s catalogued.
-        </div>
+        </Notice>
       ) : (
         <>
-          <p className="text-color-2 fs-13 mb-2">
+          <p className="ha-sub mb-2">
             Get an instant offer and we&apos;ll sell your car to trade buyers at auction — no viewings or negotiating.
             {listed && " Withdraw your listing first if you choose this."}
           </p>
           {!offer ? (
-            <button type="button" className="sc-button" disabled={busy} onClick={getOffer}>
-              <span>{busy ? "Working out your offer..." : "Get an instant offer"}</span>
-            </button>
+            <button type="button" className="ha-btn is-primary" disabled={busy} aria-busy={busy} onClick={getOffer}>{busy ? "Working out your offer…" : "Get an instant offer"}</button>
           ) : (
             <>
-              <div className="mb-2" style={{ fontSize: 22, fontWeight: 700 }}>
+              <div className="mb-2 ha-num" style={{ fontSize: 24, fontWeight: 700 }}>
                 Instant offer: £{Number(offer.value).toLocaleString("en-GB")}
               </div>
-              <div className="p-2 mb-2" style={{ background: "#F4F6FB", borderRadius: 8, fontSize: 14 }}>{terms}</div>
+              <div className="ha-inline-edit mb-2">{terms}</div>
               <label className="d-flex gap-2 align-items-start mb-2" style={{ cursor: "pointer" }}>
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ marginTop: 4 }} />
                 <span>I agree to these terms and want to sell my car to the trade.</span>
               </label>
-              <button type="button" className="sc-button" disabled={busy || !agreed} onClick={accept}>
-                <span>{busy ? "Entering your car..." : "Accept instant offer"}</span>
-              </button>
+              <button type="button" className="ha-btn is-primary" disabled={busy || !agreed} aria-busy={busy} onClick={accept}>{busy ? "Entering your car…" : "Accept instant offer"}</button>
             </>
           )}
         </>
       )}
-      {error && <div className="alert alert-danger mt-2 mb-0">{error}</div>}
+      {error && <Notice tone="danger">{error}</Notice>}
     </div>
   );
 }

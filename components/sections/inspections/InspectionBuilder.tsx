@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, type MouseEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import EnrichmentPanel from "@/components/sections/inspections/EnrichmentPanel";
 import {
   useActiveGradingMatrix,
@@ -11,6 +10,9 @@ import {
   useVehicleMedia,
 } from "@/hooks/useInspection";
 import type { DraftDamageItem, InspectionMedia } from "@/types/inspection";
+import Link from "next/link";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Badge, EmptyState, LoadingRows, LoadingTable, Notice, StatusBadge } from "@/components/ui/kit";
 
 const QA_STATUS_LABELS: Record<InspectionMedia["qaStatus"], string> = {
   passed: "QA passed",
@@ -48,7 +50,7 @@ function PhotoWithPins({
   const canAcceptPin = pending !== null && (pending.lockedToMediaId === null || pending.lockedToMediaId === media.id);
 
   return (
-    <div className="tfcl-card p-2" style={{ position: "relative" }}>
+    <div className="ha-card" style={{ position: "relative", padding: 8 }}>
       <div
         onClick={canAcceptPin ? (e) => onPhotoClick(media.id, e) : undefined}
         style={{
@@ -60,7 +62,7 @@ function PhotoWithPins({
           backgroundSize: "cover",
           backgroundPosition: "center",
           borderRadius: 6,
-          outline: canAcceptPin ? "2px dashed #2a78d6" : "none",
+          outline: canAcceptPin ? "2px dashed var(--hmp-primary)" : "none",
         }}
       >
         {items.map((item) => (
@@ -87,11 +89,9 @@ function PhotoWithPins({
           />
         ))}
       </div>
-      <div className="flex gap-10 mt-1" style={{ justifyContent: "space-between" }}>
+      <div className="d-flex justify-content-between align-items-center mt-2">
         <span className="text-capitalize">{media.type}</span>
-        <span className={media.qaStatus === "failed" ? "text-color-danger" : "text-color-2"}>
-          {QA_STATUS_LABELS[media.qaStatus]}
-        </span>
+        <Badge tone={media.qaStatus === "failed" ? "danger" : media.qaStatus === "passed" ? "success" : "neutral"}>{QA_STATUS_LABELS[media.qaStatus]}</Badge>
       </div>
     </div>
   );
@@ -235,240 +235,227 @@ export default function InspectionBuilder({ vehiclePublicId }: { vehiclePublicId
     if (ok) window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  if (vehicleLoading) return <p>Loading vehicle...</p>;
+  if (vehicleLoading) {
+    return (
+      <DashboardPage title="Condition report">
+        <LoadingRows rows={5} label="Loading vehicle" />
+      </DashboardPage>
+    );
+  }
   if (vehicleError || !vehicle) {
     return (
-      <div id="themesflat-content">
-        <DashboardToggle />
-        <div className="container">
-          <div className="alert alert-danger mt-3">{vehicleError ?? "Vehicle not found."}</div>
-        </div>
-      </div>
+      <DashboardPage eyebrow={<Link href="/inspections">← My inspections</Link>} title="Condition report">
+        <Notice tone="danger">{vehicleError ?? "Vehicle not found."}</Notice>
+      </DashboardPage>
     );
   }
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">
-                    Condition report — {vehicle.make} {vehicle.model} {vehicle.derivative}
-                  </h1>
-                  <p className="text-color-2 mb-3">
-                    VIN {vehicle.vin} · VRM {vehicle.currentVrm ?? "-"} · Provenance: {vehicle.provenanceStatus}
-                  </p>
+    <DashboardPage
+      eyebrow={<Link href="/inspections">← My inspections</Link>}
+      title={<>Condition report — {vehicle.make} {vehicle.model} {vehicle.derivative}</>}
+      description={
+        <>
+          VIN <code>{vehicle.vin}</code> · VRM {vehicle.currentVrm ?? "—"} · Provenance <StatusBadge status={vehicle.provenanceStatus} />
+        </>
+      }
+    >
+      {!report && <EnrichmentPanel vehiclePublicId={vehiclePublicId} vin={vehicle.vin} onEnriched={reloadVehicle} />}
 
-                  {!report && <EnrichmentPanel vehiclePublicId={vehiclePublicId} vin={vehicle.vin} onEnriched={reloadVehicle} />}
+      {report && (
+        <Notice tone={report.status === "published" ? "success" : "info"}>
+          Report #{report.id} — <StatusBadge status={report.status} />
+          {report.conditionGrade !== null && <> · Condition grade {report.conditionGrade}</>}
+          {report.mechanicalGrade !== null && <> · Mechanical grade {report.mechanicalGrade}</>}
+          {report.status === "draft" && (
+            <div className="mt-2">
+              <button type="button" className="ha-btn is-primary" disabled={publishing} aria-busy={publishing} onClick={publish}>{publishing ? "Publishing…" : "Publish"}</button>
+            </div>
+          )}
+          {publishError && <Notice tone="danger">{publishError}</Notice>}
+        </Notice>
+      )}
 
-                  {report && (
-                    <div className={`alert ${report.status === "published" ? "alert-success" : "alert-info"} mb-3`}>
-                      Report #{report.id} — status: {report.status}
-                      {report.conditionGrade !== null && <> · Condition grade {report.conditionGrade}</>}
-                      {report.mechanicalGrade !== null && <> · Mechanical grade {report.mechanicalGrade}</>}
-                      {report.status === "draft" && (
-                        <div className="mt-2">
-                          <button type="button" className="sc-button" disabled={publishing} onClick={publish}>
-                            <span>{publishing ? "Publishing..." : "Publish"}</span>
-                          </button>
-                        </div>
-                      )}
-                      {publishError && <div className="alert alert-danger mt-2">{publishError}</div>}
-                    </div>
-                  )}
-
-                  {!report && (
-                    <>
-                      <div className="tfcl-card p-3 mb-3">
-                        <h4 className="mb-2">Checklist</h4>
-                        <div className="row">
-                          <div className="col-md-3 form-group">
-                            <label>Vehicle category</label>
-                            <select className="form-control" value={vehicleCategory} onChange={(e) => setVehicleCategory(e.target.value as typeof vehicleCategory)}>
-                              <option value="car">Car</option>
-                              <option value="lcv">LCV</option>
-                              <option value="motorcycle">Motorcycle</option>
-                              <option value="bev">BEV</option>
-                            </select>
-                          </div>
-                          <div className="col-md-3 form-group">
-                            <label>Drive status</label>
-                            <select className="form-control" value={driveStatus} onChange={(e) => setDriveStatus(e.target.value as typeof driveStatus)}>
-                              <option value="runs_and_drives">Runs and drives</option>
-                              <option value="non_runner">Non-runner</option>
-                            </select>
-                          </div>
-                          <div className="col-md-3 form-group">
-                            <label>Warning lamps (comma-separated)</label>
-                            <input type="text" className="form-control" placeholder="e.g. abs, airbag" value={warningLamps} onChange={(e) => setWarningLamps(e.target.value)} />
-                          </div>
-                          <div className="col-md-3 form-group">
-                            <label className="flex gap-10" style={{ alignItems: "center" }}>
-                              <input type="checkbox" checked={serviceHistoryVerified} onChange={(e) => setServiceHistoryVerified(e.target.checked)} />
-                              Service history verified
-                            </label>
-                          </div>
-                        </div>
-                        <div className="row">
-                          <div className="col-md-3 form-group">
-                            <label>Tyre depth FL (mm)</label>
-                            <input type="number" step="0.5" className="form-control" value={tyreFl} onChange={(e) => setTyreFl(e.target.value)} />
-                          </div>
-                          <div className="col-md-3 form-group">
-                            <label>Tyre depth FR (mm)</label>
-                            <input type="number" step="0.5" className="form-control" value={tyreFr} onChange={(e) => setTyreFr(e.target.value)} />
-                          </div>
-                          <div className="col-md-3 form-group">
-                            <label>Tyre depth RL (mm)</label>
-                            <input type="number" step="0.5" className="form-control" value={tyreRl} onChange={(e) => setTyreRl(e.target.value)} />
-                          </div>
-                          <div className="col-md-3 form-group">
-                            <label>Tyre depth RR (mm)</label>
-                            <input type="number" step="0.5" className="form-control" value={tyreRr} onChange={(e) => setTyreRr(e.target.value)} />
-                          </div>
-                        </div>
-                        {vehicleCategory === "bev" && (
-                          <div className="row">
-                            <div className="col-md-4 form-group">
-                              <label>State of health (%)</label>
-                              <input type="number" className="form-control" value={sohPercentage} onChange={(e) => setSohPercentage(e.target.value)} />
-                            </div>
-                            <div className="col-md-5 form-group">
-                              <label>Charge cable inventory (comma-separated)</label>
-                              <input type="text" className="form-control" value={chargeCableInventory} onChange={(e) => setChargeCableInventory(e.target.value)} />
-                            </div>
-                            <div className="col-md-3 form-group">
-                              <label className="flex gap-10" style={{ alignItems: "center" }}>
-                                <input type="checkbox" checked={chargingSessionVerified} onChange={(e) => setChargingSessionVerified(e.target.checked)} />
-                                Charging session verified
-                              </label>
-                            </div>
-                          </div>
-                        )}
-                        <div className="row">
-                          <div className="col-md-12 form-group">
-                            <label>Location of capture</label>
-                            <div className="flex gap-10" style={{ alignItems: "center" }}>
-                              <button type="button" className="sc-button" disabled={capturingGeo} onClick={captureGeo}>
-                                <span>{capturingGeo ? "Getting location..." : geo ? "Re-capture location" : "Capture my location"}</span>
-                              </button>
-                              {geo && (
-                                <span className="text-color-2">
-                                  {geo.lat.toFixed(5)}, {geo.lng.toFixed(5)}
-                                </span>
-                              )}
-                            </div>
-                            {geoError && <p className="text-color-danger mb-0">{geoError}</p>}
-                          </div>
-                        </div>
-                      </div>
-
-                      {matrixLoading && <p>Loading the active grading matrix...</p>}
-                      {matrixError && <div className="alert alert-danger mb-3">{matrixError}</div>}
-
-                      {matrix && (
-                        <div className="tfcl-card p-3 mb-3">
-                          <h4 className="mb-2">Add damage manually</h4>
-                          <div className="row">
-                            <div className="col-md-4 form-group">
-                              <label>Panel</label>
-                              <select className="form-control" value={manualPanel} onChange={(e) => { setManualPanel(e.target.value); setManualDamageType(""); setManualSeverity(""); }}>
-                                <option value="">Choose...</option>
-                                {panels.map((p) => <option key={p} value={p}>{p}</option>)}
-                              </select>
-                            </div>
-                            <div className="col-md-4 form-group">
-                              <label>Damage type</label>
-                              <select className="form-control" value={manualDamageType} onChange={(e) => { setManualDamageType(e.target.value); setManualSeverity(""); }} disabled={!manualPanel}>
-                                <option value="">Choose...</option>
-                                {damageTypes.map((d) => <option key={d} value={d}>{d}</option>)}
-                              </select>
-                            </div>
-                            <div className="col-md-4 form-group">
-                              <label>Severity</label>
-                              <select className="form-control" value={manualSeverity} onChange={(e) => setManualSeverity(e.target.value)} disabled={!manualDamageType}>
-                                <option value="">Choose...</option>
-                                {severities.map((s) => <option key={s} value={s}>{s}</option>)}
-                              </select>
-                            </div>
-                          </div>
-                          <button type="button" className="sc-button" disabled={!manualSeverity} onClick={startManualPin}>
-                            <span>{pending && !pending.cvSuggested ? "Click a photo below to place it" : "Place on a photo"}</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {suggestions.length > 0 && (
-                        <div className="tfcl-card p-3 mb-3">
-                          <h4 className="mb-2">CV-suggested damage</h4>
-                          <p className="text-color-2 mb-2">Proposals only — nothing here affects the grade until you confirm it by pinning it to the photo.</p>
-                          {suggestions.map((s, i) => (
-                            <div key={i} className="flex gap-10 mb-1" style={{ alignItems: "center" }}>
-                              <span>{s.panel} · {s.damageType} · {s.severity}</span>
-                              <button type="button" className="sc-button" onClick={() => startCvPin(s)}>
-                                <span>{pending?.cvSuggested && pending.lockedToMediaId === s.vehicleMediaId ? "Click the highlighted photo" : "Confirm on photo"}</span>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {pending && (
-                        <div className="alert alert-info mb-3">
-                          Placing: {pending.panel} · {pending.damageType} · {pending.severity} —{" "}
-                          {pending.lockedToMediaId ? "click the highlighted photo" : "click any photo"} to pin it, or{" "}
-                          <button type="button" className="sc-button" onClick={() => setPending(null)}><span>cancel</span></button>
-                        </div>
-                      )}
-
-                      <h4 className="mb-2">Photos</h4>
-                      {mediaLoading && <p>Loading photos...</p>}
-                      {mediaError && <div className="alert alert-danger">{mediaError}</div>}
-                      {!mediaLoading && media.length === 0 && <p className="tfcl-empty-data">No photos uploaded yet.</p>}
-
-                      <div className="row mb-3">
-                        {media.map((m) => (
-                          <div className="col-md-4 mb-3" key={m.id}>
-                            <PhotoWithPins
-                              media={m}
-                              items={damageItems.filter((item) => item.vehicleMediaId === m.id)}
-                              pending={pending}
-                              onPhotoClick={handlePhotoClick}
-                              onRemoveItem={removeItem}
-                            />
-                          </div>
-                        ))}
-                      </div>
-
-                      {damageItems.filter((i) => i.vehicleMediaId === null).length > 0 && (
-                        <div className="tfcl-card p-3 mb-3">
-                          <h4 className="mb-2">Unpinned damage</h4>
-                          {damageItems.filter((i) => i.vehicleMediaId === null).map((item) => (
-                            <div key={item.key} className="flex gap-10 mb-1">
-                              <span>{item.panel} · {item.damageType} · {item.severity}</span>
-                              <button type="button" className="sc-button" onClick={() => removeItem(item.key)}><span>Remove</span></button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {submitError && <div className="alert alert-danger mb-3">{submitError}</div>}
-
-                      <button type="button" className="sc-button" disabled={submitting} onClick={handleSubmit}>
-                        <span>{submitting ? "Submitting..." : "Submit condition report"}</span>
-                      </button>
-                    </>
+      {!report && (
+        <>
+          <div className="ha-card ha-card-body mb-4">
+            <h2 className="hd-card-title">Checklist</h2>
+            <div className="ha-form-grid">
+              <div className="ha-field">
+                <label htmlFor="ib-vehicle-category">Vehicle category</label>
+                <select id="ib-vehicle-category" className="ha-select" value={vehicleCategory} onChange={(e) => setVehicleCategory(e.target.value as typeof vehicleCategory)}>
+                  <option value="car">Car</option>
+                  <option value="lcv">LCV</option>
+                  <option value="motorcycle">Motorcycle</option>
+                  <option value="bev">BEV</option>
+                </select>
+              </div>
+              <div className="ha-field">
+                <label htmlFor="ib-drive-status">Drive status</label>
+                <select id="ib-drive-status" className="ha-select" value={driveStatus} onChange={(e) => setDriveStatus(e.target.value as typeof driveStatus)}>
+                  <option value="runs_and_drives">Runs and drives</option>
+                  <option value="non_runner">Non-runner</option>
+                </select>
+              </div>
+              <div className="ha-field">
+                <label htmlFor="ib-warning-lamps-comma-separated">Warning lamps (comma-separated)</label>
+                <input id="ib-warning-lamps-comma-separated" type="text" className="ha-input" placeholder="e.g. abs, airbag" value={warningLamps} onChange={(e) => setWarningLamps(e.target.value)} />
+              </div>
+              <div className="ha-field">
+                <label className="ha-check">
+                  <input type="checkbox" checked={serviceHistoryVerified} onChange={(e) => setServiceHistoryVerified(e.target.checked)} />
+                  Service history verified
+                </label>
+              </div>
+            </div>
+            <div className="ha-form-grid">
+              <div className="ha-field">
+                <label htmlFor="ib-tyre-depth-fl-mm">Tyre depth FL (mm)</label>
+                <input id="ib-tyre-depth-fl-mm" type="number" step="0.5" className="ha-input" value={tyreFl} onChange={(e) => setTyreFl(e.target.value)} />
+              </div>
+              <div className="ha-field">
+                <label htmlFor="ib-tyre-depth-fr-mm">Tyre depth FR (mm)</label>
+                <input id="ib-tyre-depth-fr-mm" type="number" step="0.5" className="ha-input" value={tyreFr} onChange={(e) => setTyreFr(e.target.value)} />
+              </div>
+              <div className="ha-field">
+                <label htmlFor="ib-tyre-depth-rl-mm">Tyre depth RL (mm)</label>
+                <input id="ib-tyre-depth-rl-mm" type="number" step="0.5" className="ha-input" value={tyreRl} onChange={(e) => setTyreRl(e.target.value)} />
+              </div>
+              <div className="ha-field">
+                <label htmlFor="ib-tyre-depth-rr-mm">Tyre depth RR (mm)</label>
+                <input id="ib-tyre-depth-rr-mm" type="number" step="0.5" className="ha-input" value={tyreRr} onChange={(e) => setTyreRr(e.target.value)} />
+              </div>
+            </div>
+            {vehicleCategory === "bev" && (
+              <div className="ha-form-grid">
+                <div className="ha-field">
+                  <label htmlFor="ib-state-of-health">State of health (%)</label>
+                  <input id="ib-state-of-health" type="number" className="ha-input" value={sohPercentage} onChange={(e) => setSohPercentage(e.target.value)} />
+                </div>
+                <div className="ha-field">
+                  <label htmlFor="ib-charge-cable-inventory-comma-s">Charge cable inventory (comma-separated)</label>
+                  <input id="ib-charge-cable-inventory-comma-s" type="text" className="ha-input" value={chargeCableInventory} onChange={(e) => setChargeCableInventory(e.target.value)} />
+                </div>
+                <div className="ha-field">
+                  <label className="ha-check">
+                    <input type="checkbox" checked={chargingSessionVerified} onChange={(e) => setChargingSessionVerified(e.target.checked)} />
+                    Charging session verified
+                  </label>
+                </div>
+              </div>
+            )}
+            <div className="ha-form-grid">
+              <div className="ha-field">
+                <span className="ha-label">Location of capture</span>
+                <div className="ha-actions is-start">
+                  <button type="button" className="ha-btn" disabled={capturingGeo} onClick={captureGeo}>{capturingGeo ? "Getting location…" : geo ? "Re-capture location" : "Capture my location"}</button>
+                  {geo && (
+                    <span className="ha-muted">
+                      {geo.lat.toFixed(5)}, {geo.lng.toFixed(5)}
+                    </span>
                   )}
                 </div>
-              </main>
+                {geoError && <p className="ha-error-text mb-0" role="alert">{geoError}</p>}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+
+          {matrixLoading && <LoadingTable label="Loading the active grading matrix" />}
+          {matrixError && <Notice tone="danger">{matrixError}</Notice>}
+
+          {matrix && (
+            <div className="ha-card ha-card-body mb-4">
+              <h2 className="hd-card-title">Add damage manually</h2>
+              <div className="ha-form-grid">
+                <div className="ha-field">
+                  <label htmlFor="ib-panel">Panel</label>
+                  <select id="ib-panel" className="ha-select" value={manualPanel} onChange={(e) => { setManualPanel(e.target.value); setManualDamageType(""); setManualSeverity(""); }}>
+                    <option value="">Choose...</option>
+                    {panels.map((p) => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div className="ha-field">
+                  <label htmlFor="ib-damage-type">Damage type</label>
+                  <select id="ib-damage-type" className="ha-select" value={manualDamageType} onChange={(e) => { setManualDamageType(e.target.value); setManualSeverity(""); }} disabled={!manualPanel}>
+                    <option value="">Choose...</option>
+                    {damageTypes.map((d) => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div className="ha-field">
+                  <label htmlFor="ib-severity">Severity</label>
+                  <select id="ib-severity" className="ha-select" value={manualSeverity} onChange={(e) => setManualSeverity(e.target.value)} disabled={!manualDamageType}>
+                    <option value="">Choose...</option>
+                    {severities.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <button type="button" className="ha-btn is-primary" disabled={!manualSeverity} onClick={startManualPin}>{pending && !pending.cvSuggested ? "Click a photo below to place it" : "Place on a photo"}</button>
+            </div>
+          )}
+
+          {suggestions.length > 0 && (
+            <div className="ha-card ha-card-body mb-4">
+              <h2 className="hd-card-title">CV-suggested damage</h2>
+              <p className="ha-muted mb-2">Proposals only — nothing here affects the grade until you confirm it by pinning it to the photo.</p>
+              {suggestions.map((s, i) => (
+                <div key={i} className="ha-actions is-start mb-2">
+                  <span>{s.panel} · {s.damageType} · {s.severity}</span>
+                  <button type="button" className="ha-btn is-sm" onClick={() => startCvPin(s)}>
+                    <span>{pending?.cvSuggested && pending.lockedToMediaId === s.vehicleMediaId ? "Click the highlighted photo" : "Confirm on photo"}</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {pending && (
+            <Notice tone="info">
+              Placing: {pending.panel} · {pending.damageType} · {pending.severity} —{" "}
+              {pending.lockedToMediaId ? "click the highlighted photo" : "click any photo"} to pin it, or{" "}
+              <button type="button" className="ha-link-btn" onClick={() => setPending(null)}>cancel</button>
+            </Notice>
+          )}
+
+          <h2 className="hd-section-title">Photos</h2>
+          {mediaLoading && <LoadingTable label="Loading photos" />}
+          {mediaError && <Notice tone="danger">{mediaError}</Notice>}
+          {!mediaLoading && media.length === 0 && <EmptyState icon="icon-carus-imagessquare" title="No photos uploaded yet" />}
+
+          <div className="ha-grid mb-4">
+            {media.map((m) => (
+              <div key={m.id}>
+                <PhotoWithPins
+                  media={m}
+                  items={damageItems.filter((item) => item.vehicleMediaId === m.id)}
+                  pending={pending}
+                  onPhotoClick={handlePhotoClick}
+                  onRemoveItem={removeItem}
+                />
+              </div>
+            ))}
+          </div>
+
+          {damageItems.filter((i) => i.vehicleMediaId === null).length > 0 && (
+            <div className="ha-card ha-card-body mb-4">
+              <h2 className="hd-card-title">Unpinned damage</h2>
+              {damageItems.filter((i) => i.vehicleMediaId === null).map((item) => (
+                <div key={item.key} className="ha-actions is-start mb-2">
+                  <span>{item.panel} · {item.damageType} · {item.severity}</span>
+                  <button type="button" className="ha-btn is-sm is-danger" onClick={() => removeItem(item.key)}>Remove</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {submitError && <Notice tone="danger">{submitError}</Notice>}
+
+          <div className="ha-form-footer">
+            <button type="button" className="ha-btn is-primary" disabled={submitting} aria-busy={submitting} onClick={handleSubmit}>
+              {submitting ? "Submitting…" : "Submit condition report"}
+            </button>
+          </div>
+        </>
+      )}
+    </DashboardPage>
   );
 }

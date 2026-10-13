@@ -1,0 +1,1996 @@
+// HMP UI kit — the shared components for every dashboard (components/ui/kit.tsx renders these
+// classes). Scoped under `.hmp-ui`, built only from the tokens in _tokens.scss. The `ha-`
+// prefix is historical ("HMP app") and kept so the Admin Panel didn't need rewriting.
+
+.hmp-ui {
+  font-family: var(--hmp-font);
+  font-size: var(--hmp-fs-base);
+  line-height: var(--hmp-lh);
+  color: var(--hmp-text);
+  font-feature-settings: "cv11", "ss01";
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--hmp-font);
+    color: var(--hmp-text);
+    letter-spacing: -0.01em;
+  }
+
+  a {
+    color: var(--hmp-primary);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--hmp-primary-hover);
+    }
+  }
+
+  code {
+    font-size: var(--hmp-fs-xs);
+    background: var(--hmp-surface-2);
+    border: 1px solid var(--hmp-border);
+    border-radius: var(--hmp-radius-sm);
+    padding: 1px 6px;
+    color: var(--hmp-text);
+  }
+
+  // One visible focus treatment for every interactive element (WCAG 2.4.7 / 2.4.11).
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--hmp-primary);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+
+  .ha-num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ha-visually-hidden {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  // ---------------------------------------------------------------- Page header
+
+  .ha-page-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--hmp-space-4);
+    flex-wrap: wrap;
+    margin-bottom: var(--hmp-space-6);
+
+    h1 {
+      font-size: var(--hmp-fs-xl);
+      line-height: var(--hmp-lh-tight);
+      font-weight: var(--hmp-fw-bold);
+      margin: 0;
+    }
+
+    p {
+      margin: var(--hmp-space-1) 0 0;
+      color: var(--hmp-text-2);
+      max-width: var(--hmp-measure);
+    }
+  }
+
+  .ha-eyebrow {
+    display: block;
+    font-size: var(--hmp-fs-xs);
+    font-weight: var(--hmp-fw-semibold);
+    color: var(--hmp-text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--hmp-space-1);
+  }
+
+  // ---------------------------------------------------------------- Surfaces
+
+  .ha-card {
+    background: var(--hmp-surface);
+    border: 1px solid var(--hmp-border);
+    border-radius: var(--hmp-radius-lg);
+    box-shadow: var(--hmp-elev-1);
+    min-width: 0;
+  }
+
+  .ha-card + .ha-card,
+  .ha-stack > * + * {
+    margin-top: var(--hmp-space-4);
+  }
+
+  .ha-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--hmp-space-3);
+    flex-wrap: wrap;
+    padding: var(--hmp-space-4) var(--hmp-space-5);
+    border-bottom: 1px solid var(--hmp-border);
+
+    h2 {
+      font-size: var(--hmp-fs-md);
+      font-weight: var(--hmp-fw-semibold);
+      margin: 0;
+    }
+
+    p {
+      margin: 2px 0 0;
+      color: var(--hmp-text-3);
+      font-size: var(--hmp-fs-sm);
+    }
+  }
+
+  .ha-card-body {
+    padding: var(--hmp-space-5);
+  }
+
+  .ha-grid {
+    display: grid;
+    gap: var(--hmp-space-4);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+
+    &.is-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (max-width: 767px) {
+      &.is-2 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  }
+
+  .ha-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: var(--hmp-space-4);
+    margin-bottom: var(--hmp-space-6);
+  }
+
+  .ha-stat {
+    display: block;
+    padding: var(--hmp-space-4) var(--hmp-space-5);
+    color: inherit;
+    transition: border-color var(--hmp-dur-fast) var(--hmp-ease);
+
+    &:is(a):hover {
+      border-color: var(--hmp-border-strong);
+      color: inherit;
+    }
+
+    .ha-stat-label {
+      color: var(--hmp-text-2);
+      font-size: var(--hmp-fs-sm);
+      font-weight: var(--hmp-fw-medium);
+      display: flex;
+      align-items: center;
+      gap: var(--hmp-space-2);
+
+      i {
+        color: var(--hmp-text-3);
+      }
+    }
+
+    .ha-stat-value {
+      font-size: 28px;
+      line-height: var(--hmp-lh-tight);
+      font-weight: var(--hmp-fw-bold);
+      margin: var(--hmp-space-2) 0 2px;
+      color: var(--hmp-text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ha-stat-note {
+      color: var(--hmp-text-3);
+      font-size: var(--hmp-fs-xs);
+    }
+
+    // Needs attention: a warning edge plus the note text — never the tint alone.
+    &.is-attention {
+      border-color: var(--hmp-warning);
+      box-shadow: inset 3px 0 0 var(--hmp-warning);
+    }
+  }
+
+  // Key–value list (order details, vehicle facts…)
+  .ha-dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+    gap: var(--hmp-space-3) var(--hmp-space-5);
+    margin: 0;
+
+    dt {
+      font-size: var(--hmp-fs-xs);
+      color: var(--hmp-text-3);
+      font-weight: var(--hmp-fw-medium);
+    }
+
+    dd {
+      margin: 2px 0 0;
+      font-weight: var(--hmp-fw-semibold);
+      word-break: break-word;
+      text-transform: none;
+    }
+  }
+
+  // ---------------------------------------------------------------- Toolbar & filters
+
+  .ha-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--hmp-space-2);
+    align-items: center;
+    padding: var(--hmp-space-3) var(--hmp-space-5);
+    border-bottom: 1px solid var(--hmp-border);
+
+    .ha-toolbar-end {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--hmp-space-2);
+      flex-wrap: wrap;
+    }
+  }
+
+  .ha-filterbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--hmp-space-2);
+    padding: var(--hmp-space-2) var(--hmp-space-5) var(--hmp-space-3);
+    border-bottom: 1px solid var(--hmp-border);
+    font-size: var(--hmp-fs-sm);
+    color: var(--hmp-text-2);
+  }
+
+  .ha-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--hmp-space-1);
+    height: 26px;
+    padding: 0 4px 0 10px;
+    border-radius: var(--hmp-radius-pill);
+    background: var(--hmp-primary-soft);
+    color: var(--hmp-primary-on-soft);
+    font-size: var(--hmp-fs-xs);
+    font-weight: var(--hmp-fw-semibold);
+    border: 0;
+
+    button {
+      display: grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+
+      &:hover {
+        background: rgba(38, 56, 168, 0.12);
+      }
+    }
+  }
+
+  .ha-link-btn {
+    border: 0;
+    background: none;
+    padding: 0 var(--hmp-space-1);
+    color: var(--hmp-primary);
+    font-weight: var(--hmp-fw-semibold);
+    font-size: var(--hmp-fs-sm);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: var(--hmp-primary-hover);
+    }
+  }
+
+  .ha-result-count {
+    font-size: var(--hmp-fs-sm);
+    color: var(--hmp-text-3);
+    white-space: nowrap;
+  }
+
+  // ---------------------------------------------------------------- Form controls
+
+  .ha-input,
+  .ha-select,
+  .ha-textarea {
+    height: var(--hmp-control-h);
+    border: 1px solid var(--hmp-input-border);
+    background: var(--hmp-surface);
+    border-radius: var(--hmp-radius);
+    padding: 0 var(--hmp-space-3);
+    font: inherit;
+    font-size: var(--hmp-fs-base);
+    color: var(--hmp-text);
+    outline: none;
+    transition: border-color var(--hmp-dur-fast) var(--hmp-ease), box-shadow var(--hmp-dur-fast) var(--hmp-ease);
+    width: 100%;
+
+    &::placeholder {
+      color: var(--hmp-text-3);
+    }
+
+    &:focus,
+    &:focus-visible {
+      border-color: var(--hmp-primary);
+      box-shadow: var(--hmp-focus-ring);
+      outline: none;
+    }
+
+    &:disabled {
+      background: var(--hmp-surface-2);
+      color: var(--hmp-text-3);
+      cursor: not-allowed;
+    }
+
+    &[aria-invalid="true"] {
+      border-color: var(--hmp-danger);
+    }
+  }
+
+  .ha-select {
+    appearance: none;
+    padding-right: 32px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23616a78' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+  }
+
+  .ha-textarea {
+    height: auto;
+    min-height: 88px;
+    padding: 10px var(--hmp-space-3);
+    resize: vertical;
+  }
+
+  .ha-search {
+    position: relative;
+    flex: 1 1 240px;
+    max-width: 360px;
+
+    i,
+    svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--hmp-text-3);
+      pointer-events: none;
+    }
+
+    .ha-input {
+      padding-left: 36px;
+    }
+  }
+
+  .ha-toolbar .ha-select,
+  .ha-inline-select {
+    width: auto;
+    min-width: 150px;
+  }
+
+  .ha-control-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--hmp-space-2);
+    font-size: var(--hmp-fs-sm);
+    color: var(--hmp-text-2);
+    font-weight: var(--hmp-fw-medium);
+    margin: 0;
+  }
+
+  .ha-field {
+    margin-bottom: var(--hmp-space-4);
+
+    > label,
+    .ha-label {
+      display: block;
+      font-weight: var(--hmp-fw-semibold);
+      font-size: var(--hmp-fs-sm);
+      margin-bottom: 6px;
+      color: var(--hmp-text);
+    }
+
+    .ha-hint {
+      color: var(--hmp-text-3);
+      font-size: var(--hmp-fs-xs);
+      margin-top: var(--hmp-space-1);
+    }
+
+    .ha-error-text {
+      color: var(--hmp-danger);
+      font-size: var(--hmp-fs-xs);
+      margin-top: var(--hmp-space-1);
+    }
+  }
+
+  .ha-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: 0 var(--hmp-space-4);
+  }
+
+  .ha-check {
+    display: flex;
+    align-items: center;
+    gap: var(--hmp-space-2);
+    cursor: pointer;
+    font-size: var(--hmp-fs-base);
+
+    input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--hmp-primary);
+    }
+  }
+
+  // ---------------------------------------------------------------- Buttons
+
+  .ha-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--hmp-radius);
+    border: 1px solid var(--hmp-border-strong);
+    background: var(--hmp-surface);
+    color: var(--hmp-text);
+    font: inherit;
+    font-size: var(--hmp-fs-sm);
+    font-weight: var(--hmp-fw-semibold);
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background var(--hmp-dur-fast) var(--hmp-ease), border-color var(--hmp-dur-fast) var(--hmp-ease),
+      color var(--hmp-dur-fast) var(--hmp-ease);
+
+    &:hover:not(:disabled) {
+      background: var(--hmp-surface-3);
+      color: var(--hmp-text);
+    }
+
+    &:disabled,
+    &[aria-disabled="true"] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &.is-primary {
+      background: var(--hmp-primary);
+      border-color: var(--hmp-primary);
+      color: var(--hmp-on-primary);
+
+      &:hover:not(:disabled) {
+        background: var(--hmp-primary-hover);
+        border-color: var(--hmp-primary-hover);
+        color: var(--hmp-on-primary);
+      }
+    }
+
+    &.is-danger {
+      color: var(--hmp-danger);
+
+      &:hover:not(:disabled) {
+        background: var(--hmp-danger-soft);
+        border-color: var(--hmp-danger);
+        color: var(--hmp-danger);
+      }
+    }
+
+    &.is-danger-solid {
+      background: var(--hmp-danger);
+      border-color: var(--hmp-danger);
+      color: #fff;
+
+      &:hover:not(:disabled) {
+        background: var(--hmp-danger-hover);
+        color: #fff;
+      }
+    }
+
+    &.is-ghost {
+      border-color: transparent;
+      background: transparent;
+      color: var(--hmp-text-2);
+
+      &:hover:not(:disabled) {
+        background: var(--hmp-surface-3);
+        color: var(--hmp-text);
+      }
+    }
+
+    &.is-sm {
+      height: var(--hmp-control-h-sm);
+      padding: 0 10px;
+      font-size: var(--hmp-fs-xs);
+    }
+
+    &.is-block {
+      width: 100%;
+    }
+
+    &.is-icon {
+      width: 36px;
+      padding: 0;
+    }
+
+    // In-flight state: the label stays, a small spinner says "working".
+    &[aria-busy="true"]::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      animation: ha-spin 0.7s linear infinite;
+    }
+  }
+
+  .ha-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--hmp-space-2);
+    justify-content: flex-end;
+
+    &.is-start {
+      justify-content: flex-start;
+    }
+  }
+
+  // ---------------------------------------------------------------- Segmented tabs
+
+  .ha-tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px;
+    background: var(--hmp-surface-2);
+    border: 1px solid var(--hmp-border);
+    border-radius: 10px;
+    max-width: 100%;
+
+    button {
+      border: 0;
+      background: transparent;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font: inherit;
+      font-size: var(--hmp-fs-sm);
+      font-weight: var(--hmp-fw-semibold);
+      color: var(--hmp-text-2);
+      text-transform: capitalize;
+      cursor: pointer;
+      transition: background var(--hmp-dur-fast) var(--hmp-ease), color var(--hmp-dur-fast) var(--hmp-ease);
+
+      &:hover {
+        color: var(--hmp-text);
+      }
+
+      &.is-active,
+      &[aria-selected="true"] {
+        background: var(--hmp-surface);
+        color: var(--hmp-text);
+        box-shadow: var(--hmp-elev-1);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- Table
+
+  .ha-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ha-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--hmp-fs-base);
+
+    caption {
+      caption-side: top;
+      padding: 0;
+    }
+
+    th {
+      text-align: left;
+      font-size: var(--hmp-fs-xs);
+      font-weight: var(--hmp-fw-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--hmp-text-2);
+      background: var(--hmp-surface-2);
+      padding: 10px var(--hmp-space-5);
+      border-bottom: 1px solid var(--hmp-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: var(--hmp-space-3) var(--hmp-space-5);
+      border-bottom: 1px solid var(--hmp-border);
+      vertical-align: middle;
+      color: var(--hmp-text);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    tbody tr:hover td {
+      background: var(--hmp-surface-2);
+    }
+
+    .ha-right,
+    .is-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ha-th-sort {
+      all: unset;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+
+      &:focus-visible {
+        outline: 2px solid var(--hmp-primary);
+        outline-offset: 2px;
+      }
+    }
+
+    // Narrow screens: rows become stacked cards; each cell shows its column name (data-label).
+    &.is-stacked {
+      @media (max-width: 767px) {
+        thead {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+        }
+
+        tr {
+          display: block;
+          padding: var(--hmp-space-3) var(--hmp-space-4);
+          border-bottom: 1px solid var(--hmp-border);
+        }
+
+        tbody tr:last-child {
+          border-bottom: 0;
+        }
+
+        td {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: var(--hmp-space-3);
+          padding: 6px 0;
+          border: 0;
+          text-align: right;
+
+          &::before {
+            content: attr(data-label);
+            font-size: var(--hmp-fs-xs);
+            font-weight: var(--hmp-fw-semibold);
+            color: var(--hmp-text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            text-align: left;
+            flex-shrink: 0;
+          }
+
+          &:not([data-label])::before,
+          &[data-label=""]::before {
+            content: none;
+          }
+
+          &:not([data-label]),
+          &[data-label=""] {
+            justify-content: flex-end;
+          }
+
+          // Expanded detail rows (a form under a row) span the full card.
+          &[colspan] {
+            display: block;
+            text-align: left;
+          }
+        }
+
+        tbody tr:hover td {
+          background: transparent;
+        }
+      }
+    }
+  }
+
+  .ha-primary-text {
+    font-weight: var(--hmp-fw-semibold);
+    color: var(--hmp-text);
+  }
+
+  .ha-sub {
+    color: var(--hmp-text-3);
+    font-size: var(--hmp-fs-xs);
+  }
+
+  .ha-muted {
+    color: var(--hmp-text-2);
+  }
+
+  .ha-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--hmp-space-1);
+  }
+
+  // ---------------------------------------------------------------- Badges
+
+  .ha-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 9px;
+    border-radius: var(--hmp-radius-pill);
+    font-size: var(--hmp-fs-xs);
+    font-weight: var(--hmp-fw-semibold);
+    line-height: 18px;
+    background: var(--hmp-surface-2);
+    color: var(--hmp-text-2);
+    border: 1px solid var(--hmp-border);
+    white-space: nowrap;
+    text-transform: capitalize;
+
+    &::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    &.is-plain::before {
+      display: none;
+    }
+
+    &.is-success {
+      background: var(--hmp-success-soft);
+      color: var(--hmp-success);
+      border-color: transparent;
+    }
+
+    &.is-warning {
+      background: var(--hmp-warning-soft);
+      color: var(--hmp-warning);
+      border-color: transparent;
+    }
+
+    &.is-danger {
+      background: var(--hmp-danger-soft);
+      color: var(--hmp-danger);
+      border-color: transparent;
+    }
+
+    &.is-primary {
+      background: var(--hmp-primary-soft);
+      color: var(--hmp-primary-on-soft);
+      border-color: transparent;
+    }
+
+    &.is-dark {
+      background: var(--hmp-text);
+      color: #fff;
+      border-color: transparent;
+    }
+  }
+
+  .ha-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--hmp-radius-sm);
+    font-size: var(--hmp-fs-xs);
+    background: var(--hmp-surface-2);
+    border: 1px solid var(--hmp-border);
+    color: var(--hmp-text);
+
+    &.is-added {
+      background: var(--hmp-warning-soft);
+      border-color: var(--hmp-warning);
+    }
+  }
+
+  // ---------------------------------------------------------------- Feedback
+
+  .ha-empty {
+    text-align: center;
+    padding: var(--hmp-space-12) var(--hmp-space-5);
+    color: var(--hmp-text-2);
+    max-width: 440px;
+    margin: 0 auto;
+
+    > i {
+      font-size: 28px;
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      margin: 0 auto var(--hmp-space-3);
+      border-radius: 50%;
+      background: var(--hmp-surface-2);
+      color: var(--hmp-text-3);
+    }
+
+    b {
+      display: block;
+      color: var(--hmp-text);
+      font-size: var(--hmp-fs-md);
+      font-weight: var(--hmp-fw-semibold);
+      margin-bottom: var(--hmp-space-1);
+    }
+
+    .ha-actions {
+      justify-content: center;
+      margin-top: var(--hmp-space-4);
+    }
+  }
+
+  .ha-alert {
+    display: flex;
+    gap: var(--hmp-space-2);
+    align-items: flex-start;
+    padding: 10px 14px;
+    border-radius: var(--hmp-radius);
+    font-size: var(--hmp-fs-sm);
+    margin-bottom: var(--hmp-space-4);
+    border: 1px solid transparent;
+    border-left-width: 3px;
+
+    > i {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .ha-alert-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ha-alert-close {
+      border: 0;
+      background: none;
+      padding: 0 2px;
+      color: inherit;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    &.is-danger {
+      background: var(--hmp-danger-soft);
+      color: var(--hmp-danger-hover);
+      border-color: var(--hmp-danger);
+    }
+
+    &.is-warning {
+      background: var(--hmp-warning-soft);
+      color: var(--hmp-warning);
+      border-color: var(--hmp-warning);
+    }
+
+    &.is-success {
+      background: var(--hmp-success-soft);
+      color: var(--hmp-success);
+      border-color: var(--hmp-success);
+    }
+
+    &.is-info {
+      background: var(--hmp-info-soft);
+      color: var(--hmp-info);
+      border-color: var(--hmp-primary);
+    }
+  }
+
+  // Loading: a calm pulse (motion that says "loading", nothing more).
+  .ha-skeleton {
+    height: 14px;
+    border-radius: var(--hmp-radius-sm);
+    background: var(--hmp-surface-3);
+    animation: ha-pulse 1.4s ease-in-out infinite;
+    margin: 10px 0;
+  }
+
+  .ha-skeleton-table {
+    padding: var(--hmp-space-2) var(--hmp-space-5);
+
+    .ha-skeleton-row {
+      display: flex;
+      gap: var(--hmp-space-4);
+      padding: var(--hmp-space-3) 0;
+      border-bottom: 1px solid var(--hmp-border);
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      .ha-skeleton {
+        margin: 0;
+        flex: 1;
+      }
+    }
+  }
+
+  .ha-pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: var(--hmp-space-3) var(--hmp-space-5);
+    border-top: 1px solid var(--hmp-border);
+    color: var(--hmp-text-3);
+    font-size: var(--hmp-fs-sm);
+  }
+
+  // ---------------------------------------------------------------- Switch
+
+  .ha-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border-radius: var(--hmp-radius-pill);
+    border: 0;
+    background: var(--hmp-border-strong);
+    cursor: pointer;
+    transition: background var(--hmp-dur-fast) var(--hmp-ease);
+    flex-shrink: 0;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: var(--hmp-elev-1);
+      transition: transform var(--hmp-dur-fast) var(--hmp-ease);
+    }
+
+    &.is-on {
+      background: var(--hmp-success);
+
+      &::after {
+        transform: translateX(18px);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- Modal
+
+  .ha-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.5);
+    z-index: 1060;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--hmp-space-4);
+    animation: ha-fade var(--hmp-dur-fast) var(--hmp-ease);
+  }
+
+  .ha-modal {
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    background: var(--hmp-surface);
+    border-radius: 14px;
+    box-shadow: var(--hmp-elev-3);
+    animation: ha-pop var(--hmp-dur) var(--hmp-ease);
+  }
+
+  .ha-modal-head {
+    padding: var(--hmp-space-5) var(--hmp-space-5) 6px;
+
+    h3 {
+      font-size: 17px;
+      font-weight: var(--hmp-fw-bold);
+      margin: 0 0 var(--hmp-space-1);
+    }
+
+    p {
+      margin: 0;
+      color: var(--hmp-text-2);
+      font-size: var(--hmp-fs-sm);
+    }
+  }
+
+  .ha-modal-body {
+    padding: 14px var(--hmp-space-5);
+  }
+
+  .ha-modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--hmp-space-2);
+    padding: var(--hmp-space-3) var(--hmp-space-5) var(--hmp-space-5);
+  }
+
+  // ---------------------------------------------------------------- Toasts
+
+  .ha-toasts {
+    position: fixed;
+    right: var(--hmp-space-5);
+    bottom: var(--hmp-space-5);
+    z-index: 1070;
+    display: flex;
+    flex-direction: column;
+    gap: var(--hmp-space-2);
+  }
+
+  .ha-toast {
+    min-width: 260px;
+    max-width: 380px;
+    padding: var(--hmp-space-3) 14px;
+    border-radius: 10px;
+    background: var(--hmp-text);
+    color: #fff;
+    font-size: var(--hmp-fs-sm);
+    box-shadow: var(--hmp-elev-3);
+    animation: ha-pop var(--hmp-dur) var(--hmp-ease);
+
+    &.is-error {
+      background: var(--hmp-danger);
+    }
+  }
+
+  // ---------------------------------------------------------------- Media, timeline
+
+  .ha-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+
+  .ha-thumb {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border: 1px solid var(--hmp-border);
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 0;
+    background: var(--hmp-surface-2);
+    cursor: zoom-in;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  .ha-thumb-flag {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    background: var(--hmp-danger);
+    color: #fff;
+    font-size: 11px;
+    font-weight: var(--hmp-fw-bold);
+    border-radius: var(--hmp-radius-sm);
+    padding: 1px 6px;
+  }
+
+  .ha-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      position: relative;
+      padding: 0 0 var(--hmp-space-3) 18px;
+      border-left: 2px solid var(--hmp-border);
+      margin-left: var(--hmp-space-1);
+      text-transform: capitalize;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: -6px;
+        top: 4px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--hmp-primary);
+      }
+
+      &:last-child {
+        padding-bottom: 0;
+      }
+    }
+  }
+
+  // Shortcut / navigation tiles
+  .ha-tile {
+    display: flex;
+    gap: var(--hmp-space-3);
+    align-items: flex-start;
+    padding: var(--hmp-space-4);
+    color: inherit;
+    height: 100%;
+    transition: border-color var(--hmp-dur-fast) var(--hmp-ease);
+
+    > i {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--hmp-radius);
+      background: var(--hmp-primary-soft);
+      color: var(--hmp-primary-on-soft);
+      font-size: 17px;
+    }
+
+    b {
+      display: block;
+      font-weight: var(--hmp-fw-semibold);
+      color: var(--hmp-text);
+    }
+
+    span {
+      color: var(--hmp-text-2);
+      font-size: var(--hmp-fs-sm);
+    }
+
+    &:hover {
+      border-color: var(--hmp-primary);
+      color: inherit;
+    }
+  }
+}
+
+@keyframes ha-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes ha-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ha-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ha-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Row action menu
+
+  .ha-menu {
+    position: relative;
+    display: inline-block;
+  }
+
+  .ha-menu-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 1050;
+    min-width: 200px;
+    padding: 6px;
+    background: var(--hmp-surface);
+    border: 1px solid var(--hmp-border);
+    border-radius: var(--hmp-radius-lg);
+    box-shadow: var(--hmp-elev-2);
+    text-align: left;
+    animation: ha-pop var(--hmp-dur-fast) var(--hmp-ease);
+
+    [role="menuitem"] {
+      display: block;
+      width: 100%;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: var(--hmp-radius-sm);
+      background: none;
+      color: var(--hmp-text);
+      font: inherit;
+      font-size: var(--hmp-fs-sm);
+      text-align: left;
+      cursor: pointer;
+      white-space: nowrap;
+
+      &:hover,
+      &:focus-visible {
+        background: var(--hmp-surface-3);
+        color: var(--hmp-text);
+        outline: none;
+      }
+
+      &.is-danger {
+        color: var(--hmp-danger);
+
+        &:hover,
+        &:focus-visible {
+          background: var(--hmp-danger-soft);
+        }
+      }
+
+      &[aria-disabled="true"] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- Listing row (thumbnail + text)
+
+  .ha-media-row {
+    display: flex;
+    align-items: center;
+    gap: var(--hmp-space-3);
+    min-width: 260px;
+
+    img {
+      width: 88px;
+      height: 58px;
+      border-radius: var(--hmp-radius);
+      object-fit: cover;
+      background: var(--hmp-surface-2);
+      flex-shrink: 0;
+    }
+
+    .ha-media-text {
+      min-width: 0;
+    }
+
+    .ha-media-title {
+      display: block;
+      font-weight: var(--hmp-fw-semibold);
+      color: var(--hmp-text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 340px;
+
+      &:hover {
+        color: var(--hmp-primary);
+      }
+    }
+
+    .ha-media-sub {
+      color: var(--hmp-text-3);
+      font-size: var(--hmp-fs-xs);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 340px;
+    }
+  }
+
+  .ha-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--hmp-space-2);
+    flex-wrap: wrap;
+  }
+
+  .ha-inline-error {
+    color: var(--hmp-danger);
+    font-size: var(--hmp-fs-xs);
+    margin-top: var(--hmp-space-1);
+  }
+
+  .ha-inline-edit {
+    padding: var(--hmp-space-4);
+    background: var(--hmp-surface-2);
+    border-radius: var(--hmp-radius);
+  }
+}
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Small charts (dataviz rules:
+  // thin marks, 4px rounded ends, recessive track, text in text tokens, legend for 2+ series)
+
+  .ha-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--hmp-space-2) var(--hmp-space-5);
+    list-style: none;
+    margin: var(--hmp-space-3) 0 0;
+    padding: 0;
+    font-size: var(--hmp-fs-sm);
+    color: var(--hmp-text-2);
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--hmp-space-2);
+    }
+  }
+
+  .ha-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .ha-bars {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: 120px 1fr 36px;
+      align-items: center;
+      gap: var(--hmp-space-3);
+      padding: 5px 0;
+    }
+  }
+
+  .ha-bars-label {
+    font-size: var(--hmp-fs-sm);
+    color: var(--hmp-text-2);
+  }
+
+  .ha-bars-track {
+    height: 14px;
+    background: var(--hmp-surface-3);
+    border-radius: 4px;
+  }
+
+  .ha-bars-fill {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    transition: width var(--hmp-dur) var(--hmp-ease);
+  }
+
+  .ha-bars-value {
+    font-size: var(--hmp-fs-sm);
+    font-weight: var(--hmp-fw-semibold);
+    text-align: right;
+  }
+
+  .ha-range-values {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0 0 var(--hmp-space-4);
+
+    dt {
+      font-size: var(--hmp-fs-xs);
+      color: var(--hmp-text-3);
+      font-weight: var(--hmp-fw-medium);
+    }
+
+    dd {
+      margin: 2px 0 0;
+      font-size: var(--hmp-fs-lg);
+      font-weight: var(--hmp-fw-bold);
+    }
+
+    .is-center {
+      text-align: center;
+    }
+
+    .is-end {
+      text-align: right;
+    }
+  }
+
+  .ha-range {
+    position: relative;
+    height: 8px;
+    border-radius: 4px;
+    background: #cde2fb; // sequential ramp step 100 (track)
+  }
+
+  .ha-range-marker {
+    position: absolute;
+    top: -5px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #2a78d6; // sequential ramp step 450
+    border: 2px solid var(--hmp-surface);
+    transform: translateX(-50%);
+  }
+}
+
+.hmp-ui {
+  .hd-card-title {
+    font-size: var(--hmp-fs-md);
+    font-weight: var(--hmp-fw-semibold);
+    margin: 0 0 var(--hmp-space-3);
+  }
+}
+
+.hmp-ui {
+  fieldset.ha-field {
+    border: 0;
+    padding: 0;
+    margin: 0 0 var(--hmp-space-4);
+    min-width: 0;
+
+    legend {
+      float: none;
+      font-size: var(--hmp-fs-sm);
+      font-weight: var(--hmp-fw-semibold);
+      margin-bottom: 6px;
+      padding: 0;
+    }
+  }
+}
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Reviews
+
+  .ha-stars {
+    display: inline-flex;
+    gap: 2px;
+    font-size: 13px;
+    color: var(--hmp-border-strong);
+
+    .is-on {
+      color: #b45309; // amber-700: 5:1 on surface — the filled stars carry the rating; the label reads it out
+    }
+  }
+
+  .ha-review-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ha-review {
+    display: flex;
+    gap: var(--hmp-space-3);
+    padding: var(--hmp-space-4) var(--hmp-space-5);
+    border-bottom: 1px solid var(--hmp-border);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    p {
+      margin: var(--hmp-space-2) 0 0;
+      max-width: var(--hmp-measure);
+    }
+  }
+
+  .ha-review-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .ha-review-body {
+    min-width: 0;
+  }
+
+  .ha-review-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--hmp-space-2);
+  }
+}
+
+.hmp-ui {
+  .ha-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+    gap: var(--hmp-space-3) var(--hmp-space-4);
+
+    .ha-label {
+      display: block;
+      font-size: var(--hmp-fs-xs);
+      font-weight: var(--hmp-fw-semibold);
+      color: var(--hmp-text-2);
+      margin-bottom: 4px;
+    }
+  }
+
+  .ha-card-body > .ha-filterbar {
+    border-bottom: 0;
+    padding: var(--hmp-space-3) 0 0;
+  }
+}
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Live lanes
+
+  .ha-lane.is-focus {
+    border-color: var(--hmp-success);
+    box-shadow: inset 0 3px 0 var(--hmp-success), var(--hmp-elev-1);
+  }
+
+  .ha-lane-price {
+    font-size: var(--hmp-fs-xl);
+    font-weight: var(--hmp-fw-bold);
+    margin: 2px 0 var(--hmp-space-2);
+  }
+
+  .ha-lane-picker {
+    display: grid;
+    gap: var(--hmp-space-2);
+    border: 0;
+    margin: 0;
+    min-width: 0;
+  }
+}
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Meter, plans
+
+  .ha-meter {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--hmp-surface-3);
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: 4px;
+      background: var(--hmp-primary);
+      transition: width var(--hmp-dur) var(--hmp-ease);
+    }
+
+    &.is-warning span {
+      background: #b45309;
+    }
+
+    &.is-danger span {
+      background: var(--hmp-danger);
+    }
+  }
+
+  .ha-feature-list {
+    padding-left: 18px;
+    color: var(--hmp-text-2);
+    font-size: var(--hmp-fs-sm);
+
+    li + li {
+      margin-top: 4px;
+    }
+  }
+
+  .ha-plan-price {
+    font-size: var(--hmp-fs-lg);
+    font-weight: var(--hmp-fw-bold);
+  }
+
+  .ha-plan-pending {
+    border-color: var(--hmp-primary);
+    box-shadow: inset 0 3px 0 var(--hmp-primary), var(--hmp-elev-1);
+  }
+
+  .ha-proration {
+    margin-bottom: var(--hmp-space-3);
+
+    td {
+      padding: var(--hmp-space-2) 0;
+    }
+
+    tbody tr:hover td {
+      background: transparent;
+    }
+  }
+}
+
+.hmp-ui {
+  .ha-mapping {
+    display: grid;
+    gap: var(--hmp-space-2);
+    max-width: 640px;
+  }
+
+  .ha-mapping-head,
+  .ha-mapping-row {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    align-items: center;
+    gap: var(--hmp-space-2);
+  }
+
+  .ha-mapping-head {
+    grid-template-columns: 1fr 1fr;
+    gap: calc(24px + 2 * var(--hmp-space-2));
+    font-size: var(--hmp-fs-xs);
+    font-weight: var(--hmp-fw-semibold);
+    color: var(--hmp-text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .ha-mapping-arrow {
+    text-align: center;
+    color: var(--hmp-text-3);
+  }
+}
+
+.hmp-ui {
+  .ha-check-list {
+    display: grid;
+    gap: 6px;
+
+    &.is-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px var(--hmp-space-4);
+    }
+
+    .ha-check {
+      font-size: var(--hmp-fs-sm);
+      align-items: flex-start;
+
+      input {
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+
+      input:disabled + span,
+      input:disabled ~ * {
+        color: var(--hmp-text-3);
+      }
+    }
+  }
+
+  .ha-team-editor {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: var(--hmp-space-4) var(--hmp-space-6);
+    margin-bottom: var(--hmp-space-2);
+  }
+}
+
+.hmp-ui {
+  .ha-form-card {
+    max-width: 560px;
+  }
+
+  .ha-codes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--hmp-space-2);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    code {
+      display: block;
+      text-align: center;
+      padding: 6px;
+      font-size: var(--hmp-fs-sm);
+    }
+  }
+}
+
+.hmp-ui {
+  .ha-rules {
+    list-style: none;
+    padding: 0;
+    margin: var(--hmp-space-2) 0 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px var(--hmp-space-4);
+    font-size: var(--hmp-fs-xs);
+    color: var(--hmp-text-3);
+
+    li {
+      display: flex;
+      gap: 6px;
+    }
+
+    .is-met {
+      color: var(--hmp-success);
+    }
+  }
+}
+
+.hmp-ui {
+  .ha-profile-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+    gap: 0 var(--hmp-space-4);
+    align-items: start;
+
+    @media (max-width: 991px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Stepper (current step: number, weight and colour)
+
+  .ha-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--hmp-space-2) var(--hmp-space-6);
+    list-style: none;
+    margin: 0 0 var(--hmp-space-5);
+    padding: 0;
+    counter-reset: none;
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--hmp-space-2);
+      font-size: var(--hmp-fs-sm);
+      font-weight: var(--hmp-fw-medium);
+      color: var(--hmp-text-3);
+
+      > span {
+        display: grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1px solid var(--hmp-border-strong);
+        font-size: var(--hmp-fs-xs);
+        font-weight: var(--hmp-fw-bold);
+      }
+
+      &.is-current {
+        color: var(--hmp-text);
+        font-weight: var(--hmp-fw-semibold);
+
+        > span {
+          background: var(--hmp-primary);
+          border-color: var(--hmp-primary);
+          color: var(--hmp-on-primary);
+        }
+      }
+
+      &.is-done {
+        color: var(--hmp-success);
+
+        > span {
+          border-color: var(--hmp-success);
+          color: var(--hmp-success);
+        }
+      }
+    }
+  }
+}
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Guided capture shot list
+
+  .ha-shot-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    gap: var(--hmp-space-2);
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--hmp-space-4);
+  }
+
+  .ha-shot {
+    display: flex;
+    align-items: center;
+    gap: var(--hmp-space-3);
+    width: 100%;
+    padding: var(--hmp-space-3);
+    text-align: left;
+    background: var(--hmp-surface);
+    border: 1px solid var(--hmp-border);
+    border-radius: var(--hmp-radius);
+    font: inherit;
+    color: var(--hmp-text);
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--hmp-border-strong);
+    }
+
+    &.is-current {
+      border-color: var(--hmp-primary);
+      box-shadow: inset 0 0 0 1px var(--hmp-primary);
+    }
+
+    &.is-passed .ha-shot-mark {
+      background: var(--hmp-success);
+      border-color: var(--hmp-success);
+      color: #fff;
+    }
+
+    &.is-failed .ha-shot-mark {
+      background: var(--hmp-danger);
+      border-color: var(--hmp-danger);
+      color: #fff;
+    }
+  }
+
+  .ha-shot-mark {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--hmp-border-strong);
+    font-size: var(--hmp-fs-xs);
+    font-weight: var(--hmp-fw-bold);
+    flex-shrink: 0;
+  }
+
+  .ha-shot-label {
+    font-size: var(--hmp-fs-sm);
+  }
+}
+
+.hmp-ui {
+  // Repeating input rows (matrix entries, thresholds): a grid with one header row.
+  .ha-row-editor {
+    display: grid;
+    gap: var(--hmp-space-2);
+    align-items: center;
+  }
+
+  .ha-row-editor-head {
+    font-size: var(--hmp-fs-xs);
+    font-weight: var(--hmp-fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--hmp-text-2);
+  }
+}
+
+.hmp-ui {
+  .ha-tree {
+    list-style: none;
+    padding: 0;
+
+    li {
+      padding: 4px 0;
+      border-bottom: 1px solid var(--hmp-border);
+
+      &.is-model {
+        padding-left: var(--hmp-space-5);
+      }
+
+      &.is-derivative {
+        padding-left: var(--hmp-space-10);
+        color: var(--hmp-text-2);
+      }
+    }
+  }
+}
+
+.hmp-ui {
+  .ha-message {
+    padding: var(--hmp-space-2) var(--hmp-space-3);
+    margin-bottom: var(--hmp-space-2);
+    border-radius: var(--hmp-radius);
+    background: var(--hmp-surface-2);
+    border: 1px solid transparent;
+
+    &.is-flagged {
+      background: var(--hmp-warning-soft);
+    }
+
+    // The case's own message: tint + red edge + the "this case" label.
+    &.is-case {
+      background: var(--hmp-danger-soft);
+      border-color: var(--hmp-danger);
+    }
+  }
+
+  .ha-table tr.is-selected td {
+    background: var(--hmp-primary-soft);
+  }
+}
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Rostrum
+
+  .ha-rostrum {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: var(--hmp-space-4);
+    align-items: start;
+
+    @media (max-width: 1099px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .ha-rostrum-price {
+    font-size: var(--hmp-fs-2xl);
+    font-weight: var(--hmp-fw-bold);
+    line-height: var(--hmp-lh-tight);
+    margin-bottom: var(--hmp-space-3);
+  }
+
+  .ha-up-next {
+    margin: 0;
+    padding-left: calc(var(--hmp-space-5) + 18px);
+
+    li + li {
+      margin-top: 6px;
+    }
+  }
+
+  .ha-label {
+    display: block;
+    font-weight: var(--hmp-fw-semibold);
+    font-size: var(--hmp-fs-sm);
+    margin-bottom: 6px;
+  }
+}
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Lot detail
+
+  .ha-lot-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+    gap: var(--hmp-space-4);
+    align-items: start;
+
+    @media (max-width: 1099px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .ha-lot-panel {
+    position: sticky;
+    top: calc(var(--hmp-topbar-h) + var(--hmp-space-4));
+
+    @media (max-width: 1099px) {
+      position: static;
+    }
+  }
+}

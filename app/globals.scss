@@ -1,5 +1,9 @@
 @use "../public/assets/scss/app.scss" as *;
+@use "./tokens";
+@use "./ui-kit";
 @use "./admin-panel";
+@use "./dashboard";
+@use "./dashboard-overview";
 @use "./auth";
 @import "../public/assets/css/font-awesome.css";
 
@@ -937,107 +941,5 @@ button.specs-features {
     background: rgba(220, 38, 38, 0.08);
     border-color: rgba(220, 38, 38, 0.16);
     color: #b91c1c;
-  }
-}
-
-// Desktop-only collapse for the dealer/dashboard sidebar (.sidebar-dashboard, #wrapper-dashboard
-// in public/assets/css/styles.css) — a separate concept from that stylesheet's own <992px
-// off-canvas drawer behavior (.sidebar-dashboard.active), which already owns that breakpoint.
-.db-collapse-toggle {
-  position: absolute;
-  top: 34px;
-  right: -13px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid #07060c;
-  background: #2a3347;
-  color: #ffffff;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10000;
-  padding: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-
-  &:hover {
-    background: #405ff2;
-  }
-
-  svg {
-    display: block;
-    transition: transform 0.2s ease-in-out;
-  }
-}
-
-@media (min-width: 992px) {
-  .db-collapse-toggle {
-    display: flex;
-  }
-
-  #wrapper-dashboard {
-    transition: padding-left 0.2s ease-in-out;
-  }
-
-  #wrapper-dashboard.sidebar-collapsed {
-    padding-left: 92px;
-  }
-
-  .sidebar-dashboard.collapsed {
-    width: 92px;
-  }
-
-  .sidebar-dashboard.collapsed .db-content {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .sidebar-dashboard.collapsed .db-logo {
-    display: flex;
-    justify-content: center;
-
-    img {
-      width: 34px;
-      height: auto;
-    }
-  }
-
-  .sidebar-dashboard.collapsed .db-author .content,
-  .sidebar-dashboard.collapsed .db-title,
-  .sidebar-dashboard.collapsed .db-menu-label,
-  .sidebar-dashboard.collapsed .count-page {
-    display: none;
-  }
-
-  .sidebar-dashboard.collapsed .db-author .author {
-    justify-content: center;
-  }
-
-  // Edge-to-edge hover/active fill (the base rule) reads as a stray colored bar in a narrow
-  // rail — a centered, rounded "icon button" per row is the clearer, more deliberate pattern.
-  .sidebar-dashboard.collapsed .db-list-menu ul {
-    padding: 0 14px;
-  }
-
-  .sidebar-dashboard.collapsed .db-list-menu ul li a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    margin: 0 auto;
-    padding: 0;
-    border-radius: 12px;
-
-    i {
-      margin-right: 0;
-      font-size: 20px;
-    }
-  }
-
-  .sidebar-dashboard.collapsed .db-list-menu ul li a:hover,
-  .sidebar-dashboard.collapsed .db-list-menu ul li a.active {
-    background: #405ff2;
   }
 }

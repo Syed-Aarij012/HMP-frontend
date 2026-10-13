@@ -3,7 +3,7 @@
 import { useState } from "react";
 import SuperAdminShell from "./SuperAdminShell";
 import JustifiedAction from "./JustifiedAction";
-import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, useDebouncedValue } from "@/components/admin/ui";
+import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, useDebouncedValue, FilterChips } from "@/components/admin/ui";
 import { useAdminResource } from "@/hooks/useSuperAdmin";
 import { pageInfo, type AdminOrganization, type Paginated } from "@/lib/superAdmin";
 
@@ -34,20 +34,27 @@ export default function Organizations() {
             <option value="suspended">Suspended</option>
           </select>
         </div>
+        <FilterChips
+          filters={[
+            q.trim() !== "" && { key: "q", label: `“${q.trim()}”`, onRemove: () => { setQ(""); setPage(1); } },
+            status !== "" && { key: "status", label: `Status: ${status}`, onRemove: () => { setStatus(""); setPage(1); } },
+          ]}
+          onClearAll={() => { setQ(""); setStatus(""); setPage(1); }}
+        />
         {loading && !data && <LoadingRows />}
         {error && <ErrorNotice message={error} />}
         {data && data.data.length === 0 && <EmptyState icon="icon-carus-usercheck" title="No organizations match" />}
         {data && data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Organisations</caption>
               <thead>
                 <tr>
-                  <th>Organization</th>
-                  <th>KYB</th>
-                  <th>Staff</th>
-                  <th>Listings</th>
-                  <th>Status</th>
-                  <th className="ha-right">Actions</th>
+                  <th scope="col">Organization</th>
+                  <th scope="col">KYB</th>
+                  <th scope="col">Staff</th>
+                  <th scope="col">Listings</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="ha-right">Actions</th>
                 </tr>
               </thead>
               <tbody>

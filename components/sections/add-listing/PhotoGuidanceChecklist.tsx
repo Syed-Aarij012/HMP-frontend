@@ -12,9 +12,9 @@ export default function PhotoGuidanceChecklist() {
   if (loading || !guidance) return null;
 
   return (
-    <div className="tfcl-card p-3 mb-3">
-      <h4 className="mb-2">Photo guide</h4>
-      <p className="text-color-2 mb-2">
+    <div className="ha-card ha-card-body mb-4">
+      <h2 className="hd-card-title">Photo guide</h2>
+      <p className="ha-muted mb-2">
         Listings with at least {guidance.recommendedStillCount} clear photos get noticed more.
         The starred shots matter most.
       </p>

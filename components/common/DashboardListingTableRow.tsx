@@ -1,15 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import Image from "@/components/common/AppImage";
 import Link from "next/link";
-import NiceSelect from "@/components/common/NiceSelect";
 import { DASHBOARD_LISTING_STATUS_META } from "@/data/dashboardListings";
 import { ADD_LISTING_PRICE_TYPE_OPTIONS } from "@/data/niceSelectOptions";
 import { formatCarPrice, getCarHref } from "@/data/cars";
 import { describeApiError } from "@/lib/api-client";
 import { usePricingSuggestion, useListingQuality } from "@/hooks/useListingTools";
-import type { DashboardCar } from "@/types/cars";
+import type { DashboardCar, DashboardListingStatus } from "@/types/cars";
+import { ActionMenu, Badge, Notice, formatMoney, type MenuAction, type Tone } from "@/components/ui/kit";
+
+const STATUS_TONE: Record<DashboardListingStatus, Tone> = {
+  approved: "success",
+  pending: "warning",
+  draft: "neutral",
+  under_offer: "primary",
+  reserved: "primary",
+  withdrawn: "neutral",
+  expired: "danger",
+  sold: "dark",
+};
 
 export type ListingEditableFields = {
   price: number;
@@ -56,30 +67,26 @@ function PricingSuggestionHint({ vehiclePublicId }: { vehiclePublicId: string })
 
   if (!suggestion && !loading && !error) {
     return (
-      <button
-        type="button"
-        className="btn-action tfcl-dashboard-action-edit mb-2"
-        onClick={() => fetchSuggestion(vehiclePublicId)}
-      >
+      <button type="button" className="ha-btn is-sm" onClick={() => fetchSuggestion(vehiclePublicId)}>
         Get a pricing suggestion
       </button>
     );
   }
 
-  if (loading) return <p className="mb-2">Checking similar cars on the platform...</p>;
-  if (error) return <div className="alert alert-danger mb-2">{error}</div>;
+  if (loading) return <p className="ha-sub" role="status">Checking similar cars on the platform…</p>;
+  if (error) return <Notice tone="danger">{error}</Notice>;
   if (!suggestion) return null;
 
   if (suggestion.suggestedPrice === null) {
-    return <p className="tfcl-empty-data mb-2">{suggestion.message}</p>;
+    return <Notice tone="info">{suggestion.message}</Notice>;
   }
 
   return (
-    <div className="alert alert-success mb-2">
-      Similar cars suggest around <b>£{suggestion.suggestedPrice.toLocaleString()}</b> (£
-      {suggestion.rangeLow?.toLocaleString()}–£{suggestion.rangeHigh?.toLocaleString()}), based on{" "}
-      {suggestion.comparables} comparable listing{suggestion.comparables === 1 ? "" : "s"}.
-    </div>
+    <Notice tone="success">
+      Similar cars suggest around <b>{formatMoney(suggestion.suggestedPrice)}</b> ({formatMoney(suggestion.rangeLow)}–
+      {formatMoney(suggestion.rangeHigh)}), based on {suggestion.comparables} comparable listing
+      {suggestion.comparables === 1 ? "" : "s"}.
+    </Notice>
   );
 }
 
@@ -89,22 +96,18 @@ function ListingQualityHint({ listingPublicId }: { listingPublicId: string }) {
 
   if (!quality && !loading && !error) {
     return (
-      <button
-        type="button"
-        className="btn-action tfcl-dashboard-action-edit mb-2"
-        onClick={() => fetchQuality(listingPublicId)}
-      >
+      <button type="button" className="ha-btn is-sm" onClick={() => fetchQuality(listingPublicId)}>
         Check listing quality
       </button>
     );
   }
 
-  if (loading) return <p className="mb-2">Scoring this listing...</p>;
-  if (error) return <div className="alert alert-danger mb-2">{error}</div>;
+  if (loading) return <p className="ha-sub" role="status">Scoring this listing…</p>;
+  if (error) return <Notice tone="danger">{error}</Notice>;
   if (!quality) return null;
 
   return (
-    <div className="alert alert-info mb-2">
+    <Notice tone="info">
       <b>Quality score: {quality.score}/100</b>
       {quality.remediationPrompts.length > 0 && (
         <ul className="mb-0 mt-1">
@@ -113,7 +116,7 @@ function ListingQualityHint({ listingPublicId }: { listingPublicId: string }) {
           ))}
         </ul>
       )}
-    </div>
+    </Notice>
   );
 }
 
@@ -154,6 +157,7 @@ export default function DashboardListingTableRow({
   const [status, setStatus] = useState<NonNullable<ListingEditableFields["status"]> | "">("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fieldId = useId();
 
   const startEditing = () => {
     setPrice(String(listing.price));
@@ -230,67 +234,69 @@ export default function DashboardListingTableRow({
     return (
       <tr>
         <td colSpan={4}>
-          <div className="tfcl-listing-edit-inline p-3">
-            {listing.vehiclePublicId && <PricingSuggestionHint vehiclePublicId={listing.vehiclePublicId} />}
-            {listing.publicId && <ListingQualityHint listingPublicId={listing.publicId} />}
-            <div className="grid-2 gap-30 mb-2">
-              <div className="form-group mb-0">
-                <label>Price</label>
+          <div className="ha-inline-edit">
+            <div className="ha-actions is-start mb-3">
+              {listing.vehiclePublicId && <PricingSuggestionHint vehiclePublicId={listing.vehiclePublicId} />}
+              {listing.publicId && <ListingQualityHint listingPublicId={listing.publicId} />}
+            </div>
+            <div className="ha-form-grid">
+              <div className="ha-field">
+                <label htmlFor={`${fieldId}-price`}>Price (£)</label>
                 <input
+                  id={`${fieldId}-price`}
                   type="number"
-                  className="form-control"
+                  className="ha-input"
                   value={price}
                   onChange={(event) => setPrice(event.target.value)}
                   min={0}
                 />
               </div>
-              <div className="form-group mb-0">
-                <label>Price type</label>
-                <NiceSelect
-                  options={ADD_LISTING_PRICE_TYPE_OPTIONS}
+              <div className="ha-field">
+                <label htmlFor={`${fieldId}-price-type`}>Price type</label>
+                <select
+                  id={`${fieldId}-price-type`}
+                  className="ha-select"
                   value={priceType}
-                  defaultValue={priceType}
-                  className="form-control"
-                  onChange={(value) => setPriceType(String(value))}
-                />
+                  onChange={(event) => setPriceType(event.target.value)}
+                >
+                  {ADD_LISTING_PRICE_TYPE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="ha-field">
+                <label htmlFor={`${fieldId}-status`}>Status</label>
+                <select
+                  id={`${fieldId}-status`}
+                  className="ha-select"
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value as NonNullable<ListingEditableFields["status"]> | "")}
+                >
+                  {[{ label: `Keep as ${statusMeta.label}`, value: "" }, ...LISTING_STATUS_OPTIONS].map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-            <div className="form-group mb-2">
-              <label>Description</label>
+            <div className="ha-field">
+              <label htmlFor={`${fieldId}-description`}>Description</label>
               <textarea
-                className="form-control"
+                id={`${fieldId}-description`}
+                className="ha-textarea"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
               />
             </div>
-            <div className="form-group mb-2">
-              <label>Status</label>
-              <NiceSelect
-                options={[{ label: `Keep as ${statusMeta.label}`, value: "" }, ...LISTING_STATUS_OPTIONS]}
-                value={status}
-                defaultValue=""
-                className="form-control"
-                onChange={(value) =>
-                  setStatus(String(value) as NonNullable<ListingEditableFields["status"]> | "")
-                }
-              />
-            </div>
-            {error && <div className="alert alert-danger">{error}</div>}
-            <div className="d-flex gap-30">
-              <button
-                type="button"
-                className="btn-action tfcl-dashboard-action-edit"
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save"}
+            {error && <Notice tone="danger">{error}</Notice>}
+            <div className="ha-actions is-start">
+              <button type="button" className="ha-btn is-primary" onClick={handleSave} disabled={saving} aria-busy={saving}>
+                {saving ? "Saving…" : "Save changes"}
               </button>
-              <button
-                type="button"
-                className="btn-action tfcl-dashboard-action-delete"
-                onClick={() => setIsEditing(false)}
-                disabled={saving}
-              >
+              <button type="button" className="ha-btn is-ghost" onClick={() => setIsEditing(false)} disabled={saving}>
                 Cancel
               </button>
             </div>
@@ -300,190 +306,72 @@ export default function DashboardListingTableRow({
     );
   }
 
+  // One primary action for the listing's current state; everything else is in "More".
+  const primary = canPublish
+    ? { label: publishing ? "Sending…" : needsReview ? "Submit for review" : "Relist", onClick: handlePublish, busy: publishing }
+    : canRenew
+      ? { label: renewing ? "Renewing…" : listing.rawStatus === "expired" ? "Relist" : "Renew", onClick: handleRenew, busy: renewing }
+      : null;
+
+  const more: MenuAction[] = [
+    ...(canPublish && canRenew ? [{ label: listing.rawStatus === "expired" ? "Relist" : "Renew", onSelect: handleRenew, disabled: renewing }] : []),
+    ...(canEdit && listing.publicId ? [{ label: "Edit all details", href: `/edit-listing/${listing.publicId}` }] : []),
+    ...(listing.vehiclePublicId ? [{ label: "Guided photos", href: `/guided-capture/${listing.vehiclePublicId}` }] : []),
+    ...(canMarkSold ? [{ label: markingSold ? "Marking…" : "Mark as sold", onSelect: handleMarkSold, disabled: markingSold }] : []),
+    { label: "Delete", onSelect: () => onDelete?.(listing.id), danger: true },
+  ];
+
   return (
     <tr>
-      <td className="column-listing">
-        <div className="tfcl-listing-product">
-          <Link href={detailHref}>
+      <td data-label="Listing">
+        <div className="ha-media-row">
+          <Link href={detailHref} tabIndex={-1} aria-hidden="true">
             <Image
               src={listing.dashboardImage}
-              alt={listing.title}
-              width={168}
-              height={95}
+              alt=""
+              width={88}
+              height={58}
               unoptimized={listing.dashboardImage.startsWith("http")}
             />
           </Link>
-          <div className="tfcl-listing-summary">
-            <h4 className="tfcl-listing-title">
-              <Link target="_blank" href={detailHref}>
-                {listing.title}
-              </Link>
-            </h4>
-            <div className="features-text">
-              {listing.description ?? DEFAULT_LISTING_DESCRIPTION}
-            </div>
-            <div className="price">
-              <div className="inner tfcl-listing-price">
-                {formatCarPrice(listing.price)}
-              </div>
-            </div>
+          <div className="ha-media-text">
+            <Link target="_blank" href={detailHref} className="ha-media-title">
+              {listing.title}
+            </Link>
+            <div className="ha-media-sub">{listing.description ?? DEFAULT_LISTING_DESCRIPTION}</div>
+            <div className="ha-primary-text ha-num">{formatCarPrice(listing.price)}</div>
           </div>
         </div>
       </td>
-      <td className="column-status">
-        <span
-          className={`tfcl-listing-status ${statusMeta.className}`}
-        >
-          {statusMeta.label}
-        </span>
+      <td data-label="Status">
+        <Badge tone={STATUS_TONE[listing.dashboardStatus] ?? "neutral"}>{statusMeta.label}</Badge>
         {/* FR-C-001: a declined listing comes back as a draft with the reviewer's reason. */}
         {listing.rawStatus === "draft" && listing.reviewNote && (
-          <div className="text-danger fs-13 mt-1" style={{ maxWidth: 220 }}>
+          <div className="ha-inline-error" style={{ maxWidth: 240 }}>
             Not approved: {listing.reviewNote}
           </div>
         )}
       </td>
-      <td className="column-date">
-        <div className="tfcl-listing-date">{formatListingDate(listing.postingDate)}</div>
+      <td data-label="Posted" className="ha-num">
+        {formatListingDate(listing.postingDate)}
       </td>
-      <td className="column-controller">
-        {canEdit && (
-          <div className="inner-controller">
-            <span className="icon">
-              <Image
-                src="/assets/images/dashboard/pen.svg"
-                alt="icon"
-                width={20}
-                height={20}
-              />
-            </span>
-            <button
-              type="button"
-              className="btn-action tfcl-dashboard-action-edit"
-              onClick={startEditing}
-            >
+      <td data-label="">
+        <div className="ha-row-actions">
+          {primary && (
+            <button type="button" className="ha-btn is-sm is-primary" onClick={primary.onClick} disabled={primary.busy} aria-busy={primary.busy}>
+              {primary.label}
+            </button>
+          )}
+          {canEdit && (
+            <button type="button" className="ha-btn is-sm" onClick={startEditing}>
               Edit
             </button>
-          </div>
-        )}
-        {canEdit && listing.publicId && (
-          <div className="inner-controller">
-            <span className="icon">
-              <Image
-                src="/assets/images/dashboard/pen.svg"
-                alt="icon"
-                width={20}
-                height={20}
-              />
-            </span>
-            {/* Every vehicle detail, the listing's fields, and photos/video — the quick Edit above
-                only covers price, description and status. */}
-            <Link href={`/edit-listing/${listing.publicId}`} className="btn-action tfcl-dashboard-action-edit">
-              Edit all details
-            </Link>
-          </div>
-        )}
-        {canPublish && (
-          <div className="inner-controller">
-            <span className="icon">
-              <Image
-                src="/assets/images/dashboard/pen.svg"
-                alt="icon"
-                width={20}
-                height={20}
-              />
-            </span>
-            <button
-              type="button"
-              className="btn-action tfcl-dashboard-action-edit"
-              onClick={handlePublish}
-              disabled={publishing}
-            >
-              {publishing ? "Sending..." : needsReview ? "Submit for review" : "Relist"}
-            </button>
-          </div>
-        )}
-        {canMarkSold && (
-          <div className="inner-controller">
-            <span className="icon">
-              <Image
-                src="/assets/images/dashboard/hide.svg"
-                alt="icon"
-                width={20}
-                height={20}
-              />
-            </span>
-            <button
-              type="button"
-              className="btn-action tfcl-dashboard-action-edit"
-              onClick={handleMarkSold}
-              disabled={markingSold}
-            >
-              {markingSold ? "Marking..." : "Sold"}
-            </button>
-          </div>
-        )}
-        {canRenew && (
-          <div className="inner-controller">
-            <span className="icon">
-              <Image
-                src="/assets/images/dashboard/pen.svg"
-                alt="icon"
-                width={20}
-                height={20}
-              />
-            </span>
-            <button
-              type="button"
-              className="btn-action tfcl-dashboard-action-edit"
-              onClick={handleRenew}
-              disabled={renewing}
-            >
-              {renewing ? "Renewing..." : listing.rawStatus === "expired" ? "Relist" : "Renew"}
-            </button>
-          </div>
-        )}
-        {listing.vehiclePublicId && (
-          <div className="inner-controller">
-            <span className="icon">
-              <Image
-                src="/assets/images/dashboard/pen.svg"
-                alt="icon"
-                width={20}
-                height={20}
-              />
-            </span>
-            <Link href={`/guided-capture/${listing.vehiclePublicId}`} className="btn-action tfcl-dashboard-action-edit">
-              Guided photos
-            </Link>
-          </div>
-        )}
-        <div className="inner-controller">
-          <span className="icon">
-            <Image
-              src="/assets/images/dashboard/trash.svg"
-              alt="icon"
-              width={20}
-              height={20}
-            />
-          </span>
-          <button
-            type="button"
-            className="btn-action tfcl-dashboard-action-delete"
-            onClick={() => onDelete?.(listing.id)}
-          >
-            Delete
-          </button>
+          )}
+          <ActionMenu actions={more} label={`More actions for ${listing.title}`} />
         </div>
-        {publishError && (
-          <div className="text-danger fs-12 w-100 mt-1">{publishError}</div>
-        )}
-        {markSoldError && (
-          <div className="text-danger fs-12 w-100 mt-1">{markSoldError}</div>
-        )}
-        {renewError && (
-          <div className="text-danger fs-12 w-100 mt-1">{renewError}</div>
-        )}
+        {publishError && <div className="ha-inline-error" role="alert">{publishError}</div>}
+        {markSoldError && <div className="ha-inline-error" role="alert">{markSoldError}</div>}
+        {renewError && <div className="ha-inline-error" role="alert">{renewError}</div>}
       </td>
     </tr>
   );

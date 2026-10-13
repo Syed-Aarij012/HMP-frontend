@@ -105,14 +105,14 @@ export default function Approvals() {
         )}
         {data && data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Pending approvals</caption>
               <thead>
                 <tr>
-                  <th>Request</th>
-                  <th>Reason</th>
-                  <th>Raised by</th>
-                  <th>Status</th>
-                  <th className="ha-right">Actions</th>
+                  <th scope="col">Request</th>
+                  <th scope="col">Reason</th>
+                  <th scope="col">Raised by</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="ha-right">Actions</th>
                 </tr>
               </thead>
               <tbody>

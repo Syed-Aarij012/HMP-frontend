@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useOrganizationTeam,
@@ -10,18 +9,32 @@ import {
   type TeamRole,
   type TeamRooftop,
 } from "@/hooks/useOrganizationTeam";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import {
+  Badge,
+  Card,
+  DataTable,
+  DataToolbar,
+  EmptyState,
+  LoadingTable,
+  NoMatches,
+  Notice,
+  StatusBadge,
+  formatMoney,
+  useListControls,
+} from "@/components/ui/kit";
 
 function RoleChecks({ roles, value, onChange, disabled }: { roles: TeamRole[]; value: string[]; onChange: (next: string[]) => void; disabled?: boolean }) {
   return (
-    <div className="d-flex flex-column gap-1">
+    <div className="ha-check-list">
       {roles.map((role) => (
-        <label key={role.name} className="fs-13" title={role.permissions.join(", ")} style={{ cursor: disabled ? "default" : "pointer" }}>
+        <label key={role.name} className="ha-check" title={role.permissions.join(", ")} style={{ cursor: disabled ? "default" : "pointer" }}>
           <input
             type="checkbox"
             disabled={disabled}
             checked={value.includes(role.name)}
             onChange={(e) => onChange(e.target.checked ? [...value, role.name] : value.filter((r) => r !== role.name))}
-          />{" "}
+          />
           {role.label}
         </label>
       ))}
@@ -50,19 +63,21 @@ function PermissionChecks({ options, roleGiven, value, onChange, disabled }: {
 }) {
   if (options.length === 0) return null;
   return (
-    <div className="d-flex flex-column gap-1">
+    <div className="ha-check-list">
       {options.map((permission) => {
         const fromRole = roleGiven.has(permission);
         return (
-          <label key={permission} className="fs-13" style={{ cursor: disabled || fromRole ? "default" : "pointer", opacity: fromRole ? 0.6 : 1 }}>
+          <label key={permission} className="ha-check" style={{ cursor: disabled || fromRole ? "default" : "pointer" }}>
             <input
               type="checkbox"
               disabled={disabled || fromRole}
               checked={fromRole || value.includes(permission)}
               onChange={(e) => onChange(e.target.checked ? [...value, permission] : value.filter((p) => p !== permission))}
-            />{" "}
-            {PERMISSION_LABELS[permission] ?? permission}
-            {fromRole && <span className="text-color-2"> (from role)</span>}
+            />
+            <span>
+              {PERMISSION_LABELS[permission] ?? permission}
+              {fromRole && <span className="ha-sub"> · from role</span>}
+            </span>
           </label>
         );
       })}
@@ -80,18 +95,18 @@ function RooftopRolesEditor({ rooftops, roles, wideRoles, value, onChange, disab
   disabled?: boolean;
 }) {
   const bindable = roles.filter((r) => r.name !== "dealer_org_admin" && !wideRoles.includes(r.name));
-  if (rooftops.length === 0 || bindable.length === 0) return <span className="fs-13 text-color-2">No rooftops yet.</span>;
+  if (rooftops.length === 0 || bindable.length === 0) return <span className="ha-sub">No rooftops yet.</span>;
 
   return (
-    <div className="d-flex flex-column gap-2">
+    <div className="ha-stack">
       {rooftops.map((rooftop) => (
-        <div key={rooftop.id}>
-          <div className="fs-13 fw-bold">{rooftop.name}</div>
-          <div className="d-flex flex-wrap gap-2">
+        <fieldset key={rooftop.id} className="ha-field mb-0">
+          <legend>{rooftop.name}</legend>
+          <div className="ha-check-list is-inline">
             {bindable.map((role) => {
               const held = (value[rooftop.id] ?? []).includes(role.name);
               return (
-                <label key={role.name} className="fs-13" style={{ cursor: disabled ? "default" : "pointer" }}>
+                <label key={role.name} className="ha-check" style={{ cursor: disabled ? "default" : "pointer" }}>
                   <input
                     type="checkbox"
                     disabled={disabled}
@@ -102,13 +117,13 @@ function RooftopRolesEditor({ rooftops, roles, wideRoles, value, onChange, disab
                         [rooftop.id]: e.target.checked ? [...(value[rooftop.id] ?? []), role.name] : (value[rooftop.id] ?? []).filter((r) => r !== role.name),
                       })
                     }
-                  />{" "}
+                  />
                   {role.label}
                 </label>
               );
             })}
           </div>
-        </div>
+        </fieldset>
       ))}
     </div>
   );
@@ -136,6 +151,7 @@ function StaffRow({ member, isSelf, roles, delegable, rooftops, onSave }: {
   const [limit, setLimit] = useState(member.spending_limit ?? "");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [open, setOpen] = useState(false);
 
   async function save(overrides: Record<string, unknown> = {}) {
     setBusy(true);
@@ -155,67 +171,109 @@ function StaffRow({ member, isSelf, roles, delegable, rooftops, onSave }: {
     setMessage(result.ok ? { ok: true, text: "Saved." } : { ok: false, text: result.message ?? "Could not save." });
   }
 
+  const roleLabels = roles.filter((r) => member.roles.includes(r.name)).map((r) => r.label);
+  const active = member.status === "active";
+
   return (
-    <tr>
-      <td>
-        <b>{member.name}</b>
-        {isSelf && <span className="badge bg-light text-dark border ms-1">You</span>}
-        <div className="fs-13 text-color-2">{member.email}</div>
-        <span className={`badge ${member.status === "active" ? "bg-success" : "bg-danger"} text-capitalize`}>
-          {member.status === "suspended" ? "deactivated" : member.status}
-        </span>
-      </td>
-      <td style={{ minWidth: 180 }}>
-        <RoleChecks roles={roles} value={memberRoles} onChange={setMemberRoles} disabled={isSelf} />
-        {isSelf && <div className="fs-13 text-color-2 mt-1">Another Org Admin changes your roles.</div>}
-      </td>
-      <td style={{ minWidth: 220 }}>
-        <PermissionChecks options={delegable} roleGiven={roleGiven} value={extra} onChange={setExtra} disabled={isSelf} />
-      </td>
-      <td style={{ minWidth: 240 }}>
-        <RooftopRolesEditor rooftops={rooftops} roles={roles} wideRoles={memberRoles} value={rooftopRoles} onChange={setRooftopRoles} disabled={isSelf} />
-      </td>
-      <td style={{ minWidth: 160 }}>
-        <select className="form-control" aria-label="Rooftop" value={rooftopId} onChange={(e) => setRooftopId(e.target.value)}>
-          <option value="">No rooftop</option>
-          {rooftops.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </select>
-      </td>
-      <td style={{ minWidth: 140 }}>
-        <input
-          type="number"
-          min={0}
-          step="0.01"
-          className="form-control"
-          aria-label="Spending limit"
-          placeholder="No limit"
-          value={limit}
-          onChange={(e) => setLimit(e.target.value)}
-        />
-      </td>
-      <td style={{ minWidth: 170 }}>
-        <div className="d-flex flex-column gap-1">
-          <button type="button" className="sc-button" disabled={busy || memberRoles.length === 0} onClick={() => save()}>
-            <span>{busy ? "Saving..." : "Save"}</span>
+    <>
+      <tr>
+        <td data-label="Person">
+          <div className="ha-primary-text">
+            {member.name} {isSelf && <Badge plain>You</Badge>}
+          </div>
+          <div className="ha-sub">{member.email}</div>
+        </td>
+        <td data-label="Roles">
+          <div className="ha-chips">
+            {roleLabels.length > 0 ? roleLabels.map((label) => <Badge key={label} plain>{label}</Badge>) : <span className="ha-sub">No roles</span>}
+            {member.extra_permissions.length > 0 && (
+              <Badge tone="primary" plain>
+                +{member.extra_permissions.length} permission{member.extra_permissions.length === 1 ? "" : "s"}
+              </Badge>
+            )}
+          </div>
+        </td>
+        <td data-label="Rooftop">{member.rooftop?.name ?? <span className="ha-muted">Whole dealership</span>}</td>
+        <td data-label="Spending limit" className="is-num">
+          {member.spending_limit ? formatMoney(Number(member.spending_limit)) : <span className="ha-muted">No limit</span>}
+        </td>
+        <td data-label="Status">
+          <Badge tone={active ? "success" : "danger"}>{member.status === "suspended" ? "deactivated" : member.status}</Badge>
+        </td>
+        <td data-label="" className="ha-right">
+          <button type="button" className="ha-btn is-sm" aria-expanded={open} onClick={() => setOpen(!open)}>
+            {open ? "Close" : "Edit"}
           </button>
-          {!isSelf && (
-            <button
-              type="button"
-              className="sc-button"
-              disabled={busy}
-              onClick={() => save({ status: member.status === "active" ? "suspended" : "active" })}
-            >
-              <span>{member.status === "active" ? "Deactivate" : "Reactivate"}</span>
-            </button>
-          )}
-          {message && <div className={`fs-13 ${message.ok ? "text-success" : "text-danger"}`}>{message.text}</div>}
-        </div>
-      </td>
-    </tr>
+        </td>
+      </tr>
+      {open && (
+        <tr>
+          <td colSpan={6}>
+            <div className="ha-inline-edit">
+              <div className="ha-team-editor">
+                <fieldset className="ha-field">
+                  <legend>Roles</legend>
+                  <RoleChecks roles={roles} value={memberRoles} onChange={setMemberRoles} disabled={isSelf} />
+                  {isSelf && <div className="ha-hint">Another Org Admin changes your roles.</div>}
+                </fieldset>
+                {delegable.length > 0 && (
+                  <fieldset className="ha-field">
+                    <legend>Extra permissions</legend>
+                    <PermissionChecks options={delegable} roleGiven={roleGiven} value={extra} onChange={setExtra} disabled={isSelf} />
+                  </fieldset>
+                )}
+                <fieldset className="ha-field">
+                  <legend>Rooftop roles</legend>
+                  <RooftopRolesEditor rooftops={rooftops} roles={roles} wideRoles={memberRoles} value={rooftopRoles} onChange={setRooftopRoles} disabled={isSelf} />
+                </fieldset>
+                <div>
+                  <div className="ha-field">
+                    <label htmlFor={`rooftop-${member.id}`}>Home rooftop</label>
+                    <select id={`rooftop-${member.id}`} className="ha-select" value={rooftopId} onChange={(e) => setRooftopId(e.target.value)}>
+                      <option value="">No rooftop</option>
+                      {rooftops.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="ha-field">
+                    <label htmlFor={`limit-${member.id}`}>Spending limit (£)</label>
+                    <input
+                      id={`limit-${member.id}`}
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      className="ha-input"
+                      placeholder="No limit"
+                      value={limit}
+                      onChange={(e) => setLimit(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              {message && <Notice tone={message.ok ? "success" : "danger"}>{message.text}</Notice>}
+              <div className="ha-actions is-start">
+                <button type="button" className="ha-btn is-primary" disabled={busy || memberRoles.length === 0} aria-busy={busy} onClick={() => save()}>
+                  {busy ? "Saving…" : "Save changes"}
+                </button>
+                {!isSelf && (
+                  <button
+                    type="button"
+                    className={`ha-btn${active ? " is-danger" : ""}`}
+                    disabled={busy}
+                    onClick={() => save({ status: active ? "suspended" : "active" })}
+                  >
+                    {active ? "Deactivate" : "Reactivate"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
@@ -256,64 +314,74 @@ function AddStaff({ roles, delegable, rooftops, onAdd }: { roles: TeamRole[]; de
   const set = (key: keyof NewStaff) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
 
   return (
-    <form onSubmit={submit} className="tfcl-card p-3 mb-4">
-      <h4 className="mb-2">Add a member of staff</h4>
-      <div className="row">
-        <div className="col-md-6 mb-2">
-          <input className="form-control" placeholder="Full name" aria-label="Full name" value={form.name} onChange={set("name")} required />
+    <Card className="mb-4" title="Add a member of staff" description="They sign in with the initial password you set, then change it.">
+      <form onSubmit={submit} className="ha-card-body">
+        <div className="ha-form-grid">
+          <div className="ha-field">
+            <label htmlFor="staff-name">Full name</label>
+            <input id="staff-name" className="ha-input" value={form.name} onChange={set("name")} required autoComplete="off" />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="staff-email">Email</label>
+            <input id="staff-email" type="email" className="ha-input" value={form.email} onChange={set("email")} required autoComplete="off" />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="staff-phone">Phone (optional)</label>
+            <input id="staff-phone" type="tel" className="ha-input" value={form.phone} onChange={set("phone")} />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="staff-rooftop">Home rooftop</label>
+            <select
+              id="staff-rooftop"
+              className="ha-select"
+              value={form.rooftop_id ?? ""}
+              onChange={(e) => setForm({ ...form, rooftop_id: e.target.value === "" ? null : Number(e.target.value) })}
+            >
+              <option value="">No rooftop</option>
+              {rooftops.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="ha-field">
+            <label htmlFor="staff-password">Initial password</label>
+            <input id="staff-password" type="password" className="ha-input" value={form.password} onChange={set("password")} required autoComplete="new-password" />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="staff-password-confirm">Confirm password</label>
+            <input id="staff-password-confirm" type="password" className="ha-input" value={form.password_confirmation} onChange={set("password_confirmation")} required autoComplete="new-password" />
+          </div>
+          <div className="ha-field">
+            <label htmlFor="staff-limit">Spending limit (£, optional)</label>
+            <input id="staff-limit" type="number" min={0} step="0.01" className="ha-input" placeholder="No limit" value={form.spending_limit} onChange={set("spending_limit")} />
+          </div>
         </div>
-        <div className="col-md-6 mb-2">
-          <input type="email" className="form-control" placeholder="Email" aria-label="Email" value={form.email} onChange={set("email")} required />
+        <div className="ha-team-editor">
+          <fieldset className="ha-field">
+            <legend>Roles (at least one)</legend>
+            <RoleChecks roles={roles} value={form.roles} onChange={(next) => setForm({ ...form, roles: next })} />
+          </fieldset>
+          {delegable.length > 0 && (
+            <fieldset className="ha-field">
+              <legend>Extra permissions (optional)</legend>
+              <PermissionChecks
+                options={delegable}
+                roleGiven={new Set(roles.filter((r) => form.roles.includes(r.name)).flatMap((r) => r.permissions))}
+                value={form.permissions}
+                onChange={(next) => setForm({ ...form, permissions: next })}
+              />
+            </fieldset>
+          )}
         </div>
-        <div className="col-md-6 mb-2">
-          <input className="form-control" placeholder="Phone (optional)" aria-label="Phone" value={form.phone} onChange={set("phone")} />
-        </div>
-        <div className="col-md-6 mb-2">
-          <select
-            className="form-control"
-            aria-label="Rooftop"
-            value={form.rooftop_id ?? ""}
-            onChange={(e) => setForm({ ...form, rooftop_id: e.target.value === "" ? null : Number(e.target.value) })}
-          >
-            <option value="">No rooftop</option>
-            {rooftops.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="col-md-6 mb-2">
-          <input type="password" className="form-control" placeholder="Initial password" aria-label="Initial password" value={form.password} onChange={set("password")} required autoComplete="new-password" />
-        </div>
-        <div className="col-md-6 mb-2">
-          <input type="password" className="form-control" placeholder="Confirm password" aria-label="Confirm password" value={form.password_confirmation} onChange={set("password_confirmation")} required autoComplete="new-password" />
-        </div>
-        <div className="col-md-6 mb-2">
-          <input type="number" min={0} step="0.01" className="form-control" placeholder="Spending limit (£, optional)" aria-label="Spending limit" value={form.spending_limit} onChange={set("spending_limit")} />
-        </div>
-      </div>
-      <div className="mb-2">
-        <div className="fw-bold mb-1">Roles</div>
-        <RoleChecks roles={roles} value={form.roles} onChange={(next) => setForm({ ...form, roles: next })} />
-      </div>
-      {delegable.length > 0 && (
-        <div className="mb-2">
-          <div className="fw-bold mb-1">Extra permissions (optional)</div>
-          <PermissionChecks
-            options={delegable}
-            roleGiven={new Set(roles.filter((r) => form.roles.includes(r.name)).flatMap((r) => r.permissions))}
-            value={form.permissions}
-            onChange={(next) => setForm({ ...form, permissions: next })}
-          />
-        </div>
-      )}
-      {error && <div className="alert alert-danger py-1">{error}</div>}
-      {done && <div className="text-success fs-13 mb-2">Added. Share the initial password with them; they can change it after signing in.</div>}
-      <button type="submit" className="sc-button" disabled={busy || form.roles.length === 0}>
-        <span>{busy ? "Adding..." : "Add staff"}</span>
-      </button>
-    </form>
+        {error && <Notice tone="danger">{error}</Notice>}
+        {done && <Notice tone="success">Added. Share the initial password with them; they can change it after signing in.</Notice>}
+        <button type="submit" className="ha-btn is-primary" disabled={busy || form.roles.length === 0} aria-busy={busy}>
+          {busy ? "Adding…" : "Add staff"}
+        </button>
+      </form>
+    </Card>
   );
 }
 
@@ -337,47 +405,52 @@ function Rooftops({ rooftops, onSave }: { rooftops: TeamRooftop[]; onSave: (id: 
   }
 
   return (
-    <div className="tfcl-card p-3">
-      <h4 className="mb-2">Rooftops</h4>
-      {rooftops.length === 0 && <p className="text-color-2">No rooftops yet.</p>}
+    <Card title="Rooftops" description="Your dealership's sites. Staff can be confined to one, or hold different roles at each.">
+      {rooftops.length === 0 && <EmptyState icon="icon-carus-mappinline" title="No rooftops yet" text="Add your first site below." />}
       {rooftops.length > 0 && (
-        <div className="table-responsive">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th />
+        <DataTable caption="Rooftops">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Location</th>
+              <th scope="col">Status</th>
+              <th scope="col">
+                <span className="ha-visually-hidden">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rooftops.map((r) => (
+              <tr key={r.id}>
+                <td data-label="Name" className="ha-primary-text">{r.name}</td>
+                <td data-label="Location">{[r.city, r.postcode].filter(Boolean).join(", ") || "—"}</td>
+                <td data-label="Status">
+                  <StatusBadge status={r.status} tone={r.status === "active" ? "success" : "neutral"} />
+                </td>
+                <td data-label="" className="ha-right">
+                  <button type="button" className="ha-btn is-sm" onClick={() => onSave(r.id, { status: r.status === "active" ? "inactive" : "active" })}>
+                    {r.status === "active" ? "Mark inactive" : "Mark active"}
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {rooftops.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.name}</td>
-                  <td>{[r.city, r.postcode].filter(Boolean).join(", ") || "-"}</td>
-                  <td className="text-capitalize">{r.status}</td>
-                  <td>
-                    <button type="button" className="sc-button" onClick={() => onSave(r.id, { status: r.status === "active" ? "inactive" : "active" })}>
-                      <span>{r.status === "active" ? "Mark inactive" : "Mark active"}</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       )}
-      <form onSubmit={add} className="d-flex flex-wrap gap-2 mt-2">
-        <input className="form-control" style={{ maxWidth: 220 }} placeholder="Rooftop name" aria-label="Rooftop name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input className="form-control" style={{ maxWidth: 160 }} placeholder="City" aria-label="City" value={city} onChange={(e) => setCity(e.target.value)} />
-        <input className="form-control" style={{ maxWidth: 120 }} placeholder="Postcode" aria-label="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value.toUpperCase())} />
-        <button type="submit" className="sc-button" disabled={!name.trim()}>
-          <span>Add rooftop</span>
+      <form onSubmit={add} className="ha-toolbar" style={{ borderTop: "1px solid var(--hmp-border)", borderBottom: 0 }} aria-label="Add a rooftop">
+        <input className="ha-input" style={{ maxWidth: 220 }} placeholder="Rooftop name" aria-label="Rooftop name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <input className="ha-input" style={{ maxWidth: 160 }} placeholder="City" aria-label="City" value={city} onChange={(e) => setCity(e.target.value)} />
+        <input className="ha-input" style={{ maxWidth: 120 }} placeholder="Postcode" aria-label="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value.toUpperCase())} />
+        <button type="submit" className="ha-btn is-primary" disabled={!name.trim()}>
+          Add rooftop
         </button>
       </form>
-      {error && <div className="alert alert-danger py-1 mt-2">{error}</div>}
-    </div>
+      {error && (
+        <div className="ha-card-body" style={{ paddingTop: 0 }}>
+          <Notice tone="danger">{error}</Notice>
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -389,66 +462,68 @@ export default function Team() {
   const { user } = useAuth();
   const { staff, rooftops, roles, delegable, loading, error, addStaff, updateStaff, saveRooftop } = useOrganizationTeam();
 
+  const controls = useListControls<TeamMember>({
+    items: staff,
+    search: (member) => [member.name, member.email],
+    filters: [
+      { key: "role", label: "Role", get: (member) => member.roles, options: roles.map((role) => ({ value: role.name, label: role.label })) },
+      { key: "rooftop", label: "Rooftop", get: (member) => (member.rooftop ? String(member.rooftop.id) : null), options: rooftops.map((r) => ({ value: String(r.id), label: r.name })) },
+      { key: "status", label: "Status", get: (member) => member.status },
+    ],
+  });
+
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-2">Team &amp; roles</h1>
-                  <p className="text-color-2 mb-3">
-                    Add staff, choose what each person can do, assign them to a rooftop and set a spending limit for auction
-                    buying. Hover a role to see its permissions. A role under <b>Roles</b> applies across the whole dealership; under
-                    <b> Rooftop roles</b> it applies at that rooftop only — so someone can be Sales Manager in Leeds and Sales Executive
-                    in York. A person with a home rooftop is confined to it.
-                  </p>
+    <DashboardPage
+      title="Team & roles"
+      description="Add staff, choose what each person can do, assign them to a rooftop and set a spending limit for auction buying."
+    >
+      {loading && <LoadingTable label="Loading your team" columns={5} />}
+      {error && <Notice tone="danger">{error}</Notice>}
 
-                  {loading && <p>Loading your team...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
-
-                  {!loading && !error && (
-                    <>
-                      <div className="table-responsive mb-4">
-                        <table className="table">
-                          <thead>
-                            <tr>
-                              <th>Person</th>
-                              <th>Roles</th>
-                              <th>Extra permissions</th>
-                              <th>Rooftop roles</th>
-                              <th>Rooftop</th>
-                              <th>Spending limit (£)</th>
-                              <th />
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {staff.map((member) => (
-                              <StaffRow
-                                key={`${member.id}-${member.roles.join(",")}-${member.extra_permissions.join(",")}-${JSON.stringify(member.rooftop_roles)}-${member.status}`}
-                                member={member}
-                                isSelf={member.id === user?.id}
-                                roles={roles}
-                                delegable={delegable}
-                                rooftops={rooftops}
-                                onSave={updateStaff}
-                              />
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <AddStaff roles={roles} delegable={delegable} rooftops={rooftops} onAdd={addStaff} />
-                      <Rooftops rooftops={rooftops} onSave={saveRooftop} />
-                    </>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      {!loading && !error && (
+        <>
+          <Notice tone="info">
+            A role under <b>Roles</b> applies across the whole dealership; under <b>Rooftop roles</b> it applies at that rooftop only — so someone can be Sales Manager in
+            Leeds and Sales Executive in York. A person with a home rooftop is confined to it. Hover a role to see its permissions.
+          </Notice>
+          <Card className="mb-4" title="Staff">
+            <DataToolbar controls={controls} searchPlaceholder="Search name or email" noun="person" />
+            {controls.results.length === 0 ? (
+              <NoMatches onClear={controls.clearAll} />
+            ) : (
+              <DataTable caption="Staff">
+                <thead>
+                  <tr>
+                    <th scope="col">Person</th>
+                    <th scope="col">Roles</th>
+                    <th scope="col">Rooftop</th>
+                    <th scope="col" className="is-num">Spending limit</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">
+                      <span className="ha-visually-hidden">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {controls.results.map((member) => (
+                    <StaffRow
+                      key={`${member.id}-${member.roles.join(",")}-${member.extra_permissions.join(",")}-${JSON.stringify(member.rooftop_roles)}-${member.status}`}
+                      member={member}
+                      isSelf={member.id === user?.id}
+                      roles={roles}
+                      delegable={delegable}
+                      rooftops={rooftops}
+                      onSave={updateStaff}
+                    />
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+          </Card>
+          <AddStaff roles={roles} delegable={delegable} rooftops={rooftops} onAdd={addStaff} />
+          <Rooftops rooftops={rooftops} onSave={saveRooftop} />
+        </>
+      )}
+    </DashboardPage>
   );
 }

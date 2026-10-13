@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "@/components/common/AppImage";
 import type { AuctionLotVehicle, ConditionReport, ConditionReportDamageItem } from "@/types/auction";
+import { EmptyState, DataTable } from "@/components/ui/kit";
 
 const SEVERITY_COLOR: Record<string, string> = {
   minor: "#f1c40f",
@@ -52,7 +53,7 @@ function HotspotPhoto({
         >
           <b className="text-capitalize">{active.panel}</b> — {active.damageType} ({active.severity})
           {active.repairCostBand && <div>Repair cost band: {active.repairCostBand}</div>}
-          {active.cvSuggested && <div className="text-color-2">Flagged by CV pre-detection, inspector-confirmed.</div>}
+          {active.cvSuggested && <div className="ha-muted">Flagged by CV pre-detection, inspector-confirmed.</div>}
         </div>
       )}
     </div>
@@ -77,9 +78,9 @@ export default function ConditionReportSection({
   }
 
   return (
-    <div className="tfcl-card mb-4">
-      <h4 className="mb-2">Condition report</h4>
-      <p className="text-color-2 mb-2">
+    <div className="ha-card ha-card-body ha-form-card mb-4">
+      <h2 className="hd-card-title">Condition report</h2>
+      <p className="ha-muted mb-2">
         Grade {report.conditionGrade ?? "-"} / 5 &middot; Mechanical grade {report.mechanicalGrade ?? "-"}
         {report.publishedAt && ` · Inspected ${new Date(report.publishedAt).toLocaleDateString()}`}
       </p>
@@ -100,14 +101,13 @@ export default function ConditionReportSection({
       )}
 
       {unpinned.length > 0 && (
-        <div className="table-responsive">
-          <table className="table">
+        <DataTable caption="TODO_CAPTION">
             <thead>
               <tr>
-                <th>Panel</th>
-                <th>Damage</th>
-                <th>Severity</th>
-                <th>Repair cost band</th>
+                <th scope="col">Panel</th>
+                <th scope="col">Damage</th>
+                <th scope="col">Severity</th>
+                <th scope="col">Repair cost band</th>
               </tr>
             </thead>
             <tbody>
@@ -120,12 +120,11 @@ export default function ConditionReportSection({
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+          </DataTable>
       )}
 
       {report.damageItems.length === 0 && (
-        <p className="tfcl-empty-data">No itemized damage recorded.</p>
+        <EmptyState title={<>No itemized damage recorded.</>} />
       )}
     </div>
   );

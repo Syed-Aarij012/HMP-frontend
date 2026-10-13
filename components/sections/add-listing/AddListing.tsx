@@ -3,8 +3,6 @@
 import { useCallback, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
-import NiceSelect from "@/components/common/NiceSelect";
 import AttachmentsSection from "@/components/sections/add-listing/AttachmentsSection";
 import FeaturesSpecsFields, {
   EMPTY_EXTRAS,
@@ -33,6 +31,8 @@ import {
   DOOR_OPTIONS,
   SEAT_OPTIONS,
 } from "@/data/niceSelectOptions";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Card, EmptyState, Notice, Select, formatMoney } from "@/components/ui/kit";
 
 type ApiVehicle = { data: { id: string } };
 type ApiListing = { data: { id: string } };
@@ -71,61 +71,60 @@ function IdentityVerificationGate() {
   }
 
   return (
-    <div className="tfcl-add-listing">
-      <div className="alert alert-warning">
+    <div>
+      <Notice tone="warning">
         <p className="mb-2">
           <b>Identity verification required.</b> Private sellers must verify their identity
           before a listing can go live — you can still save a draft and upload photos first.
         </p>
         {!open ? (
-          <button type="button" className="second-btn" onClick={() => setOpen(true)}>
+          <button type="button" className="ha-btn" onClick={() => setOpen(true)}>
             Verify my identity
           </button>
         ) : (
-          <form onSubmit={handleVerify} className="form-group-4">
-            <div className="form-group">
+          <form onSubmit={handleVerify} className="ha-form-grid">
+            <div className="ha-field">
               <label htmlFor="idv_document_type">Document type</label>
-              <NiceSelect
+              <Select id="idv_document_type"
                 options={[
                   { label: "Passport", value: "passport" },
                   { label: "Driving licence", value: "driving_licence" },
                 ]}
                 defaultValue="passport"
-                className="form-control"
                 onChange={(value) => setDocumentType(value as "passport" | "driving_licence")}
               />
             </div>
-            <div className="form-group">
+            <div className="ha-field">
               <label htmlFor="idv_document_number">Document number</label>
               <input
                 id="idv_document_number"
                 type="text"
-                className="form-control"
+                className="ha-input"
                 value={documentNumber}
                 onChange={(e) => setDocumentNumber(e.target.value)}
                 required
               />
             </div>
-            <div className="form-group">
+            <div className="ha-field">
               <label htmlFor="idv_dob">Date of birth</label>
               <input
                 id="idv_dob"
                 type="date"
-                className="form-control"
+                className="ha-input"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
                 required
               />
             </div>
-            <div className="form-group" style={{ alignSelf: "end" }}>
-              <button className="pre-btn" type="submit" disabled={submitting}>
-                {submitting ? "Verifying..." : "Submit"}
+            <div className="ha-field" style={{ alignSelf: "end" }}>
+              <button className="ha-btn is-primary" type="submit" disabled={submitting}>
+                {submitting ? "Verifying…" : "Submit"}
               </button>
             </div>
           </form>
         )}
-        {error && <p className="text-color-2 mt-2">{error}</p>}
-      </div>
+        {error && <p className="ha-error-text mt-2" role="alert">{error}</p>}
+      </Notice>
     </div>
   );
 }
@@ -143,16 +142,16 @@ function SubscriptionRequiredNotice() {
   }
 
   return (
-    <div className="tfcl-add-listing">
-      <div className="alert alert-warning">
+    <div>
+      <Notice tone="warning">
         <p className="mb-2">
           <b>No active subscription.</b> Your dealership needs an active subscription plan
           before you can list a vehicle — choose a plan to get started.
         </p>
-        <Link href="/subscription" className="second-btn">
+        <Link href="/subscription" className="ha-btn">
           Choose a subscription plan
         </Link>
-      </div>
+      </Notice>
     </div>
   );
 }
@@ -361,54 +360,47 @@ function AddListing() {
 
   if (!canSell) {
     return (
-      <div id="themesflat-content">
-        <DashboardToggle />
-        <div className="container">
-          <div className="row">
-            <div className="col-md-12">
-              <div className="content-area">
-                <main id="main" className="main-content">
-                  <div className="tfcl-dashboard">
-                    <h1 className="admin-title mb-3">Add listing</h1>
-                    <p>
-                      Your account type doesn&apos;t support creating listings. Only
-                      private sellers and dealer accounts can list a vehicle.
-                    </p>
-                  </div>
-                </main>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardPage title="Add listing">
+        <Card>
+          <EmptyState
+            icon="icon-carus-car"
+            title="Listing isn't available on this account"
+            text="Your account type doesn't support creating listings. Only private sellers and dealer accounts can list a vehicle."
+          />
+        </Card>
+      </DashboardPage>
     );
   }
 
   return (
-    <>
-      <div id="themesflat-content">
-        <DashboardToggle />
-        <div className="container">
-          <div className="row">
-            <div className="col-md-12">
-              <div className="content-area">
-                <main id="main" className="main-content">
-                  {user?.user_type === "private_seller" && <IdentityVerificationGate />}
-                  <SubscriptionRequiredNotice />
+    <DashboardPage
+      title="Add listing"
+      description={step === "spec" ? "Tell buyers about your car. You'll add photos and a price next." : "Add photos and set your price, then submit for review."}
+    >
+      {user?.user_type === "private_seller" && <IdentityVerificationGate />}
+      <SubscriptionRequiredNotice />
+
+      <ol className="ha-steps" aria-label="Progress">
+        <li className={step === "spec" ? "is-current" : "is-done"} aria-current={step === "spec" ? "step" : undefined}>
+          <span aria-hidden="true">{step === "spec" ? "1" : "✓"}</span> Vehicle details
+        </li>
+        <li className={step === "spec" ? undefined : "is-current"} aria-current={step === "spec" ? undefined : "step"}>
+          <span aria-hidden="true">2</span> Photos &amp; price
+        </li>
+      </ol>
 
                   {step === "spec" ? (
-                    <form className="tfcl-dashboard add-list" onSubmit={handleContinueToPricing}>
-                      <h1 className="admin-title mb-3">Add listing</h1>
-                      <div className="tfcl-add-listing car-details">
-                        <h3>Find your car by number plate</h3>
-                        <div className="form-group-4">
-                          <div className="form-group">
+                    <form onSubmit={handleContinueToPricing}>
+                      <Card className="mb-4" title="Find your car by number plate" description="Optional — fills in the details below for you.">
+                      <div className="ha-card-body">
+                        <div>
+                          <div className="ha-field">
                             <label htmlFor="add_listing_vrm">Number plate (optional)</label>
-                            <div className="flex gap-10">
+                            <div className="ha-actions is-start" style={{ flexWrap: "nowrap", maxWidth: 420 }}>
                               <input
                                 id="add_listing_vrm"
                                 type="text"
-                                className="form-control"
+                                className="ha-input"
                                 placeholder="e.g. AB12 CDE"
                                 value={vrm}
                                 onChange={(e) => setVrm(e.target.value)}
@@ -416,95 +408,94 @@ function AddListing() {
                               />
                               <button
                                 type="button"
-                                className="second-btn"
+                                className="ha-btn"
                                 disabled={!vrm.trim() || vrmLoading}
                                 onClick={handleVrmLookup}
                               >
                                 {vrmLoading ? "Looking up..." : "Look up"}
                               </button>
                             </div>
-                            {vrmMessage && <p className="text-color-2 mt-1">{vrmMessage}</p>}
-                            {vrmError && <p className="text-color-2 mt-1">{vrmError}</p>}
+                            {vrmMessage && <p className="ha-hint mt-1" role="status">{vrmMessage}</p>}
+                            {vrmError && <p className="ha-error-text mt-1" role="alert">{vrmError}</p>}
                           </div>
                         </div>
                       </div>
-                      <div className="tfcl-add-listing car-details">
-                        <h3>Car details</h3>
-                        <div className="form-group-4">
-                          <div className="form-group">
+                      </Card>
+                      <Card className="mb-4" title="Car details" description="Fields marked * are required.">
+                      <div className="ha-card-body">
+                        <div className="ha-form-grid">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_make">Make *</label>
                             <input
                               id="add_listing_make"
                               type="text"
-                              className="form-control"
+                              className="ha-input"
                               placeholder="e.g. Ford"
                               value={make}
                               onChange={(e) => setMake(e.target.value)}
                               required
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_model">Model *</label>
                             <input
                               id="add_listing_model"
                               type="text"
-                              className="form-control"
+                              className="ha-input"
                               placeholder="e.g. Focus"
                               value={model}
                               onChange={(e) => setModel(e.target.value)}
                               required
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_body">Body *</label>
-                            <NiceSelect
+                            <Select id="add_listing_body"
                               options={ADD_LISTING_BODY_TYPE_OPTIONS}
                               value={bodyType}
                               defaultValue=""
-                              className="form-control"
                               onChange={(value) => setBodyType(String(value))}
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_year">Year *</label>
-                            <NiceSelect
+                            <Select id="add_listing_year"
                               options={ADD_LISTING_YEAR_OPTIONS}
                               defaultValue=""
-                              className="form-control"
                               onChange={(value) => setYear(String(value))}
                             />
                           </div>
                         </div>
-                        <div className="form-group-4">
-                          <div className="form-group">
+                        <div className="ha-form-grid">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_derivative">Trim / derivative</label>
                             <input
                               id="add_listing_derivative"
                               type="text"
-                              className="form-control"
+                              className="ha-input"
                               placeholder="e.g. Titanium"
                               value={derivative}
                               onChange={(e) => setDerivative(e.target.value)}
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_vin">VIN</label>
                             <input
                               id="add_listing_vin"
                               type="text"
-                              className="form-control"
+                              className="ha-input"
                               placeholder="Leave blank if unknown"
                               value={vin}
                               onChange={(e) => setVin(e.target.value)}
                               maxLength={17}
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_mileage">Mileage (miles) *</label>
                             <input
                               id="add_listing_mileage"
                               type="number"
-                              className="form-control"
+                              className="ha-input"
                               placeholder="e.g. 32000"
                               value={mileage}
                               onChange={(e) => setMileage(e.target.value)}
@@ -512,63 +503,57 @@ function AddListing() {
                               min={0}
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_transmission">Transmission *</label>
-                            <NiceSelect
+                            <Select id="add_listing_transmission"
                               options={ADD_LISTING_TRANSMISSION_OPTIONS}
                               value={transmission}
                               defaultValue=""
-                              className="form-control"
                               onChange={(value) => setTransmission(String(value))}
                             />
                           </div>
                         </div>
-                        <div className="form-group-4">
-                          <div className="form-group">
+                        <div className="ha-form-grid">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_fuel">Fuel type *</label>
-                            <NiceSelect
+                            <Select id="add_listing_fuel"
                               options={ADD_LISTING_FUEL_TYPE_OPTIONS}
                               value={fuelType}
                               defaultValue=""
-                              className="form-control"
                               onChange={(value) => setFuelType(String(value))}
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_v5c">V5C (logbook) *</label>
-                            <NiceSelect
+                            <Select id="add_listing_v5c"
                               options={ADD_LISTING_V5C_STATUS_OPTIONS}
                               value={v5cStatus}
                               defaultValue=""
-                              className="form-control"
                               onChange={(value) => setV5cStatus(String(value))}
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_doors">Doors</label>
-                            <NiceSelect
+                            <Select id="add_listing_doors"
                               options={DOOR_OPTIONS}
                               defaultValue=""
-                              className="form-control"
                               onChange={(value) => setDoors(value === "" ? "" : Number(value))}
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_seats">Seats</label>
-                            <NiceSelect
+                            <Select id="add_listing_seats"
                               options={SEAT_OPTIONS}
                               defaultValue=""
-                              className="form-control"
                               onChange={(value) => setSeats(value === "" ? "" : Number(value))}
                             />
                           </div>
-                          <div className="form-group">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_color">Color</label>
-                            <NiceSelect
+                            <Select id="add_listing_color"
                               options={COLOR_OPTIONS_WITH_OTHER}
                               value={showCustomColourInput ? COLOR_OTHER_VALUE : colour}
                               defaultValue=""
-                              className="form-control"
                               onChange={(value) => {
                                 if (value === COLOR_OTHER_VALUE) {
                                   setUseCustomColour(true);
@@ -582,7 +567,8 @@ function AddListing() {
                             {showCustomColourInput && (
                               <input
                                 type="text"
-                                className="form-control mt-2"
+                                className="ha-input mt-2"
+                                aria-label="Colour"
                                 placeholder="e.g. British Racing Green"
                                 maxLength={40}
                                 value={colour}
@@ -592,67 +578,71 @@ function AddListing() {
                             )}
                           </div>
                         </div>
-                        <div className="form-group mb-0">
+                        <div className="ha-field">
                           <label htmlFor="add_listing_description">Description</label>
                           <textarea
                             id="add_listing_description"
-                            className="form-control"
+                            className="ha-textarea"
                             placeholder="Your description"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                           />
                         </div>
                       </div>
+                      </Card>
 
                       {/* Optional: buyers see these under Specifications / Features on the listing. */}
                       <FeaturesSpecsFields value={extras} onChange={setExtras} />
 
-                      {error && <div className="alert alert-danger">{error}</div>}
+                      {error && <Notice tone="danger">{error}</Notice>}
 
-                      <div className="group-button-submit">
-                        <button className="pre-btn" type="submit" disabled={creatingVehicle}>
-                          {creatingVehicle ? "Saving..." : "Continue to pricing & photos"}
+                      <div className="ha-form-footer">
+                        <button className="ha-btn is-primary" type="submit" disabled={creatingVehicle} aria-busy={creatingVehicle}>
+                          {creatingVehicle ? "Saving…" : "Continue to photos & price"}
                         </button>
                       </div>
                     </form>
                   ) : (
-                    <form className="tfcl-dashboard add-list" onSubmit={handleSubmit}>
-                      <h1 className="admin-title mb-3">Add listing</h1>
-                      <PhotoGuidanceChecklist />
-                      <UploadPhotoSection onPhotosChange={handlePhotosChange} />
-                      <UploadVideoSpinSection onVideoChange={setVideo} onSpinFramesChange={setSpinFrames} />
-                      <AttachmentsSection />
-                      <div className="tfcl-add-listing car-price">
-                        <h3>Car price</h3>
-                        {suggestionLoading && <p>Getting a pricing suggestion...</p>}
+                    <form onSubmit={handleSubmit}>
+                      <Card className="mb-4" title="Photos, video and documents">
+                        <div className="ha-card-body hd-template-section">
+                          <PhotoGuidanceChecklist />
+                          <UploadPhotoSection onPhotosChange={handlePhotosChange} />
+                          <UploadVideoSpinSection onVideoChange={setVideo} onSpinFramesChange={setSpinFrames} />
+                          <AttachmentsSection />
+                        </div>
+                      </Card>
+                      <Card className="mb-4" title="Price">
+                      <div className="ha-card-body">
+                        {suggestionLoading && <p className="ha-sub" role="status">Getting a pricing suggestion…</p>}
                         {suggestion && suggestion.suggestedPrice !== null && (
-                          <div className="alert alert-info mb-3">
+                          <Notice tone="info">
                             Similar cars suggest around{" "}
-                            <b>£{suggestion.suggestedPrice.toLocaleString()}</b>
+                            <b>{formatMoney(suggestion.suggestedPrice)}</b>
                             {suggestion.rangeLow !== null && suggestion.rangeHigh !== null && (
-                              <> (£{suggestion.rangeLow.toLocaleString()}–£{suggestion.rangeHigh.toLocaleString()})</>
+                              <> ({formatMoney(suggestion.rangeLow)}–{formatMoney(suggestion.rangeHigh)})</>
                             )}
                             , based on {suggestion.comparables} comparable listing
                             {suggestion.comparables === 1 ? "" : "s"}.{" "}
                             <button
                               type="button"
-                              className="second-btn"
+                              className="ha-btn is-sm"
                               onClick={() => setPrice(String(suggestion.suggestedPrice))}
                             >
                               Use this price
                             </button>
-                          </div>
+                          </Notice>
                         )}
                         {suggestion && suggestion.suggestedPrice === null && suggestion.message && (
-                          <p className="tfcl-empty-data mb-2">{suggestion.message}</p>
+                          <Notice tone="info">{suggestion.message}</Notice>
                         )}
-                        <div className="grid-2 gap-30">
-                          <div className="form-group mb-0">
+                        <div className="ha-form-grid">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_price">Price *</label>
                             <input
                               id="add_listing_price"
                               type="number"
-                              className="form-control"
+                              className="ha-input"
                               placeholder="Your price"
                               value={price}
                               onChange={(e) => setPrice(e.target.value)}
@@ -660,52 +650,46 @@ function AddListing() {
                               min={0}
                             />
                           </div>
-                          <div className="form-group mb-0">
+                          <div className="ha-field">
                             <label htmlFor="add_listing_price_type">Price type *</label>
-                            <NiceSelect
+                            <Select id="add_listing_price_type"
                               options={ADD_LISTING_PRICE_TYPE_OPTIONS}
                               defaultValue="fixed"
-                              className="form-control"
                               onChange={(value) => setPriceType(String(value))}
                             />
                           </div>
                         </div>
                       </div>
+                      </Card>
 
-                      {error && <div className="alert alert-danger">{error}</div>}
-                      {photoUploadStatus && <p className="text-color-2">{photoUploadStatus} {fileUploading ? `(${fileUploadProgress}%)` : ""}</p>}
-                      {!photoUploadStatus && fileUploading && <p className="text-color-2">Uploading video... {fileUploadProgress}%</p>}
+                      {error && <Notice tone="danger">{error}</Notice>}
+                      {(photoUploadStatus || fileUploading) && (
+                        <div className="mb-3" role="status" aria-live="polite">
+                          <div className="ha-sub mb-1">
+                            {photoUploadStatus ?? "Uploading video…"} {fileUploading ? `${fileUploadProgress}%` : ""}
+                          </div>
+                          {fileUploading && (
+                            <div className="ha-meter" role="progressbar" aria-label="Upload progress" aria-valuenow={fileUploadProgress} aria-valuemin={0} aria-valuemax={100}>
+                              <span style={{ width: `${fileUploadProgress}%` }} />
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                      <div className="group-button-submit">
-                        <button className="pre-btn" type="submit" disabled={submitting}>
-                          {submitting ? "Submitting..." : "Submit for review"}
+                      <div className="ha-form-footer">
+                        <button className="ha-btn is-primary" type="submit" disabled={submitting} aria-busy={submitting}>
+                          {submitting ? "Submitting…" : "Submit for review"}
                         </button>
-                        <button
-                          className="second-btn"
-                          type="button"
-                          disabled={submitting}
-                          onClick={() => submitListing(false)}
-                        >
-                          Save as Draft
+                        <button className="ha-btn" type="button" disabled={submitting} onClick={() => submitListing(false)}>
+                          Save as draft
                         </button>
-                        <button
-                          className="second-btn"
-                          type="button"
-                          disabled={submitting}
-                          onClick={() => setStep("spec")}
-                        >
-                          Back to vehicle details
+                        <button className="ha-btn is-ghost" type="button" disabled={submitting} onClick={() => setStep("spec")} style={{ marginLeft: "auto" }}>
+                          ← Back to vehicle details
                         </button>
                       </div>
                     </form>
                   )}
-                </main>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    </DashboardPage>
   );
 }
 

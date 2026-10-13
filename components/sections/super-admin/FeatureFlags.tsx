@@ -92,13 +92,13 @@ export default function FeatureFlags() {
         {data && data.data.length === 0 && <EmptyState icon="icon-carus-power" title="No flags yet" text="Create one with “New flag”." />}
         {data && data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Feature flags</caption>
               <thead>
                 <tr>
-                  <th>Flag</th>
-                  <th>State</th>
-                  <th>Last changed</th>
-                  <th className="ha-right">On / off</th>
+                  <th scope="col">Flag</th>
+                  <th scope="col">State</th>
+                  <th scope="col">Last changed</th>
+                  <th scope="col" className="ha-right">On / off</th>
                 </tr>
               </thead>
               <tbody>

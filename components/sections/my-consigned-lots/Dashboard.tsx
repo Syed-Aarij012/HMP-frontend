@@ -2,7 +2,21 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import {
+  Badge,
+  Card,
+  DataTable,
+  DataToolbar,
+  EmptyState,
+  ErrorNotice,
+  LoadingTable,
+  NoMatches,
+  Notice,
+  StatusBadge,
+  formatMoney,
+  useListControls,
+} from "@/components/ui/kit";
 import { useMyConsignedLots } from "@/hooks/useMyConsignedLots";
 import { CONSIGNOR_FIXABLE, describeBlocker } from "@/lib/auctionPublishBlockers";
 import type { AuctionLot } from "@/types/auction";
@@ -32,7 +46,7 @@ function NextSteps({
   const blockers = lot.publishBlockers;
 
   if (blockers.length === 0) {
-    return <span className="text-color-2">Ready — waiting for the auction team to publish it.</span>;
+    return <Badge tone="primary">Ready — waiting for the auction team to publish it</Badge>;
   }
 
   const yours = blockers.filter((code) => (CONSIGNOR_FIXABLE as string[]).includes(code));
@@ -60,23 +74,23 @@ function NextSteps({
 
   return (
     <div>
-      <ul className="mb-1" style={{ paddingLeft: 18 }}>
+      <ul className="mb-1" style={{ paddingLeft: 18, fontSize: 13 }}>
         {blockers.map((code) => (
           <li key={code}>{describeBlocker(code)}</li>
         ))}
       </ul>
 
       {yours.length > 0 && !open && (
-        <button type="button" className="sc-button" onClick={() => setOpen(true)}>
-          <span>Complete details</span>
+        <button type="button" className="ha-btn is-sm is-primary" onClick={() => setOpen(true)}>
+          Complete details
         </button>
       )}
 
       {open && (
-        <form onSubmit={handleSubmit} className="mt-2" style={{ maxWidth: 320 }}>
+        <form onSubmit={handleSubmit} className="ha-inline-edit mt-2" style={{ maxWidth: 320 }}>
           {blockers.includes("v5c_status") && (
             <select
-              className="form-control mb-2"
+              className="ha-select mb-2"
               aria-label="V5C status"
               value={v5cStatus}
               onChange={(e) => setV5cStatus(e.target.value)}
@@ -88,7 +102,7 @@ function NextSteps({
           )}
           {blockers.includes("vat_status") && (
             <select
-              className="form-control mb-2"
+              className="ha-select mb-2"
               aria-label="VAT status"
               value={vatStatus}
               onChange={(e) => setVatStatus(e.target.value)}
@@ -103,21 +117,21 @@ function NextSteps({
               type="number"
               min="0"
               step="0.01"
-              className="form-control mb-2"
-              aria-label="Acquisition cost"
+              className="ha-input mb-2"
+              aria-label="Acquisition cost in pounds"
               placeholder="Acquisition cost (£)"
               value={acquisitionCost}
               onChange={(e) => setAcquisitionCost(e.target.value)}
               required
             />
           )}
-          {error && <div className="alert alert-danger py-1">{error}</div>}
-          <div className="flex gap-10">
-            <button type="submit" className="sc-button" disabled={saving}>
-              <span>{saving ? "Saving..." : "Save"}</span>
+          {error && <Notice tone="danger">{error}</Notice>}
+          <div className="ha-actions is-start">
+            <button type="submit" className="ha-btn is-sm is-primary" disabled={saving} aria-busy={saving}>
+              {saving ? "Saving…" : "Save"}
             </button>
-            <button type="button" className="sc-button" disabled={saving} onClick={() => setOpen(false)}>
-              <span>Cancel</span>
+            <button type="button" className="ha-btn is-sm is-ghost" disabled={saving} onClick={() => setOpen(false)}>
+              Cancel
             </button>
           </div>
         </form>
@@ -126,77 +140,104 @@ function NextSteps({
   );
 }
 
+const vehicleName = (lot: AuctionLot) =>
+  lot.vehicle ? [lot.vehicle.year, lot.vehicle.make, lot.vehicle.model].filter(Boolean).join(" ") : "—";
+
 function Dashboard() {
   const { lots, loading, error, updateCompliance } = useMyConsignedLots();
+  const controls = useListControls<AuctionLot>({
+    items: lots,
+    search: (lot) => [vehicleName(lot), lot.saleName],
+    filters: [
+      { key: "status", label: "Status", get: (lot) => lot.status },
+      {
+        key: "blocked",
+        label: "Readiness",
+        get: (lot) => (lot.status === "cataloged" && (lot.publishBlockers?.length ?? 0) > 0 ? "needs" : "ok"),
+        options: [
+          { value: "needs", label: "Needs details" },
+          { value: "ok", label: "Nothing outstanding" },
+        ],
+      },
+    ],
+  });
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">My consigned vehicles</h1>
+    <DashboardPage
+      title="My consigned vehicles"
+      description="Vehicles you've entered into auction, and anything still needed before they go live."
+      actions={
+        <Link href="/consign-vehicle" className="ha-btn is-primary">
+          <i className="icon-carus-plus" aria-hidden="true" />
+          Consign a vehicle
+        </Link>
+      }
+    >
+      <Card>
+        {loading && <LoadingTable label="Loading your consigned vehicles" columns={5} />}
+        {error && <ErrorNotice message={error} />}
 
-                  {loading && <p>Loading your consigned vehicles...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
+        {!loading && !error && lots.length === 0 && (
+          <EmptyState
+            icon="icon-carus-car"
+            title="Nothing consigned yet"
+            text="You haven't consigned any vehicles to auction yet."
+            action={
+              <Link href="/consign-vehicle" className="ha-btn is-primary">
+                Consign one now
+              </Link>
+            }
+          />
+        )}
 
-                  {!loading && !error && lots.length === 0 && (
-                    <p className="tfcl-empty-data">
-                      You haven&apos;t consigned any vehicles to auction yet.{" "}
-                      <Link href="/consign-vehicle">Consign one now</Link>.
-                    </p>
-                  )}
-
-                  {!loading && !error && lots.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Vehicle</th>
-                            <th>Sale</th>
-                            <th>Status</th>
-                            <th>What&apos;s needed to go live</th>
-                            <th>Current price</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {lots.map((lot) => (
-                            <tr key={lot.id}>
-                              <td>
-                                {lot.vehicle
-                                  ? [lot.vehicle.year, lot.vehicle.make, lot.vehicle.model]
-                                      .filter(Boolean)
-                                      .join(" ")
-                                  : "-"}
-                              </td>
-                              <td>{lot.saleName ?? "-"}</td>
-                              <td className="text-capitalize">{lot.status.replace("_", " ")}</td>
-                              <td>
-                                <NextSteps lot={lot} onSave={updateCompliance} />
-                              </td>
-                              <td>{lot.currentPrice !== null ? `£${lot.currentPrice.toLocaleString()}` : "-"}</td>
-                              <td>
-                                <Link href={`/auction/${lot.id}`} className="sc-button">
-                                  <span>View lot</span>
-                                </Link>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        {!loading && !error && lots.length > 0 && (
+          <>
+            <DataToolbar controls={controls} searchPlaceholder="Search by vehicle or sale" noun="vehicle" />
+            {controls.results.length === 0 ? (
+              <NoMatches onClear={controls.clearAll} />
+            ) : (
+              <DataTable caption="Your consigned vehicles">
+                <thead>
+                  <tr>
+                    <th scope="col">Vehicle</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">What&apos;s needed to go live</th>
+                    <th scope="col" className="is-num">Current price</th>
+                    <th scope="col">
+                      <span className="ha-visually-hidden">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {controls.results.map((lot) => (
+                    <tr key={lot.id}>
+                      <td data-label="Vehicle">
+                        <div className="ha-primary-text">{vehicleName(lot)}</div>
+                        <div className="ha-sub">{lot.saleName ?? "No sale yet"}</div>
+                      </td>
+                      <td data-label="Status">
+                        <StatusBadge status={lot.status} />
+                      </td>
+                      <td data-label="What's needed">
+                        <NextSteps lot={lot} onSave={updateCompliance} />
+                      </td>
+                      <td data-label="Current price" className="is-num">
+                        {lot.currentPrice !== null ? formatMoney(lot.currentPrice) : "—"}
+                      </td>
+                      <td data-label="" className="ha-right">
+                        <Link href={`/auction/${lot.id}`} className="ha-btn is-sm is-ghost">
+                          View lot
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+          </>
+        )}
+      </Card>
+    </DashboardPage>
   );
 }
 

@@ -1,0 +1,992 @@
+// User dashboard shell (sellers, dealers, buyers, trade buyers, auction & ops staff). Scoped under
+// `.hmp-dash`, built from _tokens.scss; components come from _ui-kit.scss. The public marketplace
+// never carries `.hmp-dash`, so nothing here reaches it.
+
+.hmp-dash {
+  min-height: 100vh;
+  background: var(--hmp-bg);
+
+  .hd-skip:focus {
+    position: fixed !important;
+    left: var(--hmp-space-4);
+    top: var(--hmp-space-3);
+    width: auto;
+    height: auto;
+    clip: auto;
+    z-index: 2000;
+    padding: var(--hmp-space-2) var(--hmp-space-4);
+    background: var(--hmp-text);
+    color: #fff;
+    border-radius: var(--hmp-radius);
+  }
+
+  .hd-content:focus {
+    outline: none;
+  }
+
+  // ---------------------------------------------------------------- Sidebar
+
+  .hd-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1040;
+    width: var(--hmp-sidebar-w);
+    display: flex;
+    flex-direction: column;
+    background: var(--hmp-surface);
+    border-right: 1px solid var(--hmp-border);
+    transition: width var(--hmp-dur) var(--hmp-ease), transform var(--hmp-dur) var(--hmp-ease);
+  }
+
+  .hd-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--hmp-space-2);
+    height: var(--hmp-topbar-h);
+    padding: 0 var(--hmp-space-4) 0 var(--hmp-space-5);
+    border-bottom: 1px solid var(--hmp-border);
+    flex-shrink: 0;
+
+    img {
+      height: 30px;
+      width: auto;
+      display: block;
+    }
+  }
+
+  .hd-collapse {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--hmp-radius);
+    border: 1px solid var(--hmp-border);
+    background: var(--hmp-surface);
+    color: var(--hmp-text-2);
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:hover {
+      background: var(--hmp-surface-3);
+      color: var(--hmp-text);
+    }
+
+    svg {
+      transition: transform var(--hmp-dur) var(--hmp-ease);
+    }
+  }
+
+  .hd-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--hmp-space-3) var(--hmp-space-3) var(--hmp-space-5);
+    scrollbar-width: thin;
+  }
+
+  .hd-nav-group + .hd-nav-group {
+    margin-top: var(--hmp-space-4);
+  }
+
+  .hd-nav-title {
+    font-size: 11px;
+    font-weight: var(--hmp-fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--hmp-text-3);
+    padding: 0 10px 6px;
+    margin: 0;
+  }
+
+  .hd-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .hd-nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--hmp-space-3);
+    min-height: 36px;
+    padding: 0 10px;
+    border-radius: var(--hmp-radius);
+    color: var(--hmp-text-2);
+    font-size: var(--hmp-fs-base);
+    font-weight: var(--hmp-fw-medium);
+    transition: background var(--hmp-dur-fast) var(--hmp-ease), color var(--hmp-dur-fast) var(--hmp-ease);
+
+    i {
+      font-size: 17px;
+      width: 20px;
+      text-align: center;
+      color: var(--hmp-text-3);
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      background: var(--hmp-surface-3);
+      color: var(--hmp-text);
+    }
+
+    // Current page: tinted fill + weight + a leading bar — three cues, not colour alone.
+    &[aria-current="page"] {
+      background: var(--hmp-primary-soft);
+      color: var(--hmp-primary-on-soft);
+      font-weight: var(--hmp-fw-semibold);
+
+      i {
+        color: var(--hmp-primary);
+      }
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: -12px;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: var(--hmp-primary);
+      }
+    }
+  }
+
+  .hd-nav-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hd-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: var(--hmp-radius-pill);
+    background: var(--hmp-primary);
+    color: var(--hmp-on-primary);
+    font-size: 11px;
+    font-weight: var(--hmp-fw-bold);
+    line-height: 20px;
+    text-align: center;
+  }
+
+  .hd-sidebar-foot {
+    border-top: 1px solid var(--hmp-border);
+    padding: var(--hmp-space-3);
+    flex-shrink: 0;
+  }
+
+  .hd-me {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px;
+    min-width: 0;
+  }
+
+  .hd-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: var(--hmp-primary-soft);
+    color: var(--hmp-primary-on-soft);
+    font-size: var(--hmp-fs-xs);
+    font-weight: var(--hmp-fw-bold);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .hd-me-text {
+    min-width: 0;
+    line-height: 1.3;
+
+    b,
+    span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    b {
+      font-size: var(--hmp-fs-sm);
+      color: var(--hmp-text);
+    }
+
+    span {
+      font-size: var(--hmp-fs-xs);
+      color: var(--hmp-text-3);
+    }
+  }
+
+  // ---------------------------------------------------------------- Main column
+
+  .hd-main {
+    margin-left: var(--hmp-sidebar-w);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left var(--hmp-dur) var(--hmp-ease);
+  }
+
+  .hd-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    height: var(--hmp-topbar-h);
+    display: flex;
+    align-items: center;
+    gap: var(--hmp-space-3);
+    padding: 0 var(--hmp-space-8);
+    background: var(--hmp-surface);
+    border-bottom: 1px solid var(--hmp-border);
+  }
+
+  .hd-menu-btn {
+    display: none;
+  }
+
+  .hd-crumbs {
+    min-width: 0;
+    font-size: var(--hmp-fs-sm);
+    color: var(--hmp-text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    b {
+      color: var(--hmp-text);
+      font-weight: var(--hmp-fw-semibold);
+    }
+  }
+
+  .hd-topbar-end {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--hmp-space-2);
+  }
+
+  .hd-sitenav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-right: var(--hmp-space-2);
+
+    a {
+      padding: 6px 10px;
+      border-radius: var(--hmp-radius);
+      color: var(--hmp-text-2);
+      font-size: var(--hmp-fs-sm);
+      font-weight: var(--hmp-fw-medium);
+
+      &:hover {
+        background: var(--hmp-surface-3);
+        color: var(--hmp-text);
+      }
+    }
+  }
+
+  // Disclosure menus (marketplace links on small screens, the account menu).
+  .hd-menu {
+    position: relative;
+  }
+
+  .hd-menu-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 220px;
+    padding: 6px;
+    background: var(--hmp-surface);
+    border: 1px solid var(--hmp-border);
+    border-radius: var(--hmp-radius-lg);
+    box-shadow: var(--hmp-elev-2);
+    z-index: 1050;
+    animation: ha-pop var(--hmp-dur-fast) var(--hmp-ease);
+
+    a,
+    button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: var(--hmp-radius-sm);
+      background: none;
+      color: var(--hmp-text);
+      font: inherit;
+      font-size: var(--hmp-fs-sm);
+      text-align: left;
+      cursor: pointer;
+
+      i {
+        color: var(--hmp-text-3);
+        width: 16px;
+        text-align: center;
+      }
+
+      &:hover,
+      &:focus-visible {
+        background: var(--hmp-surface-3);
+        color: var(--hmp-text);
+      }
+    }
+
+    hr {
+      margin: 6px 0;
+      border: 0;
+      border-top: 1px solid var(--hmp-border);
+      opacity: 1;
+    }
+  }
+
+  .hd-menu-head {
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid var(--hmp-border);
+    margin-bottom: 6px;
+    line-height: 1.3;
+
+    b {
+      display: block;
+      font-size: var(--hmp-fs-sm);
+    }
+
+    span {
+      font-size: var(--hmp-fs-xs);
+      color: var(--hmp-text-3);
+      word-break: break-all;
+    }
+  }
+
+  .hd-account-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--hmp-space-2);
+    height: 40px;
+    padding: 3px 8px 3px 3px;
+    border-radius: var(--hmp-radius-pill);
+    border: 1px solid var(--hmp-border);
+    background: var(--hmp-surface);
+    color: var(--hmp-text);
+    font: inherit;
+    font-size: var(--hmp-fs-sm);
+    font-weight: var(--hmp-fw-semibold);
+    cursor: pointer;
+
+    &:hover,
+    &[aria-expanded="true"] {
+      background: var(--hmp-surface-3);
+    }
+
+    .hd-avatar {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  .hd-content {
+    flex: 1;
+    width: 100%;
+    max-width: calc(var(--hmp-content-max) + 2 * var(--hmp-space-8));
+    padding: var(--hmp-space-8);
+  }
+
+  .hd-overlay {
+    display: none;
+  }
+
+  // ---------------------------------------------------------------- Collapsed rail (desktop)
+
+  &.is-collapsed {
+    @media (min-width: 992px) {
+      .hd-sidebar {
+        width: var(--hmp-sidebar-w-collapsed);
+      }
+
+      .hd-main {
+        margin-left: var(--hmp-sidebar-w-collapsed);
+      }
+
+      .hd-brand {
+        flex-direction: column;
+        justify-content: center;
+        padding: 0;
+
+        a {
+          display: none;
+        }
+      }
+
+      .hd-collapse svg {
+        transform: rotate(180deg);
+      }
+
+      .hd-nav-title,
+      .hd-nav-label,
+      .hd-me-text {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+
+      .hd-nav-group + .hd-nav-group {
+        margin-top: var(--hmp-space-2);
+        padding-top: var(--hmp-space-2);
+        border-top: 1px solid var(--hmp-border);
+      }
+
+      .hd-nav-link {
+        justify-content: center;
+        width: 44px;
+        height: 40px;
+        margin: 0 auto;
+        padding: 0;
+
+        &::before {
+          left: -14px;
+        }
+      }
+
+      .hd-count {
+        position: absolute;
+        top: 2px;
+        right: 0;
+        min-width: 16px;
+        height: 16px;
+        line-height: 16px;
+        padding: 0 4px;
+        font-size: 10px;
+      }
+
+      .hd-me {
+        justify-content: center;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- Tablet & phone
+
+  @media (max-width: 1199px) {
+    .hd-sitenav {
+      display: none;
+    }
+
+    .hd-topbar {
+      padding: 0 var(--hmp-space-6);
+    }
+
+    .hd-content {
+      padding: var(--hmp-space-6);
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .hd-sitenav-menu {
+      display: none;
+    }
+  }
+
+  @media (max-width: 991px) {
+    .hd-sidebar {
+      transform: translateX(-100%);
+      box-shadow: none;
+
+      &.is-open {
+        transform: none;
+        box-shadow: var(--hmp-elev-3);
+      }
+    }
+
+    .hd-collapse {
+      display: none;
+    }
+
+    .hd-overlay.is-open {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.45);
+      z-index: 1035;
+      border: 0;
+      padding: 0;
+      width: 100%;
+    }
+
+    .hd-main {
+      margin-left: 0;
+    }
+
+    .hd-menu-btn {
+      display: inline-flex;
+    }
+  }
+
+  @media (max-width: 575px) {
+    .hd-topbar {
+      padding: 0 var(--hmp-space-4);
+      gap: var(--hmp-space-2);
+    }
+
+    .hd-content {
+      padding: var(--hmp-space-5) var(--hmp-space-4);
+    }
+
+    .hd-account-name,
+    .hd-sell-label {
+      display: none;
+    }
+
+    .ha-page-head h1 {
+      font-size: var(--hmp-fs-lg);
+    }
+  }
+
+  // ---------------------------------------------------------------- Page
+
+  .hd-page {
+    width: 100%;
+  }
+
+  .hd-section-title {
+    font-size: var(--hmp-fs-md);
+    font-weight: var(--hmp-fw-semibold);
+    margin: var(--hmp-space-8) 0 var(--hmp-space-3);
+  }
+
+  // ---------------------------------------------------------------- Template compatibility
+  //
+  // Some deep editors (add/edit listing, inspection builder, messages) still use the original
+  // template's markup inside their forms. Inside the dashboard these classes take the design
+  // system's look, so every screen reads the same.
+
+  .hd-content {
+    .table {
+      --bs-table-bg: transparent;
+      margin: 0;
+      font-size: var(--hmp-fs-base);
+      color: var(--hmp-text);
+
+      > :not(caption) > * > * {
+        padding: var(--hmp-space-3) var(--hmp-space-4);
+        border-bottom-color: var(--hmp-border);
+        box-shadow: none;
+        vertical-align: middle;
+      }
+
+      thead th {
+        font-size: var(--hmp-fs-xs);
+        font-weight: var(--hmp-fw-semibold);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--hmp-text-2);
+        background: var(--hmp-surface-2);
+        white-space: nowrap;
+      }
+    }
+
+    .table-responsive {
+      border: 1px solid var(--hmp-border);
+      border-radius: var(--hmp-radius-lg);
+      background: var(--hmp-surface);
+    }
+
+    .sc-button,
+    .tf-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--hmp-radius);
+      border: 1px solid var(--hmp-primary);
+      background: var(--hmp-primary);
+      color: var(--hmp-on-primary);
+      font-family: var(--hmp-font);
+      font-size: var(--hmp-fs-sm);
+      font-weight: var(--hmp-fw-semibold);
+      line-height: 1;
+      white-space: nowrap;
+      transition: background var(--hmp-dur-fast) var(--hmp-ease);
+
+      span,
+      i {
+        color: inherit;
+        font-size: inherit;
+      }
+
+      &::before,
+      &::after {
+        display: none;
+      }
+
+      &:hover:not(:disabled) {
+        background: var(--hmp-primary-hover);
+        border-color: var(--hmp-primary-hover);
+        color: var(--hmp-on-primary);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--hmp-radius-sm);
+      border: 1px solid var(--hmp-border-strong);
+      background: var(--hmp-surface);
+      color: var(--hmp-text);
+      font-size: var(--hmp-fs-xs);
+      font-weight: var(--hmp-fw-semibold);
+
+      &:hover {
+        background: var(--hmp-surface-3);
+      }
+
+      &.tfcl-dashboard-action-delete {
+        color: var(--hmp-danger);
+      }
+    }
+
+    .alert {
+      border-radius: var(--hmp-radius);
+      border: 1px solid transparent;
+      border-left-width: 3px;
+      padding: 10px 14px;
+      font-size: var(--hmp-fs-sm);
+
+      &.alert-danger {
+        background: var(--hmp-danger-soft);
+        color: var(--hmp-danger-hover);
+        border-color: var(--hmp-danger);
+      }
+
+      &.alert-success {
+        background: var(--hmp-success-soft);
+        color: var(--hmp-success);
+        border-color: var(--hmp-success);
+      }
+
+      &.alert-warning {
+        background: var(--hmp-warning-soft);
+        color: var(--hmp-warning);
+        border-color: var(--hmp-warning);
+      }
+
+      &.alert-info {
+        background: var(--hmp-info-soft);
+        color: var(--hmp-info);
+        border-color: var(--hmp-primary);
+      }
+    }
+
+    .form-control,
+    .form-select,
+    input[type="text"]:not(.ha-input),
+    input[type="number"]:not(.ha-input),
+    input[type="email"]:not(.ha-input),
+    input[type="tel"]:not(.ha-input),
+    input[type="date"]:not(.ha-input),
+    input[type="datetime-local"]:not(.ha-input),
+    input[type="password"]:not(.ha-input),
+    textarea:not(.ha-textarea),
+    select:not(.ha-select) {
+      border: 1px solid var(--hmp-input-border);
+      border-radius: var(--hmp-radius);
+      background-color: var(--hmp-surface);
+      color: var(--hmp-text);
+      font-family: var(--hmp-font);
+      font-size: var(--hmp-fs-base);
+
+      &:focus {
+        border-color: var(--hmp-primary);
+        box-shadow: var(--hmp-focus-ring);
+        outline: none;
+      }
+    }
+
+    label {
+      color: var(--hmp-text);
+    }
+
+    .tfcl-card,
+    .widget-box-2,
+    .tfcl-add-listing {
+      background: var(--hmp-surface);
+      border: 1px solid var(--hmp-border);
+      border-radius: var(--hmp-radius-lg);
+      box-shadow: var(--hmp-elev-1);
+    }
+
+    .tfcl-empty-data {
+      color: var(--hmp-text-2);
+      padding: var(--hmp-space-8) 0;
+      text-align: center;
+    }
+
+    .text-color-2 {
+      color: var(--hmp-text-2) !important;
+    }
+
+    .admin-title {
+      font-family: var(--hmp-font);
+      font-size: var(--hmp-fs-xl);
+      font-weight: var(--hmp-fw-bold);
+      color: var(--hmp-text);
+      margin-bottom: var(--hmp-space-4);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: var(--hmp-font);
+    }
+
+    // The template's own page wrappers add their own padding; the shell already provides it.
+    #themesflat-content,
+    .content-area,
+    .main-content {
+      padding: 0;
+      margin: 0;
+    }
+
+    .container {
+      max-width: none;
+      padding: 0;
+    }
+
+    .tfcl-dashboard {
+      padding: 0;
+      background: transparent;
+    }
+  }
+}
+
+// Tables, empty states and headed sections placed straight on a page (not in a Card) take the
+// card surface, so every list reads the same whether or not the page wraps it.
+.hmp-dash .hd-page,
+.hmp-admin .hd-page {
+  > .ha-table-wrap,
+  > .ha-empty,
+  > .ha-skeleton-table {
+    background: var(--hmp-surface);
+    border: 1px solid var(--hmp-border);
+    border-radius: var(--hmp-radius-lg);
+    box-shadow: var(--hmp-elev-1);
+    margin-bottom: var(--hmp-space-4);
+  }
+
+  > .ha-empty {
+    max-width: none;
+  }
+
+  > .ha-card + .ha-card,
+  > .ha-card {
+    margin-bottom: var(--hmp-space-4);
+  }
+
+  > .ha-card + .ha-card {
+    margin-top: 0;
+  }
+}
+
+.hmp-dash .hd-content,
+.hmp-admin .hd-page {
+  // Template upload widgets placed inside a design-system Card: drop their own card chrome.
+  .hd-template-section .tfcl-add-listing,
+  .ha-card .tfcl-add-listing {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+    margin-bottom: var(--hmp-space-6);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h3,
+    .form-title {
+      font-family: var(--hmp-font);
+      font-size: var(--hmp-fs-md);
+      font-weight: var(--hmp-fw-semibold);
+      color: var(--hmp-text);
+      margin-bottom: var(--hmp-space-3);
+    }
+  }
+}
+
+.hmp-ui {
+  // Long forms: the primary action stays in reach at the bottom of the viewport.
+  .ha-form-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    gap: var(--hmp-space-2);
+    align-items: center;
+    padding: var(--hmp-space-3) var(--hmp-space-4);
+    margin: 0 calc(-1 * var(--hmp-space-4));
+    background: var(--hmp-bg);
+    border-top: 1px solid var(--hmp-border);
+  }
+}
+
+// ---------------------------------------------------------------- Messages (template two-pane chat, tokenised)
+
+.hmp-dash .hd-content .hd-messages {
+  background: var(--hmp-surface);
+  border: 1px solid var(--hmp-border);
+  border-radius: var(--hmp-radius-lg);
+  box-shadow: var(--hmp-elev-1);
+  overflow: hidden;
+
+  .message-header {
+    padding: var(--hmp-space-4);
+    border-color: var(--hmp-border);
+
+    label {
+      font-family: var(--hmp-font);
+      font-size: var(--hmp-fs-md) !important;
+      font-weight: var(--hmp-fw-semibold) !important;
+      color: var(--hmp-text) !important;
+    }
+
+    input {
+      border: 1px solid var(--hmp-border-strong);
+      border-radius: var(--hmp-radius);
+      height: var(--hmp-control-h);
+    }
+  }
+
+  .list-user-chat {
+    padding: var(--hmp-space-2);
+    border-color: var(--hmp-border);
+
+    li:not(:last-child) {
+      margin-bottom: 2px;
+    }
+
+    .user-item {
+      padding: var(--hmp-space-3);
+      gap: var(--hmp-space-3);
+      border-radius: var(--hmp-radius);
+      transition: background var(--hmp-dur-fast) var(--hmp-ease);
+
+      .name {
+        font-family: var(--hmp-font);
+        font-size: var(--hmp-fs-base);
+        font-weight: var(--hmp-fw-semibold);
+        color: var(--hmp-text);
+      }
+
+      .date,
+      p {
+        font-size: var(--hmp-fs-xs);
+        color: var(--hmp-text-3);
+      }
+    }
+
+    li .user-item:hover {
+      background: var(--hmp-surface-3);
+    }
+
+    // Selected conversation: tint + a leading bar.
+    li.active .user-item {
+      background: var(--hmp-primary-soft);
+      box-shadow: inset 3px 0 0 var(--hmp-primary);
+    }
+  }
+
+  .header-inner-chat {
+    border-color: var(--hmp-border);
+
+    .name {
+      font-family: var(--hmp-font);
+      color: var(--hmp-text);
+      font-weight: var(--hmp-fw-semibold);
+    }
+  }
+
+  .content-inner-chat {
+    .chat-text p {
+      background: var(--hmp-primary);
+      color: var(--hmp-on-primary);
+      border-radius: 14px 14px 4px 14px;
+      font-size: var(--hmp-fs-base);
+    }
+
+    .client-inner .content p {
+      background: var(--hmp-surface-3);
+      color: var(--hmp-text);
+      border-radius: 14px 14px 14px 4px;
+      font-size: var(--hmp-fs-base);
+    }
+
+    .date-pushlish {
+      color: var(--hmp-text-3);
+      font-size: var(--hmp-fs-xs);
+    }
+  }
+
+  .controller-chat {
+    border-color: var(--hmp-border);
+
+    input,
+    textarea {
+      border: 1px solid var(--hmp-border-strong);
+      border-radius: var(--hmp-radius);
+    }
+
+    .controll a,
+    .controll button {
+      background: var(--hmp-surface-3);
+      border-radius: var(--hmp-radius);
+    }
+  }
+}
+
+.hmp-dash .btn-open-list-user {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .hmp-dash .btn-open-list-user {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--hmp-radius);
+    border: 1px solid var(--hmp-border-strong);
+    background: var(--hmp-surface);
+
+    &.d-none {
+      display: none;
+    }
+  }
+}

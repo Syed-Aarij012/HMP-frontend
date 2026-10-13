@@ -5,6 +5,7 @@ import { downloadFile } from "@/lib/api-client";
 import type { usePostSaleRecords } from "@/hooks/usePostSaleRecords";
 import { useTransportJob } from "@/hooks/useTransportJob";
 import type { PostSaleOrderRef, TransportJob } from "@/types/postSale";
+import { Notice } from "@/components/ui/kit";
 
 // Module F post-sale sections shared by trade orders (my-trade-orders) and retail direct-buy
 // orders (my-orders), so both journeys book, track, collect and download the same way.
@@ -53,9 +54,9 @@ function Tracker({ job }: { job: TransportJob }) {
       </ol>
 
       {job.status === "exception" && (
-        <div className="alert alert-danger">
+        <Notice tone="danger">
           There is a problem with this delivery ({(job.exception_code ?? "unknown").replace(/_/g, " ")}). Our logistics team is looking into it.
-        </div>
+        </Notice>
       )}
 
       {job.eta_at && job.status === "in_transit" && (
@@ -64,7 +65,7 @@ function Tracker({ job }: { job: TransportJob }) {
         </p>
       )}
       {job.last_position && (
-        <p className="text-color-2">
+        <p className="ha-muted">
           Last seen at {job.last_position.lat.toFixed(3)}, {job.last_position.lng.toFixed(3)} ({when(job.last_position.at)}).{" "}
           <a
             href={`https://www.openstreetmap.org/?mlat=${job.last_position.lat}&mlon=${job.last_position.lng}#map=11/${job.last_position.lat}/${job.last_position.lng}`}
@@ -75,13 +76,13 @@ function Tracker({ job }: { job: TransportJob }) {
           </a>
         </p>
       )}
-      <p className="text-color-2">
+      <p className="ha-muted">
         {job.pickup_address.postcode} &rarr; {job.dropoff_address.postcode}
         {job.distance_miles ? ` (about ${Number(job.distance_miles).toFixed(0)} road miles)` : ""} &middot; {money(job.quote_amount)}
       </p>
 
       {job.events && job.events.length > 0 && (
-        <ul className="text-color-2" style={{ paddingLeft: 18 }}>
+        <ul className="ha-muted" style={{ paddingLeft: 18 }}>
           {[...job.events].reverse().map((event, index) => (
             <li key={index}>
               {when(event.created_at)} — {event.event_type.replace(/_/g, " ")}
@@ -119,7 +120,7 @@ export function TransportSection({
 
   return (
     <Section title="Delivery">
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && <Notice tone="danger">{error}</Notice>}
 
       {!job && (
         <form
@@ -128,16 +129,14 @@ export function TransportSection({
             requestQuote({ pickupPostcode: pickup, dropoffPostcode: dropoff, vehicleClass: "car", isRunner: true, transportType: enclosed ? "enclosed" : "open" });
           }}
         >
-          <p className="text-color-2">Get quotes from our carrier panel to have the vehicle delivered to you.</p>
+          <p className="ha-muted">Get quotes from our carrier panel to have the vehicle delivered to you.</p>
           <div className="flex gap-10 align-center" style={{ flexWrap: "wrap" }}>
-            <input className="form-control" style={{ flex: "0 0 180px" }} placeholder="Collect from (postcode)" value={pickup} onChange={(e) => setPickup(e.target.value)} required />
-            <input className="form-control" style={{ flex: "0 0 180px" }} placeholder="Deliver to (postcode)" value={dropoff} onChange={(e) => setDropoff(e.target.value)} required />
+            <input className="ha-input" style={{ flex: "0 0 180px" }} placeholder="Collect from (postcode)" value={pickup} onChange={(e) => setPickup(e.target.value)} required />
+            <input className="ha-input" style={{ flex: "0 0 180px" }} placeholder="Deliver to (postcode)" value={dropoff} onChange={(e) => setDropoff(e.target.value)} required />
             <label>
               <input type="checkbox" checked={enclosed} onChange={(e) => setEnclosed(e.target.checked)} /> Enclosed transport
             </label>
-            <button type="submit" className="sc-button" disabled={busy}>
-              <span>{busy ? "Getting quotes..." : "Get quotes"}</span>
-            </button>
+            <button type="submit" className="ha-btn is-primary" disabled={busy}>{busy ? "Getting quotes..." : "Get quotes"}</button>
           </div>
         </form>
       )}
@@ -170,10 +169,10 @@ export function TransportSection({
                   </tbody>
                 </table>
               ) : (
-                <p className="text-color-2">Indicative price {money(job.quote_amount)} (we could not measure this route, so this is a flat estimate).</p>
+                <p className="ha-muted">Indicative price {money(job.quote_amount)} (we could not measure this route, so this is a flat estimate).</p>
               )}
-              <button type="button" className="sc-button" disabled={busy} onClick={() => book(chosen ?? job.carrier_quotes?.[0]?.carrier_id)}>
-                <span>{busy ? "Booking..." : "Book delivery"}</span>
+              <button type="button" className="ha-btn" disabled={busy} onClick={() => book(chosen ?? job.carrier_quotes?.[0]?.carrier_id)}>
+                <span>{busy ? "Booking…" : "Book delivery"}</span>
               </button>
             </div>
           )}
@@ -188,7 +187,7 @@ export function ReleaseSection({ releaseNoteId, release }: { releaseNoteId: numb
   if (!releaseNoteId) {
     return (
       <Section title="Collection">
-        <p className="text-color-2">Your release code will appear here once your payment has cleared.</p>
+        <p className="ha-muted">Your release code will appear here once your payment has cleared.</p>
       </Section>
     );
   }
@@ -197,7 +196,7 @@ export function ReleaseSection({ releaseNoteId, release }: { releaseNoteId: numb
     <Section title="Collection">
       {!release && <p>Loading...</p>}
       {release && release.status === "held" && (
-        <div className="alert alert-danger">Release is on hold{release.hold_reason ? `: ${release.hold_reason.replace(/_/g, " ")}` : ""}. Please contact support.</div>
+        <Notice tone="danger">Release is on hold{release.hold_reason ? `: ${release.hold_reason.replace(/_/g, " ")}` : ""}. Please contact support.</Notice>
       )}
       {release && release.status === "released" && <p>Vehicle released on {when(release.released_at)}.</p>}
       {release && release.status === "pending" && release.release_code && (
@@ -214,12 +213,12 @@ export function ReleaseSection({ releaseNoteId, release }: { releaseNoteId: numb
           <div>
             <p className="mb-1">Show this at the gate together with photo ID:</p>
             <p style={{ fontSize: 28, fontWeight: 700, letterSpacing: 4 }}>{release.release_code}</p>
-            <p className="text-color-2">Only the named collector can collect this vehicle.</p>
+            <p className="ha-muted">Only the named collector can collect this vehicle.</p>
           </div>
         </div>
       )}
       {release?.handover_checklist && (
-        <ul className="text-color-2" style={{ paddingLeft: 18 }}>
+        <ul className="ha-muted" style={{ paddingLeft: 18 }}>
           {Object.entries(release.handover_checklist).map(([key, value]) => (
             <li key={key}>
               {key.replace(/_/g, " ")}: {value ? "yes" : "no"}
@@ -252,15 +251,15 @@ export function DocumentsSection({ documents }: { documents: ReturnType<typeof u
 
   return (
     <Section title="Documents">
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && <Notice tone="danger">{error}</Notice>}
       <table className="table">
         <tbody>
           {rows.map((row) => (
             <tr key={row.url}>
               <td>{row.label}</td>
-              <td className="text-color-2">Kept until {row.retain}</td>
+              <td className="ha-muted">Kept until {row.retain}</td>
               <td>
-                <button type="button" className="sc-button" onClick={() => downloadFile(row.url, row.file).catch(() => setError("That document could not be downloaded."))}>
+                <button type="button" className="ha-btn" onClick={() => downloadFile(row.url, row.file).catch(() => setError("That document could not be downloaded."))}>
                   <span>Download</span>
                 </button>
               </td>

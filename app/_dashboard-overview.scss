@@ -1,0 +1,567 @@
+// Role dashboard overview (components/dashboard/overview). Scoped under `.hmp-ui`, tokens only.
+// Motion: cards fade/slide in (200ms), charts draw in once, KPI numbers count up — all off
+// under prefers-reduced-motion (see _tokens.scss), nothing loops.
+
+.hmp-ui {
+  .ov-range {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--hmp-space-2);
+  }
+
+  .ov-range-custom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--hmp-space-2);
+  }
+
+  .ov-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--hmp-space-2);
+    margin: calc(-1 * var(--hmp-space-2)) 0 var(--hmp-space-5);
+  }
+
+  .ov-body {
+    transition: opacity var(--hmp-dur) var(--hmp-ease);
+
+    // Refetching a new range keeps the frame — dimmed, no layout jump.
+    &.is-refreshing {
+      opacity: 0.55;
+    }
+  }
+
+  // ---------------------------------------------------------------- KPIs
+
+  .ov-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+    gap: var(--hmp-space-4);
+    margin-bottom: var(--hmp-space-4);
+  }
+
+  .ov-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--hmp-space-4);
+    min-height: 132px;
+    color: inherit;
+
+    &:is(a):hover {
+      border-color: var(--hmp-border-strong);
+      color: inherit;
+    }
+  }
+
+  .ov-kpi-label {
+    font-size: var(--hmp-fs-sm);
+    font-weight: var(--hmp-fw-medium);
+    color: var(--hmp-text-2);
+  }
+
+  .ov-kpi-value {
+    font-size: 26px;
+    line-height: var(--hmp-lh-tight);
+    font-weight: var(--hmp-fw-bold);
+    color: var(--hmp-text);
+    margin: var(--hmp-space-1) 0 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ov-kpi-foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--hmp-space-2);
+    margin-top: var(--hmp-space-2);
+    font-size: var(--hmp-fs-xs);
+  }
+
+  .ov-change {
+    display: inline-flex;
+    gap: 4px;
+    font-size: var(--hmp-fs-xs);
+    font-weight: var(--hmp-fw-semibold);
+    color: var(--hmp-text-2);
+
+    &.is-up {
+      color: var(--hmp-success);
+    }
+
+    &.is-down {
+      color: var(--hmp-danger);
+    }
+  }
+
+  .ov-spark {
+    width: 84px;
+    height: 28px;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  .ov-spark-line {
+    fill: none;
+    stroke: #2a78d6;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .ov-spark-dot {
+    fill: #2a78d6;
+    stroke: var(--hmp-surface);
+    stroke-width: 1.5;
+  }
+
+  // ---------------------------------------------------------------- Layout
+
+  .ov-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+    gap: var(--hmp-space-4);
+    align-items: stretch;
+    margin-bottom: var(--hmp-space-4);
+
+    @media (max-width: 1099px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    > .ha-card + .ha-card {
+      margin-top: 0;
+    }
+  }
+
+  .ov-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+    gap: var(--hmp-space-4);
+    margin-bottom: var(--hmp-space-4);
+
+    > .ha-card + .ha-card {
+      margin-top: 0;
+    }
+  }
+
+  .ov-chart-card {
+    display: flex;
+    flex-direction: column;
+
+    > .ha-card-body {
+      flex: 1;
+    }
+  }
+
+  // ---------------------------------------------------------------- Action needed
+
+  .ov-actions {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ov-action-list {
+    list-style: none;
+    margin: 0;
+    padding: var(--hmp-space-2);
+  }
+
+  .ov-action {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--hmp-space-3);
+    padding: var(--hmp-space-3);
+    border-radius: var(--hmp-radius);
+    color: var(--hmp-text);
+
+    &:is(a):hover {
+      background: var(--hmp-surface-3);
+      color: var(--hmp-text);
+    }
+  }
+
+  .ov-action-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    b {
+      font-weight: var(--hmp-fw-semibold);
+      font-size: var(--hmp-fs-base);
+    }
+  }
+
+  .ov-action-go {
+    color: var(--hmp-text-3);
+    align-self: center;
+  }
+
+  // Severity: shape + colour + (hidden) text label — never colour alone.
+  .ov-severity {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: var(--hmp-fw-bold);
+
+    &.is-urgent {
+      background: var(--hmp-danger);
+      color: #fff;
+    }
+
+    &.is-warning {
+      background: var(--hmp-warning-soft);
+      color: var(--hmp-warning);
+      box-shadow: inset 0 0 0 1px var(--hmp-warning);
+    }
+
+    &.is-info {
+      background: var(--hmp-primary-soft);
+      color: var(--hmp-primary-on-soft);
+      font-style: italic;
+      font-family: Georgia, serif;
+    }
+  }
+
+  // ---------------------------------------------------------------- Charts
+
+  .ov-chart {
+    position: relative;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+
+      &:focus-visible {
+        outline: 2px solid var(--hmp-primary);
+        outline-offset: 4px;
+        border-radius: var(--hmp-radius-sm);
+      }
+    }
+  }
+
+  .ov-grid {
+    stroke: var(--hmp-border);
+    stroke-width: 1;
+  }
+
+  .ov-axis {
+    fill: var(--hmp-text-3);
+    font-size: 11px;
+    font-family: var(--hmp-font);
+  }
+
+  .ov-crosshair {
+    stroke: var(--hmp-text-3);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+  }
+
+  .ov-line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .ov-dot {
+    stroke: var(--hmp-surface);
+    stroke-width: 2;
+  }
+
+  .ov-bar {
+    transition: opacity var(--hmp-dur-fast) var(--hmp-ease);
+  }
+
+  .ov-bar-hit {
+    cursor: default;
+    outline: none;
+
+    &:hover .ov-bar:not(.is-active),
+    &:focus .ov-bar:not(.is-active) {
+      opacity: 1;
+    }
+
+    &:focus-visible .ov-bar {
+      stroke: var(--hmp-text);
+      stroke-width: 2;
+    }
+  }
+
+  .ov-bar.is-active {
+    opacity: 0.8;
+  }
+
+  .ov-tip {
+    position: absolute;
+    transform: translate(-50%, calc(-100% - 10px));
+    pointer-events: none;
+    z-index: 5;
+    min-width: 140px;
+    padding: var(--hmp-space-2) var(--hmp-space-3);
+    background: var(--hmp-surface);
+    border: 1px solid var(--hmp-border);
+    border-radius: var(--hmp-radius);
+    box-shadow: var(--hmp-elev-2);
+    font-size: var(--hmp-fs-xs);
+    white-space: nowrap;
+  }
+
+  .ov-tip-title {
+    color: var(--hmp-text-3);
+    margin-bottom: 4px;
+  }
+
+  .ov-tip-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    b {
+      font-size: var(--hmp-fs-sm);
+      color: var(--hmp-text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    span:last-child {
+      color: var(--hmp-text-2);
+    }
+  }
+
+  .ov-key-line {
+    display: inline-block;
+    width: 14px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  .ov-key-box {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .ov-hbars,
+  .ov-funnel {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: minmax(90px, 0.9fr) 2fr minmax(56px, auto);
+      align-items: center;
+      gap: var(--hmp-space-3);
+      padding: 6px 0;
+    }
+  }
+
+  .ov-hbar-label,
+  .ov-funnel-label {
+    font-size: var(--hmp-fs-sm);
+    color: var(--hmp-text-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ov-hbar-track,
+  .ov-funnel-bar {
+    height: 14px;
+    border-radius: 4px;
+    background: var(--hmp-surface-3);
+    overflow: hidden;
+
+    > span {
+      display: block;
+      height: 100%;
+      border-radius: 4px;
+    }
+  }
+
+  .ov-hbar-value {
+    font-size: var(--hmp-fs-sm);
+    font-weight: var(--hmp-fw-semibold);
+    text-align: right;
+  }
+
+  .ov-donut {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--hmp-space-5);
+
+    svg {
+      width: 160px;
+      height: 160px;
+      flex-shrink: 0;
+    }
+  }
+
+  .ov-donut-total {
+    fill: var(--hmp-text);
+    font-size: 20px;
+    font-weight: var(--hmp-fw-bold);
+    font-family: var(--hmp-font);
+  }
+
+  .ov-donut-legend {
+    flex: 1;
+    min-width: 180px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: 10px 1fr auto 44px;
+      align-items: center;
+      gap: var(--hmp-space-2);
+      padding: 5px 0;
+      font-size: var(--hmp-fs-sm);
+      border-bottom: 1px solid var(--hmp-border);
+
+      &:last-child {
+        border-bottom: 0;
+      }
+    }
+  }
+
+  .ov-donut-label {
+    color: var(--hmp-text-2);
+  }
+
+  .ov-donut-share {
+    color: var(--hmp-text-3);
+    text-align: right;
+  }
+
+  .ov-gauge-figures {
+    display: flex;
+    align-items: baseline;
+    gap: var(--hmp-space-2);
+    margin-bottom: var(--hmp-space-3);
+  }
+
+  .ov-gauge-value {
+    font-size: var(--hmp-fs-xl);
+    font-weight: var(--hmp-fw-bold);
+  }
+
+  .ov-gauge-meter {
+    height: 12px;
+    border-radius: 6px;
+
+    span {
+      border-radius: 6px;
+    }
+  }
+
+  .ov-gauge-status {
+    margin-top: var(--hmp-space-2);
+    font-size: var(--hmp-fs-sm);
+    color: var(--hmp-text-2);
+  }
+
+  .ov-table {
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--hmp-border);
+    border-radius: var(--hmp-radius);
+
+    th {
+      position: sticky;
+      top: 0;
+    }
+  }
+
+  .ov-activity-type {
+    display: inline-block;
+    margin-right: var(--hmp-space-2);
+    padding: 0 6px;
+    border-radius: var(--hmp-radius-sm);
+    background: var(--hmp-surface-2);
+    border: 1px solid var(--hmp-border);
+    font-size: 11px;
+    font-weight: var(--hmp-fw-semibold);
+    color: var(--hmp-text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  // ---------------------------------------------------------------- Motion (state changes only)
+
+  .ov-enter {
+    animation: ov-enter 220ms var(--hmp-ease) both;
+  }
+
+  .ov-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: ov-draw 300ms ease-out forwards;
+  }
+
+  .ov-grow {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: ov-grow 260ms ease-out both;
+  }
+
+  .ov-grow-x {
+    transform-origin: left;
+    animation: ov-grow-x 260ms ease-out both;
+  }
+}
+
+@keyframes ov-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes ov-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ov-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes ov-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+// Sidebar labels wrap to two lines instead of being cut off.
+.hmp-dash .hd-nav-label {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3;
+}
+
+.hmp-dash .hd-nav-link {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}

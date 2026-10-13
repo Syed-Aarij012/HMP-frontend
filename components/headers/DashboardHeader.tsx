@@ -1,329 +1,193 @@
 "use client";
 
-import Image from "@/components/common/AppImage";
 import Link from "next/link";
-import React from "react";
-import {
-  MobileMenuBackdrop,
-  MobileMenuCloser,
-  MobileMenuTrigger,
-} from "./MobileMenu";
-import Nav from "./Nav";
-import MobileNav from "./MobileNav";
+import { usePathname } from "next/navigation";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { HeaderSearchTrigger } from "./HeaderSearch";
 import { canAny, useAuth } from "@/contexts/AuthContext";
+import { canAccessRoute } from "@/lib/routeAccess";
+import { useDashboardSidebar } from "@/components/dashboard/DashboardSidebarContext";
+import { mainNavMenu } from "@/data/navigation";
+import { humanize } from "@/components/ui/kit";
+import Avatar from "@/components/ui/Avatar";
+import type { NavMenuItem } from "@/types/navigation";
 
-const DEFAULT_AVATAR = "/assets/images/dashboard/agent1.jpg";
+// The marketplace's own links, flattened (the top bar has no room for mega-menus).
+function flatten(items: NavMenuItem[]): Array<{ id: string; label: string; href: string }> {
+  return items.flatMap((item) => (item.children?.length ? flatten(item.children) : item.href ? [{ id: item.id, label: item.label, href: item.href }] : []));
+}
+const SITE_LINKS = flatten(mainNavMenu);
+
+// Page names for the breadcrumb where the URL segment doesn't read well on its own.
+const PAGE_NAMES: Record<string, string> = {
+  dashboard: "Overview",
+  "my-listing": "My listings",
+  "my-favorite": "Favourites",
+  message: "Messages",
+  "my-review": "Reviews",
+  "my-profile": "Profile",
+  auction: "Auction catalogue",
+  rostrum: "Rostrum console",
+  "list-fixed-price": "List at fixed price",
+  "dealer-stock-feed": "Bulk stock upload",
+  "routing-rules": "Auto-routing rules",
+  "trust-safety": "Trust & Safety",
+  team: "Team & roles",
+  "gate-release": "Vehicle release",
+  "my-transport-jobs": "Transport jobs",
+  "guided-capture": "Guided capture",
+};
+
+function pageName(pathname: string): string {
+  const segment = pathname.split("/").filter(Boolean)[0] ?? "dashboard";
+  return PAGE_NAMES[segment] ?? humanize(segment).replace(/^./, (c) => c.toUpperCase());
+}
+
+/**
+ * A small disclosure menu: Escape and outside clicks close it, focus returns to the button.
+ * The parent re-keys it on navigation, so it always starts closed on a new page.
+ */
+function HeaderMenu({ className = "", buttonClassName, buttonLabel, buttonContent, children }: {
+  className?: string;
+  buttonClassName: string;
+  buttonLabel?: string;
+  buttonContent: ReactNode;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className={`hd-menu ${className}`} ref={ref}>
+      <button ref={buttonRef} type="button" className={buttonClassName} aria-expanded={open} aria-controls={panelId} aria-label={buttonLabel} onClick={() => setOpen(!open)}>
+        {buttonContent}
+      </button>
+      {open && (
+        <div id={panelId} className="hd-menu-panel">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
+  const { isOpen, open: openSidebar } = useDashboardSidebar();
   // SRS §2.2: selling is for seller accounts (P2/P3); guests see it and are asked to sign up.
   const canSell = !user || canAny(user, ["manage-own-listings", "manage-org-listings"]);
-  const avatarSrc = typeof user?.avatar_url === "string" ? user.avatar_url : DEFAULT_AVATAR;
-  const isRealAvatar = typeof user?.avatar_url === "string";
+  const avatarUrl = typeof user?.avatar_url === "string" ? user.avatar_url : null;
 
   return (
-    <header className="main-header">
-      {/* Header Lower */}
-      <div className="header-lower">
-        <div className="container2">
-          <div className="row">
-            <div className="col-lg-12">
-              <div className="inner-container flex justify-space align-center">
-                {/* Logo Box */}
-                <div className="logo-box flex">
-                  <div className="logo">
-                    <Link href={`/`}>
-                      <Image
-                        src="/assets/images/logo/hmp-logo.png"
-                        alt="HMP"
-                    priority
-                        width={140}
-                        height={47}
-                      />
-                    </Link>
-                  </div>
-                </div>
-                <div className="nav-outer flex align-center">
-                  {/* Main Menu */}
-                  <nav className="main-menu show navbar-expand-md">
-                    <div
-                      className="navbar-collapse collapse clearfix"
-                      id="navbarSupportedContent"
-                    >
-                      <ul className="navigation clearfix">
-                        <Nav />
-                      </ul>
-                    </div>
-                  </nav>
-                  <HeaderSearchTrigger iconClassName="search-icon fs-18" />
-                  {/* Main Menu End*/}
-                </div>
-                <div className="header-account flex align-center">
-                  <a
-                    href="#"
-                    className="box-avatar dropdown-toggle"
-                    data-bs-toggle="dropdown"
-                  >
-                    <div className="avatar avt-40 round">
-                      <Image
-                        src={avatarSrc}
-                        alt="avt"
-                        width={80}
-                        height={80}
-                        unoptimized={isRealAvatar}
-                      />
-                    </div>
-                    <p className="name">
-                      {user?.name ?? "Account"} <i className="fal fa-angle-down" />
-                    </p>
-                  </a>
-                  <div className="dropdown-menu dashboard-menu">
-                    <Link className="dropdown-item" href="/" onClick={() => logout()}>
-                      <i className="icon-carus-signout" />
-                      Logout
-                    </Link>
-                  </div>
-                  <div className="flat-bt-top">
-                    {canSell && (
-                      <Link className="sc-button" href={`/add-listing`}>
-                        <span>Sell my car</span>
-                      </Link>
-                    )}
-                  </div>
-                </div>
-                <MobileMenuTrigger />
-              </div>
-            </div>
-          </div>
-        </div>
+    <header className="hd-topbar">
+      <button
+        type="button"
+        className="ha-btn is-icon hd-menu-btn"
+        onClick={openSidebar}
+        aria-label="Open dashboard menu"
+        aria-controls="dashboard-sidebar"
+        aria-expanded={isOpen}
+      >
+        <i className="icon-carus-list" aria-hidden="true" />
+      </button>
+
+      <div className="hd-crumbs" aria-label="You are here">
+        Dashboard{pathname !== "/dashboard" && <> / <b>{pageName(pathname)}</b></>}
       </div>
-      {/* End Header Lower */}
-      {/* Mobile Menu  */}
-      <MobileMenuCloser />
-      <div className="mobile-menu">
-        <MobileMenuBackdrop />
-        <nav className="menu-box">
-          <div className="header-account-menu flex align-center">
-            <a href="#" className="box-avatar dropdown-toggle">
-              <div className="avatar round">
-                <Image
-                  src={avatarSrc}
-                  alt="avt"
-                  height={48}
-                  width={48}
-                  unoptimized={isRealAvatar}
-                />
-              </div>
-              <div className="content">
-                <p className="fs-12 fw-4">Your account</p>
-                <p className="name">
-                  {user?.name ?? "Account"} <i className="fal fa-angle-down" />
-                </p>
-              </div>
-            </a>
-          </div>
-          <div className="bottom-canvas">
-            <div className="menu-outer">
-              <div
-                className="navbar-collapse collapse clearfix"
-                id="navbarSupportedContent"
-              >
-                <ul className="navigation clearfix">
-                  <MobileNav />
-                </ul>
-              </div>
-            </div>
-            <div className="button-mobi-sell">
-              {canSell && (
-                <Link className="sc-button btn-icon center" href={`/add-listing`}>
-                  <span>Sell my car</span>
-                </Link>
-              )}
-            </div>
-            <div className="conatct-us">
-              <div className="fs-18 fw-6 title">Contact us</div>
-              <div className="information">
-                <div className="icon-box-footer flex-three">
-                  <div className="icon">
-                    <svg
-                      width={40}
-                      height={40}
-                      viewBox="0 0 40 40"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M32.2489 23.062C31.2489 22.0628 29.5052 22.0628 28.5043 23.062L26.8764 24.6903C25.781 25.7862 23.8485 25.7862 22.7531 24.6903L15.3081 17.2457C14.7577 16.6957 14.4543 15.9628 14.4543 15.1837C14.4543 14.407 14.7577 13.6741 15.3081 13.1241L16.9368 11.4957C17.9693 10.4637 17.9693 8.78241 16.9368 7.75033L11.626 2.43866C11.6256 2.43866 11.6252 2.43866 11.6247 2.43658C10.5927 1.41116 8.91432 1.40908 7.88182 2.43866L4.73474 5.58783C2.7564 7.56574 1.66724 10.1932 1.66724 12.9899C1.66724 15.7891 2.7564 18.4166 4.73432 20.3949L19.6039 35.2641C21.5818 37.2424 24.2114 38.3316 27.0085 38.3316C29.8056 38.3316 32.4356 37.2424 34.4131 35.2641L37.5606 32.1174C38.5922 31.0853 38.5922 29.4062 37.5606 28.3741L32.2489 23.062ZM9.47349 4.03408C9.55057 3.95699 9.65182 3.91741 9.75307 3.91741C9.85474 3.91741 9.95599 3.95699 10.0331 4.03408L15.3435 9.34408C15.4977 9.49824 15.4977 9.74908 15.3435 9.90283L13.7147 11.5312C13.616 11.6299 13.5247 11.7337 13.4352 11.8387L7.55224 5.95533L9.47349 4.03408ZM21.1972 33.6707L6.32724 18.8016C4.77515 17.2503 3.92057 15.1862 3.92057 12.9899C3.92057 10.9712 4.65182 9.06741 5.97724 7.56658L12.356 13.9453C12.2577 14.3466 12.201 14.7603 12.201 15.1837C12.201 16.5657 12.7389 17.8641 13.7152 18.8387L21.1589 26.2837C22.4256 27.5495 24.3139 27.9878 26.0156 27.6066L32.4306 34.0199C29.2802 36.7624 24.1781 36.6537 21.1972 33.6707ZM35.9668 30.5241L34.0435 32.447L28.1589 26.5632C28.2652 26.4741 28.3706 26.3832 28.4702 26.2837L30.0977 24.6553C30.2289 24.5232 30.5243 24.5232 30.6552 24.6553L35.9664 29.9674C36.1202 30.1212 36.1202 30.3699 35.9668 30.5241Z"
-                        fill="#24272C"
-                      />
-                      <path
-                        d="M23.3716 16.2021H23.5507V18.0859C23.5507 18.8055 23.977 19.4546 24.6366 19.7409C24.8682 19.8421 25.1124 19.8905 25.3549 19.8905C25.8045 19.8905 26.2474 19.7234 26.5891 19.4042L30.0036 16.2026H34.657C36.5953 16.2026 38.1724 14.6271 38.1724 12.6884V5.59132C38.1724 3.65257 36.5953 2.07715 34.657 2.07715H23.3716C21.4332 2.07715 19.8561 3.65257 19.8561 5.59132V12.688C19.8561 14.6267 21.4332 16.2021 23.3716 16.2021ZM22.1095 5.59132C22.1095 4.8959 22.6753 4.33048 23.3716 4.33048H34.6574C35.3532 4.33048 35.9195 4.8959 35.9195 5.59132V12.688C35.9195 13.3834 35.3532 13.9488 34.6574 13.9488H29.5586C29.272 13.9488 28.997 14.0588 28.7878 14.2526L25.8041 17.0517V15.0755C25.8041 14.4526 25.2995 13.9488 24.6774 13.9488H23.3716C22.6757 13.9488 22.1095 13.3834 22.1095 12.688V5.59132Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M25.7893 8.6049H32.2402C32.8622 8.6049 33.3668 8.10115 33.3668 7.47823C33.3668 6.85531 32.8622 6.35156 32.2402 6.35156H25.7893C25.1668 6.35156 24.6627 6.85531 24.6627 7.47823C24.6627 8.10073 25.1672 8.6049 25.7893 8.6049Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M25.7893 11.8285H32.2401C32.8622 11.8285 33.3668 11.3248 33.3668 10.7019C33.3668 10.0789 32.8622 9.5752 32.2401 9.5752H25.7893C25.1668 9.5752 24.6626 10.0789 24.6626 10.7019C24.6626 11.3248 25.1672 11.8285 25.7893 11.8285Z"
-                        fill="#405FF2"
-                      />
-                    </svg>
-                  </div>
-                  <div className="content">
-                    <p className="fs-14 fw-4">Phone:</p>
-                    <div className="sub fs-18 fw-6">(239) 555-0108</div>
-                  </div>
-                </div>
-                <div className="icon-box-footer flex-three">
-                  <div className="icon">
-                    <svg
-                      width={40}
-                      height={40}
-                      viewBox="0 0 40 40"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M33.8681 1.79492H18.0939C15.6314 1.79492 13.6281 3.79784 13.6281 6.26117V14.192H6.13015C3.66932 14.1924 1.66724 16.1953 1.66724 18.6562V28.5728C1.66724 31.0337 3.66932 33.037 6.13015 33.037H6.8289V36.1253C6.8289 36.9641 7.3064 37.6949 8.07515 38.0295C8.34265 38.1462 8.62599 38.2033 8.90682 38.2033C9.42265 38.2033 9.93182 38.0116 10.3281 37.6441L15.2327 33.037H21.9089C24.3706 33.037 26.3731 31.0341 26.3731 28.5728V22.1412L29.6764 25.2358C30.0689 25.6058 30.5789 25.7991 31.096 25.7991C31.3739 25.7991 31.6547 25.742 31.9202 25.6274C32.6793 25.2995 33.1702 24.5512 33.1702 23.7233V20.6437H33.8685C36.3306 20.6441 38.3339 18.6408 38.3339 16.1778V6.26117C38.3339 3.79826 36.3306 1.79492 33.8681 1.79492ZM21.9089 30.7828H14.7868C14.5002 30.7828 14.2239 30.8928 14.0152 31.0887L9.08307 35.7224V31.9099C9.08307 31.287 8.57849 30.7828 7.95599 30.7828H6.13015C4.91224 30.7828 3.9214 29.7924 3.9214 28.5728V18.6562C3.9214 17.4366 4.91224 16.4462 6.13015 16.4462H13.6418C13.7818 18.7841 15.7222 20.6441 18.0939 20.6441H24.1185V28.5728C24.1189 29.7924 23.1272 30.7828 21.9089 30.7828ZM36.0797 16.1778C36.0797 17.3974 35.0877 18.3899 33.8681 18.3899H32.0427C31.4202 18.3899 30.9156 18.8941 30.9156 19.517V23.3099C30.9156 23.3099 26.0322 18.727 26.0231 18.7183L25.9997 18.6962L25.9968 18.6995L25.991 18.6941C25.7822 18.4983 25.5064 18.3903 25.2202 18.3903H18.0939C16.8743 18.3903 15.8822 17.3974 15.8822 16.1783V16.1762H15.8906L15.8822 6.26201C15.8822 5.04242 16.8743 4.04992 18.0939 4.04992H33.8681C35.0877 4.04992 36.0797 5.04284 36.0797 6.26201V16.1778Z"
-                        fill="#24272C"
-                      />
-                      <path
-                        d="M30.4891 7.76953H21.4733C20.8508 7.76953 20.3462 8.2737 20.3462 8.89661C20.3462 9.51953 20.8508 10.0237 21.4733 10.0237H30.4895C31.112 10.0237 31.6166 9.51953 31.6166 8.89661C31.6166 8.2737 31.1116 7.76953 30.4891 7.76953Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M30.4891 12.2783H21.4733C20.8508 12.2783 20.3462 12.7825 20.3462 13.4054C20.3462 14.0283 20.8508 14.5325 21.4733 14.5325H30.4895C31.112 14.5325 31.6166 14.0283 31.6166 13.4054C31.6166 12.7825 31.1116 12.2783 30.4891 12.2783Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M9.5215 22.5157C9.3865 22.5599 9.27359 22.6499 9.16109 22.7403C8.95817 22.9649 8.82275 23.2599 8.82275 23.5524C8.82275 23.8449 8.95775 24.1378 9.16109 24.3403C9.3865 24.5649 9.65692 24.6794 9.94984 24.6794C10.1073 24.6794 10.2657 24.6332 10.4007 24.589C10.5361 24.5428 10.6486 24.4524 10.7611 24.3403C10.964 24.1378 11.0994 23.8449 11.0994 23.5524C11.0994 23.2599 10.964 22.9644 10.7611 22.7403C10.4457 22.4478 9.94984 22.3353 9.5215 22.5157Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M14.909 22.5138C14.4807 22.3334 13.9848 22.4455 13.6694 22.7384C13.4665 22.963 13.354 23.258 13.354 23.5505C13.354 23.843 13.4665 24.1359 13.6694 24.3384C13.7819 24.4505 13.8948 24.5409 14.0298 24.5872C14.1878 24.6313 14.3228 24.6776 14.4807 24.6776C14.774 24.6776 15.0444 24.563 15.2698 24.3384C15.4728 24.1359 15.6082 23.843 15.6082 23.5505C15.6082 23.258 15.4728 22.9626 15.2698 22.7384C15.1569 22.6484 15.0444 22.558 14.909 22.5138Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M19.417 22.5146C19.1466 22.4001 18.8308 22.4001 18.5379 22.5146C18.4029 22.5588 18.2899 22.6488 18.1774 22.7392C17.9745 22.9638 17.8391 23.2588 17.8391 23.5513C17.8391 23.8438 17.9741 24.1367 18.1774 24.3392C18.4029 24.5638 18.6733 24.6784 18.9666 24.6784C19.1241 24.6784 19.282 24.6321 19.4174 24.588C19.5529 24.5417 19.6654 24.4513 19.7783 24.3392C19.9812 24.1367 20.0937 23.8438 20.0937 23.5513C20.0937 23.2588 19.9808 22.9634 19.7783 22.7392C19.6649 22.6492 19.5524 22.5588 19.417 22.5146Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M7.70911 11.1497H9.96328C10.5858 11.1497 11.0904 10.6455 11.0904 10.0226C11.0904 9.39967 10.5858 8.89551 9.96328 8.89551H7.70911C7.08661 8.89551 6.58203 9.39967 6.58203 10.0226C6.58161 10.6455 7.0862 11.1497 7.70911 11.1497Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M32.5023 29.1826H30.2482C29.6257 29.1826 29.1211 29.6868 29.1211 30.3097C29.1211 30.9326 29.6257 31.4368 30.2482 31.4368H32.5023C33.1248 31.4368 33.6294 30.9326 33.6294 30.3097C33.6294 29.6868 33.1248 29.1826 32.5023 29.1826Z"
-                        fill="#405FF2"
-                      />
-                    </svg>
-                  </div>
-                  <div className="content">
-                    <p className="fs-14 fw-4">Email us:</p>
-                    <div className="sub fs-18 fw-6">
-                      <a href="mailto:info@hmp.com">
-                        info@hmp.com
-                      </a>
-                    </div>
-                  </div>
-                </div>
-                <div className="icon-box-footer flex-three">
-                  <div className="icon">
-                    <svg
-                      width={40}
-                      height={40}
-                      viewBox="0 0 40 40"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M33.6863 22.3985H20.9525V9.79848C20.9525 9.16764 20.4413 8.65723 19.8113 8.65723H2.86836C2.23795 8.65723 1.72711 9.16764 1.72711 9.79848V37.1922C1.72711 37.8231 2.23795 38.3335 2.86836 38.3335H19.8113H33.6863C34.3167 38.3335 34.8275 37.8231 34.8275 37.1922V23.5397C34.8275 22.9089 34.3167 22.3985 33.6863 22.3985ZM18.6696 36.0506H4.00961V10.9397H18.6696V36.0506ZM32.5446 36.0506H20.9525V24.6814H32.5446V36.0506Z"
-                        fill="#24272C"
-                      />
-                      <path
-                        d="M25.385 29.3089H28.1125C28.7429 29.3089 29.2542 28.7984 29.2542 28.1676C29.2542 27.5368 28.7429 27.0264 28.1125 27.0264H25.385C24.7546 27.0264 24.2438 27.5368 24.2438 28.1676C24.2434 28.7984 24.7546 29.3089 25.385 29.3089Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M28.1125 31.1279H25.385C24.7546 31.1279 24.2438 31.6383 24.2438 32.2692C24.2438 32.9 24.755 33.4104 25.385 33.4104H28.1125C28.7429 33.4104 29.2542 32.9 29.2542 32.2692C29.2542 31.6383 28.7429 31.1279 28.1125 31.1279Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M13.5137 30.2718H15.2529C15.8833 30.2718 16.3942 29.7613 16.3942 29.1305C16.3942 28.4997 15.8829 27.9893 15.2529 27.9893H13.5137C12.8833 27.9893 12.3721 28.4997 12.3721 29.1305C12.3725 29.7613 12.8833 30.2718 13.5137 30.2718Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M7.42622 30.2718H9.16581C9.79622 30.2718 10.3071 29.7613 10.3071 29.1305C10.3071 28.4997 9.79581 27.9893 9.16581 27.9893H7.42622C6.79581 27.9893 6.28497 28.4997 6.28497 29.1305C6.28456 29.7613 6.79581 30.2718 7.42622 30.2718Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M13.5137 16.1829H15.2529C15.8833 16.1829 16.3942 15.6725 16.3942 15.0416C16.3942 14.4108 15.8829 13.9004 15.2529 13.9004H13.5137C12.8833 13.9004 12.3721 14.4108 12.3721 15.0416C12.3725 15.6725 12.8833 16.1829 13.5137 16.1829Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M7.42622 16.1829H9.16581C9.79622 16.1829 10.3071 15.6725 10.3071 15.0416C10.3071 14.4108 9.79581 13.9004 9.16581 13.9004H7.42622C6.79581 13.9004 6.28497 14.4108 6.28497 15.0416C6.28456 15.6725 6.79581 16.1829 7.42622 16.1829Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M13.5137 20.8782H15.2529C15.8833 20.8782 16.3942 20.3678 16.3942 19.737C16.3942 19.1061 15.8829 18.5957 15.2529 18.5957H13.5137C12.8833 18.5957 12.3721 19.1061 12.3721 19.737C12.3725 20.3678 12.8833 20.8782 13.5137 20.8782Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M7.42622 20.8782H9.16581C9.79622 20.8782 10.3071 20.3678 10.3071 19.737C10.3071 19.1061 9.79581 18.5957 9.16581 18.5957H7.42622C6.79581 18.5957 6.28497 19.1061 6.28497 19.737C6.28456 20.3678 6.79581 20.8782 7.42622 20.8782Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M13.5137 25.5755H15.2529C15.8833 25.5755 16.3942 25.0651 16.3942 24.4342C16.3942 23.8034 15.8829 23.293 15.2529 23.293H13.5137C12.8833 23.293 12.3721 23.8034 12.3721 24.4342C12.3725 25.0651 12.8833 25.5755 13.5137 25.5755Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M7.42622 25.5755H9.16581C9.79622 25.5755 10.3071 25.0651 10.3071 24.4342C10.3071 23.8034 9.79581 23.293 9.16581 23.293H7.42622C6.79581 23.293 6.28497 23.8034 6.28497 24.4342C6.28456 25.0651 6.79581 25.5755 7.42622 25.5755Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M32.5129 1.83119C30.3038 1.36286 28.0496 1.90911 26.3288 3.30702C24.6079 4.70494 23.6213 6.77786 23.6213 8.99411C23.6213 11.0895 24.5163 13.0783 26.0809 14.4716L28.9979 18.3283C29.4642 18.9437 30.1746 19.2979 30.9471 19.2979C31.7196 19.2979 32.43 18.9433 32.8954 18.3283L35.8125 14.4716C37.7796 12.7237 38.6434 10.1312 38.125 7.50952C37.57 4.69786 35.3146 2.41536 32.5129 1.83119ZM34.2296 12.8237C34.1679 12.8749 31.075 16.9499 31.075 16.9499C31.075 16.952 30.9013 16.9499 30.8396 16.9499C30.8267 16.9499 30.8188 16.9499 30.8188 16.9499C30.8188 16.9499 27.7263 12.8749 27.6646 12.8237C26.5459 11.8608 25.9042 10.4649 25.9042 8.99369C25.9042 7.46869 26.5838 6.04202 27.7692 5.07661C28.9717 4.10036 30.4913 3.73911 32.0471 4.06452C33.9634 4.46577 35.5063 6.02619 35.8863 7.95036C36.2509 9.79869 35.6313 11.6199 34.2296 12.8237Z"
-                        fill="#405FF2"
-                      />
-                      <path
-                        d="M30.9013 5.51367C29.0446 5.51367 27.5338 7.02284 27.5338 8.87992C27.5338 10.737 29.0442 12.2483 30.9013 12.2483C32.7583 12.2483 34.2688 10.7366 34.2688 8.87992C34.2683 7.02284 32.7579 5.51367 30.9013 5.51367ZM30.9013 9.96534C30.3033 9.96534 29.8167 9.47951 29.8167 8.87951C29.8167 8.28201 30.3033 7.79617 30.9013 7.79617C31.4996 7.79617 31.9858 8.28201 31.9858 8.87951C31.9858 9.47951 31.4996 9.96534 30.9013 9.96534Z"
-                        fill="#405FF2"
-                      />
-                    </svg>
-                  </div>
-                  <div className="content">
-                    <p className="fs-14 fw-4">Address:</p>
-                    <div className="fs-18 fw-6 sub">
-                      1901 Thornridge Cir. Shiloh, Hawaii 81063
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="social">
-              <div className="fs-18 fw-6 title">Follow us</div>
-              <div className="icon-social box-3">
-                <a href="#">
-                  <i className="icon-carus-facebook" />
-                </a>
-                <a href="#">
-                  <i className="icon-carus-in" />
-                </a>
-                <a href="#">
-                  <i className="icon-carus-x" />
-                </a>
-                <a href="#">
-                  <i className="icon-carus-instagram" />
-                </a>
-                <a href="#">
-                  <i className="icon-carus-youtube" />
-                </a>
-              </div>
-            </div>
-          </div>
+
+      <div className="hd-topbar-end">
+        <nav className="hd-sitenav" aria-label="Marketplace">
+          {SITE_LINKS.map((link) => (
+            <Link key={link.id} href={link.href}>
+              {link.label}
+            </Link>
+          ))}
         </nav>
+
+        <HeaderMenu
+          key={`site-${pathname}`}
+          className="hd-sitenav-menu"
+          buttonClassName="ha-btn is-ghost"
+          buttonContent={
+            <>
+              Marketplace
+              <i className="icon-carus-caretdown" aria-hidden="true" />
+            </>
+          }
+        >
+          {SITE_LINKS.map((link) => (
+            <Link key={link.id} href={link.href}>
+              {link.label}
+            </Link>
+          ))}
+        </HeaderMenu>
+
+        <HeaderSearchTrigger className="ha-btn is-icon is-ghost" iconClassName="" />
+
+        {canSell && (
+          <Link className="ha-btn is-primary" href={`/add-listing`}>
+            <i className="icon-carus-plus" aria-hidden="true" />
+            <span className="hd-sell-label">Sell my car</span>
+          </Link>
+        )}
+
+        <HeaderMenu
+          key={`account-${pathname}`}
+          buttonClassName="hd-account-btn"
+          buttonLabel={`Account menu for ${user?.name ?? "your account"}`}
+          buttonContent={
+            <>
+              <Avatar src={avatarUrl} name={user?.name} size={32} />
+              <span className="hd-account-name">{user?.name?.split(" ")[0] ?? "Account"}</span>
+              <i className="icon-carus-caretdown" aria-hidden="true" />
+            </>
+          }
+        >
+          <div className="hd-menu-head">
+            <b>{user?.name ?? "Account"}</b>
+            <span>{user?.email ?? ""}</span>
+          </div>
+          {canAccessRoute(user, "/my-profile") && (
+            <Link href="/my-profile">
+              <i className="icon-carus-profile" aria-hidden="true" />
+              Profile
+            </Link>
+          )}
+          {canAccessRoute(user, "/security") && (
+            <Link href="/security">
+              <i className="icon-carus-usercheck" aria-hidden="true" />
+              Security
+            </Link>
+          )}
+          <hr />
+          <Link href="/" onClick={() => logout()}>
+            <i className="icon-carus-signout" aria-hidden="true" />
+            Logout
+          </Link>
+        </HeaderMenu>
       </div>
-      {/* End Mobile Menu */}
     </header>
   );
 }

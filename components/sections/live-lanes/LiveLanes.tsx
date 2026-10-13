@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import LiveStreamPlayer from "@/components/common/LiveStreamPlayer";
 import LotCountdown from "@/components/sections/auction-lot/LotCountdown";
 import { useLiveLanes } from "@/hooks/useLiveLanes";
 import { useLotSpectatorStream } from "@/hooks/useLotSpectatorStream";
 import { useServerClock } from "@/hooks/useServerClock";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Badge, Card, EmptyState, LoadingRows, Notice, StatusBadge, formatMoney } from "@/components/ui/kit";
 
 /**
  * FR-D-033/036: multi-lane viewing. A trade buyer can follow up to the platform's
@@ -33,35 +34,41 @@ function FollowedLaneCard({
   const closesAt = spectatorState?.closesAt ?? lane.currentLot?.closesAt ?? null;
 
   return (
-    <div className="col-md-6 mb-3">
-      <div className="tfcl-card p-3" style={isFocus ? { outline: "2px solid #2ecc71" } : undefined}>
-        <h4 className="mb-1">
-          {lane.name} <span className="text-color-2 text-capitalize">({lane.status})</span>
-        </h4>
-        {lane.status === "paused" && <p style={{ color: "#e67e22" }}>Paused by the auctioneer.</p>}
-        {!lane.currentLot && <p className="tfcl-empty-data">No lot on this lane.</p>}
-        {lane.currentLot && (
-          <>
-            <LiveStreamPlayer laneId={lane.id} compact />
-            <p className="mb-1">{lane.currentLot.vehicle ?? "Current lot"}</p>
-            <p style={{ fontSize: 24 }} className="mb-1">
-              <b>{currentPrice !== null ? `£${currentPrice.toLocaleString()}` : "No bids yet"}</b>
-            </p>
-            <LotCountdown closesAt={closesAt} offsetMs={offsetMs} />
-            <div className="flex gap-10 mt-2">
-              <button type="button" className="sc-button" onClick={onMakeFocus}>
-                <span>{isFocus ? "Bidding focus" : "Make bidding focus"}</span>
-              </button>
-              {isFocus && (
-                <Link href={`/auction/${lane.currentLot.id}`} className="sc-button">
-                  <span>Open lot to bid</span>
-                </Link>
-              )}
-            </div>
-          </>
-        )}
+    <section className={`ha-card ha-lane${isFocus ? " is-focus" : ""}`} aria-label={`${lane.name}${isFocus ? " (bidding focus)" : ""}`}>
+      <div className="ha-card-head">
+        <h2>{lane.name}</h2>
+        <div className="ha-chips">
+          {isFocus && <Badge tone="success">Bidding focus</Badge>}
+          <StatusBadge status={lane.status} tone={lane.status === "paused" ? "warning" : undefined} />
+        </div>
       </div>
-    </div>
+      {lane.status === "paused" && (
+        <div className="ha-card-body" style={{ paddingBottom: 0 }}>
+          <Notice tone="warning">Paused by the auctioneer.</Notice>
+        </div>
+      )}
+      {!lane.currentLot && <EmptyState icon="icon-carus-videocamerass" title="No lot on this lane" />}
+      {lane.currentLot && (
+        <div className="ha-card-body">
+          <LiveStreamPlayer laneId={lane.id} compact />
+          <div className="ha-sub mt-3">{lane.currentLot.vehicle ?? "Current lot"}</div>
+          <div className="ha-lane-price ha-num" aria-live="polite">
+            {currentPrice !== null ? formatMoney(currentPrice) : <span className="ha-muted">No bids yet</span>}
+          </div>
+          <LotCountdown closesAt={closesAt} offsetMs={offsetMs} />
+          <div className="ha-actions is-start mt-3">
+            {isFocus ? (
+              <Link href={`/auction/${lane.currentLot.id}`} className="ha-btn is-primary">
+                Open lot to bid
+              </Link>
+            ) : null}
+            <button type="button" className={`ha-btn${isFocus ? " is-ghost" : " is-primary"}`} onClick={onMakeFocus} aria-pressed={isFocus}>
+              {isFocus ? "Bidding focus" : "Make bidding focus"}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -83,62 +90,49 @@ export default function LiveLanes() {
   const atLimit = selected.length >= maxLanes;
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-1">Live lanes</h1>
-                  <p className="text-color-2 mb-3">
-                    Follow up to {maxLanes} lanes at once. Choose one as your bidding focus to open its lot.
-                  </p>
+    <DashboardPage title="Live lanes" description={<>Follow up to {maxLanes} lanes at once. Choose one as your bidding focus to open its lot.</>}>
+      {loading && <LoadingRows rows={3} label="Loading live lanes" />}
+      {error && <Notice tone="danger">{error}</Notice>}
+      {!loading && !error && lanes.length === 0 && (
+        <Card>
+          <EmptyState icon="icon-carus-videocamerass" title="Nothing on air" text="No lanes are on air right now." />
+        </Card>
+      )}
 
-                  {loading && <p>Loading live lanes...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
-                  {!loading && !error && lanes.length === 0 && (
-                    <p className="tfcl-empty-data">No lanes are on air right now.</p>
-                  )}
+      {lanes.length > 0 && (
+        <Card className="mb-4" title="Available lanes" actions={<Badge tone={atLimit ? "warning" : "neutral"} plain>{selected.length}/{maxLanes} followed</Badge>}>
+          <fieldset className="ha-card-body ha-lane-picker">
+            <legend className="ha-visually-hidden">Lanes to follow</legend>
+            {lanes.map((lane) => (
+              <label key={lane.id} className="ha-check">
+                <input
+                  type="checkbox"
+                  checked={selected.includes(lane.id)}
+                  disabled={!selected.includes(lane.id) && atLimit}
+                  onChange={() => toggle(lane.id)}
+                />
+                <span>
+                  {lane.saleName} — {lane.name}
+                </span>
+                <StatusBadge status={lane.status} />
+              </label>
+            ))}
+            {atLimit && <p className="ha-sub mb-0">You are following the maximum number of lanes.</p>}
+          </fieldset>
+        </Card>
+      )}
 
-                  {lanes.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="mb-2">
-                        Available lanes ({selected.length}/{maxLanes} followed)
-                      </h4>
-                      {lanes.map((lane) => (
-                        <label key={lane.id} style={{ display: "block", marginBottom: 6 }}>
-                          <input
-                            type="checkbox"
-                            checked={selected.includes(lane.id)}
-                            disabled={!selected.includes(lane.id) && atLimit}
-                            onChange={() => toggle(lane.id)}
-                          />{" "}
-                          {lane.saleName} - {lane.name} <span className="text-color-2">({lane.status})</span>
-                        </label>
-                      ))}
-                      {atLimit && <p className="text-color-2">You are following the maximum number of lanes.</p>}
-                    </div>
-                  )}
-
-                  <div className="row">
-                    {followed.map((lane) => (
-                      <FollowedLaneCard
-                        key={lane.id}
-                        lane={lane}
-                        isFocus={focusId === lane.id}
-                        offsetMs={offsetMs}
-                        onMakeFocus={() => setFocusId(lane.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
+      <div className="ha-grid is-2">
+        {followed.map((lane) => (
+          <FollowedLaneCard
+            key={lane.id}
+            lane={lane}
+            isFocus={focusId === lane.id}
+            offsetMs={offsetMs}
+            onMakeFocus={() => setFocusId(lane.id)}
+          />
+        ))}
       </div>
-    </div>
+    </DashboardPage>
   );
 }

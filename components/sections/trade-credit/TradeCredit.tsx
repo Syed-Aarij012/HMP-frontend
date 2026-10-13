@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch, describeApiError } from "@/lib/api-client";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Card, DataTable, EmptyState, LoadingRows, Notice, StatusBadge, formatDate, formatMoney } from "@/components/ui/kit";
 
 type Application = {
   id: number;
@@ -71,65 +72,55 @@ export default function TradeCredit() {
   const pending = applications.some((a) => a.decision === "pending" || a.decision === "refer");
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-2">Trade credit</h1>
-                  <p className="text-color-2 mb-3">
-                    A trade credit line lets you bid and buy at auction without a deposit for every lot. We check your business
-                    (KYB) and trading history before deciding.
-                  </p>
+    <DashboardPage title="Trade credit" description="A trade credit line lets you bid and buy at auction without a deposit for every lot. We check your business (KYB) and trading history before deciding.">
+      {notice && <Notice tone="success">{notice}</Notice>}
+      <div className="ha-grid is-2" style={{ alignItems: "start" }}>
+        <Card title="Apply for trade credit">
+          {pending ? (
+            <EmptyState icon="icon-carus-clock" title="Application in progress" text="You have an application being assessed. You'll see the decision here." />
+          ) : (
+            <form onSubmit={apply} className="ha-card-body">
+              <div className="ha-field">
+                <label htmlFor="credit-limit">Credit limit you&apos;d like (£)</label>
+                <input id="credit-limit" type="number" min={1} step={100} className="ha-input" value={limit} onChange={(e) => setLimit(e.target.value)} required />
+              </div>
+              {error && <Notice tone="danger">{error}</Notice>}
+              <button type="submit" className="ha-btn is-primary" disabled={busy || !limit} aria-busy={busy}>
+                {busy ? "Submitting…" : "Apply for trade credit"}
+              </button>
+            </form>
+          )}
+        </Card>
 
-                  {!pending && (
-                    <form onSubmit={apply} className="tfcl-card p-3 mb-4" style={{ maxWidth: 460 }}>
-                      <label htmlFor="credit-limit" className="mb-1">Credit limit you&apos;d like (£)</label>
-                      <input id="credit-limit" type="number" min={1} step={100} className="form-control mb-2" value={limit} onChange={(e) => setLimit(e.target.value)} required />
-                      {error && <div className="alert alert-danger py-1">{error}</div>}
-                      <button type="submit" className="sc-button" disabled={busy || !limit}>
-                        <span>{busy ? "Submitting..." : "Apply for trade credit"}</span>
-                      </button>
-                    </form>
-                  )}
-                  {notice && <div className="alert alert-success">{notice}</div>}
-
-                  <h4 className="mb-2">Your applications</h4>
-                  {loading && <p>Loading...</p>}
-                  {!loading && applications.length === 0 && <p className="tfcl-empty-data">No applications yet.</p>}
-                  {applications.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Applied</th>
-                            <th>Type</th>
-                            <th>Decision</th>
-                            <th>Limit</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {applications.map((a) => (
-                            <tr key={a.id}>
-                              <td>{new Date(a.created_at).toLocaleDateString("en-GB")}</td>
-                              <td>{a.is_reassessment ? "Quarterly review" : "Application"}</td>
-                              <td>{DECISION_LABEL[a.decision] ?? a.decision}</td>
-                              <td>{a.assigned_limit ? `£${Number(a.assigned_limit).toLocaleString("en-GB")}` : "—"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
+        <Card title="Your applications">
+          {loading && <LoadingRows rows={3} label="Loading your applications" />}
+          {!loading && applications.length === 0 && <EmptyState icon="icon-carus-power" title="No applications yet" text="Your applications and their decisions appear here." />}
+          {applications.length > 0 && (
+            <DataTable caption="Your trade credit applications">
+              <thead>
+                <tr>
+                  <th scope="col">Applied</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Decision</th>
+                  <th scope="col" className="is-num">Limit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {applications.map((a) => (
+                  <tr key={a.id}>
+                    <td data-label="Applied" className="ha-num">{formatDate(a.created_at)}</td>
+                    <td data-label="Type">{a.is_reassessment ? "Quarterly review" : "Application"}</td>
+                    <td data-label="Decision">
+                      <StatusBadge status={a.decision} label={DECISION_LABEL[a.decision]} tone={a.decision === "refer" ? "warning" : a.decision === "pending" ? "warning" : undefined} />
+                    </td>
+                    <td data-label="Limit" className="is-num">{a.assigned_limit ? formatMoney(Number(a.assigned_limit)) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </DataTable>
+          )}
+        </Card>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

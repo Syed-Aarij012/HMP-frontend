@@ -1,78 +1,108 @@
 "use client";
 
 import Link from "next/link";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useMyProxyBids } from "@/hooks/useMyProxyBids";
 import { useExposure } from "@/hooks/useExposure";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import {
+  Card,
+  DataTable,
+  DataToolbar,
+  EmptyState,
+  ErrorNotice,
+  LoadingTable,
+  NoMatches,
+  StatusBadge,
+  formatMoney,
+  useListControls,
+} from "@/components/ui/kit";
+import type { MyProxyBid } from "@/types/auction";
 
 function Dashboard() {
   const { proxyBids, loading, error } = useMyProxyBids();
   const { exposure } = useExposure();
+  const controls = useListControls<MyProxyBid>({
+    items: proxyBids,
+    search: (proxy) => [proxy.vehicleLabel, proxy.saleName],
+    filters: [
+      { key: "status", label: "Proxy status", get: (proxy) => proxy.status },
+      { key: "lot", label: "Lot status", get: (proxy) => proxy.lotStatus },
+    ],
+    sorts: [
+      { value: "recent", label: "Most recent", compare: (a, b) => (b.lodgedAt ?? "").localeCompare(a.lodgedAt ?? "") },
+      { value: "price", label: "Highest current price", compare: (a, b) => (b.currentPrice ?? 0) - (a.currentPrice ?? 0) },
+    ],
+  });
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">My proxy bids</h1>
-                  <p className="text-color-2 mb-3">
-                    Your armed proxy maxima are confidential — even to you, once lodged — so
-                    only their status and the lot they&apos;re on show here. Your aggregate
-                    exposure against them is on{" "}
-                    <Link href="/my-exposure">My exposure</Link>
-                    {exposure && ` (currently £${exposure.committedExposure.toLocaleString()} committed).`}
-                  </p>
+    <DashboardPage
+      title="My proxy bids"
+      description={
+        <>
+          Your armed proxy maxima are confidential — even to you, once lodged — so only their status and the lot
+          they&apos;re on show here. Your aggregate exposure against them is on <Link href="/my-exposure">My exposure</Link>
+          {exposure && ` (currently ${formatMoney(exposure.committedExposure)} committed).`}
+        </>
+      }
+    >
+      <Card>
+        {loading && <LoadingTable label="Loading your proxy bids" />}
+        {error && <ErrorNotice message={error} />}
 
-                  {loading && <p>Loading your proxy bids...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
+        {!loading && !error && proxyBids.length === 0 && (
+          <EmptyState icon="icon-carus-sliders" title="No proxy bids yet" text="Proxy bids you lodge on auction lots will appear here." />
+        )}
 
-                  {!loading && !error && proxyBids.length === 0 && (
-                    <p className="tfcl-empty-data">You haven&apos;t lodged any proxy bids yet.</p>
-                  )}
-
-                  {!loading && !error && proxyBids.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Vehicle</th>
-                            <th>Lot status</th>
-                            <th>Current price</th>
-                            <th>Proxy status</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {proxyBids.map((proxy) => (
-                            <tr key={proxy.id}>
-                              <td>{proxy.vehicleLabel ?? "-"}</td>
-                              <td className="text-capitalize">{proxy.lotStatus?.replace("_", " ") ?? "-"}</td>
-                              <td>{proxy.currentPrice !== null ? `£${proxy.currentPrice.toLocaleString()}` : "-"}</td>
-                              <td className="text-capitalize">{proxy.status}</td>
-                              <td>
-                                {proxy.lotId && (
-                                  <Link href={`/auction/${proxy.lotId}`} className="sc-button">
-                                    <span>View lot</span>
-                                  </Link>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        {!loading && !error && proxyBids.length > 0 && (
+          <>
+            <DataToolbar controls={controls} searchPlaceholder="Search by vehicle or sale" noun="proxy bid" />
+            {controls.results.length === 0 ? (
+              <NoMatches onClear={controls.clearAll} />
+            ) : (
+              <DataTable caption="Your proxy bids">
+                <thead>
+                  <tr>
+                    <th scope="col">Vehicle</th>
+                    <th scope="col">Lot status</th>
+                    <th scope="col" className="is-num">Current price</th>
+                    <th scope="col">Proxy status</th>
+                    <th scope="col">
+                      <span className="ha-visually-hidden">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {controls.results.map((proxy) => (
+                    <tr key={proxy.id}>
+                      <td data-label="Vehicle">
+                        <div className="ha-primary-text">{proxy.vehicleLabel ?? "—"}</div>
+                        {proxy.saleName && <div className="ha-sub">{proxy.saleName}</div>}
+                      </td>
+                      <td data-label="Lot status">
+                        <StatusBadge status={proxy.lotStatus} />
+                      </td>
+                      <td data-label="Current price" className="is-num">
+                        {proxy.currentPrice !== null ? formatMoney(proxy.currentPrice) : "—"}
+                      </td>
+                      <td data-label="Proxy status">
+                        <StatusBadge status={proxy.status} />
+                      </td>
+                      <td data-label="" className="ha-right">
+                        {proxy.lotId && (
+                          <Link href={`/auction/${proxy.lotId}`} className="ha-btn is-sm">
+                            View lot
+                          </Link>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            )}
+          </>
+        )}
+      </Card>
+    </DashboardPage>
   );
 }
 

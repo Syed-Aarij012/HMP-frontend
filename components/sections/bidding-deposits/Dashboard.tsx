@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useBiddingDeposits } from "@/hooks/useBiddingDeposits";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Card, DataTable, EmptyState, ErrorNotice, LoadingTable, Notice, StatusBadge, formatMoney } from "@/components/ui/kit";
 
 function Dashboard() {
   const { deposits, loading, error, actionError, submitting, placeDeposit, refundDeposit } =
@@ -33,89 +34,76 @@ function Dashboard() {
   }
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Bidding deposits</h1>
-                  <p className="text-color-2 mb-3">
-                    A refundable deposit funds your bidding headroom alongside (or instead of) a
-                    trade credit account.
-                  </p>
+    <DashboardPage title="Bidding deposits" description="A refundable deposit funds your bidding headroom alongside (or instead of) a trade credit account.">
+      {notice && <Notice tone="success">{notice}</Notice>}
+      {actionError && <Notice tone="danger">{actionError}</Notice>}
 
-                  {notice && <div className="alert alert-success mb-3">{notice}</div>}
-                  {actionError && <div className="alert alert-danger mb-3">{actionError}</div>}
-
-                  <form onSubmit={handleSubmit} className="tfcl-card mb-4">
-                    <h4 className="mb-2">Place a new deposit</h4>
-                    <div className="form-group">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        className="form-control"
-                        placeholder="Amount (£)"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <button type="submit" className="sc-button" disabled={submitting}>
-                      <span>{submitting ? "Placing..." : "Place deposit"}</span>
-                    </button>
-                  </form>
-
-                  {loading && <p>Loading your deposits...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
-
-                  {!loading && !error && deposits.length === 0 && (
-                    <p className="tfcl-empty-data">You have no bidding deposits yet.</p>
-                  )}
-
-                  {!loading && !error && deposits.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {deposits.map((deposit) => (
-                            <tr key={deposit.id}>
-                              <td>£{deposit.amount.toLocaleString()}</td>
-                              <td className="text-capitalize">{deposit.status}</td>
-                              <td>
-                                {deposit.status === "held" && (
-                                  <button
-                                    type="button"
-                                    className="sc-button"
-                                    disabled={submitting}
-                                    onClick={() => handleRefund(deposit.id)}
-                                  >
-                                    <span>Refund</span>
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
+      <div className="ha-grid is-2" style={{ alignItems: "start" }}>
+        <Card title="Place a new deposit" description="Held until you ask for it back.">
+          <form onSubmit={handleSubmit} className="ha-card-body">
+            <div className="ha-field">
+              <label htmlFor="deposit-amount">Amount (£)</label>
+              <input
+                id="deposit-amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                className="ha-input"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+              />
             </div>
-          </div>
-        </div>
+            <button type="submit" className="ha-btn is-primary" disabled={submitting} aria-busy={submitting}>
+              {submitting ? "Placing…" : "Place deposit"}
+            </button>
+          </form>
+        </Card>
+
+        <Card title="Your deposits">
+          {loading && <LoadingTable label="Loading your deposits" columns={3} rows={3} />}
+          {error && <ErrorNotice message={error} />}
+
+          {!loading && !error && deposits.length === 0 && (
+            <EmptyState icon="icon-carus-power" title="No deposits yet" text="Deposits you place will be listed here." />
+          )}
+
+          {!loading && !error && deposits.length > 0 && (
+            <DataTable caption="Your bidding deposits">
+              <thead>
+                <tr>
+                  <th scope="col" className="is-num">Amount</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">
+                    <span className="ha-visually-hidden">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {deposits.map((deposit) => (
+                  <tr key={deposit.id}>
+                    <td data-label="Amount" className="is-num ha-primary-text">
+                      {formatMoney(deposit.amount)}
+                    </td>
+                    <td data-label="Status">
+                      <StatusBadge status={deposit.status} tone={deposit.status === "held" ? "primary" : undefined} />
+                    </td>
+                    <td data-label="" className="ha-right">
+                      {deposit.status === "held" && (
+                        <button type="button" className="ha-btn is-sm" disabled={submitting} onClick={() => handleRefund(deposit.id)}>
+                          Refund
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </DataTable>
+          )}
+        </Card>
       </div>
-    </div>
+    </DashboardPage>
   );
 }
 

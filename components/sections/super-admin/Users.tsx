@@ -3,7 +3,7 @@
 import { useState } from "react";
 import SuperAdminShell from "./SuperAdminShell";
 import JustifiedAction from "./JustifiedAction";
-import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, initials, useDebouncedValue } from "@/components/admin/ui";
+import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Pager, SearchInput, initials, useDebouncedValue, FilterChips } from "@/components/admin/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminResource } from "@/hooks/useSuperAdmin";
 import { pageInfo, roleLabel, type AdminUser, type Paginated, type RoleMatrixResponse } from "@/lib/superAdmin";
@@ -109,19 +109,27 @@ export default function Users() {
             <option value="banned">Banned</option>
           </select>
         </div>
+        <FilterChips
+          filters={[
+            q.trim() !== "" && { key: "q", label: `“${q.trim()}”`, onRemove: () => { setQ(""); setPage(1); } },
+            role !== "" && { key: "role", label: `Role: ${roleLabel(role)}`, onRemove: () => { setRole(""); setPage(1); } },
+            status !== "" && { key: "status", label: `Status: ${status === "suspended" ? "Frozen" : status}`, onRemove: () => { setStatus(""); setPage(1); } },
+          ]}
+          onClearAll={() => { setQ(""); setRole(""); setStatus(""); setPage(1); }}
+        />
         {loading && !data && <LoadingRows />}
         {error && <ErrorNotice message={error} />}
         {data && data.data.length === 0 && <EmptyState icon="icon-carus-profile" title="No accounts match" text="Try a different search or filter." />}
         {data && data.data.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Users</caption>
               <thead>
                 <tr>
-                  <th>Account</th>
-                  <th>Roles</th>
-                  <th>Organization</th>
-                  <th>Status</th>
-                  <th className="ha-right">Actions</th>
+                  <th scope="col">Account</th>
+                  <th scope="col">Roles</th>
+                  <th scope="col">Organization</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="ha-right">Actions</th>
                 </tr>
               </thead>
               <tbody>

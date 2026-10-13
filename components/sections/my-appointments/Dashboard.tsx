@@ -2,8 +2,22 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useMyAppointments } from "@/hooks/useAppointments";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import {
+  Card,
+  DataTable,
+  DataToolbar,
+  EmptyState,
+  ErrorNotice,
+  LoadingTable,
+  NoMatches,
+  Notice,
+  StatusBadge,
+  formatDate,
+  useListControls,
+} from "@/components/ui/kit";
+import type { Appointment } from "@/types/marketplaceTools";
 
 export default function Dashboard() {
   const { appointments, loading, error, actionError, busyId, cancel, markOutcome } = useMyAppointments();
@@ -11,116 +25,123 @@ export default function Dashboard() {
   // Captured once at mount: whether a booking's time has passed decides if it can be marked
   // completed / a no-show (the backend rejects either before the scheduled time).
   const [now] = useState(() => Date.now());
+  const controls = useListControls<Appointment>({
+    items: appointments,
+    search: (appointment) => [appointment.listing?.vehicleLabel, appointment.buyerName],
+    filters: [
+      { key: "status", label: "Status", get: (appointment) => appointment.status },
+      {
+        key: "when",
+        label: "Timing",
+        get: (appointment) => (new Date(appointment.scheduledAt).getTime() > now ? "upcoming" : "past"),
+        options: [
+          { value: "upcoming", label: "Upcoming" },
+          { value: "past", label: "Past" },
+        ],
+      },
+    ],
+    sorts: [
+      { value: "soonest", label: "Soonest first", compare: (a, b) => a.scheduledAt.localeCompare(b.scheduledAt) },
+      { value: "latest", label: "Latest first", compare: (a, b) => b.scheduledAt.localeCompare(a.scheduledAt) },
+    ],
+  });
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">My appointments</h1>
-                  <p className="text-color-2 mb-3">
-                    {hasDealerSide
-                      ? "Test drives booked on your listings, and any you have booked yourself."
-                      : "Test drives and dealer visits you have booked."}
-                  </p>
+    <DashboardPage
+      title="My appointments"
+      description={hasDealerSide ? "Test drives booked on your listings, and any you have booked yourself." : "Test drives and dealer visits you have booked."}
+    >
+      {actionError && <Notice tone="danger">{actionError}</Notice>}
+      <Card>
+        {loading && <LoadingTable label="Loading your appointments" />}
+        {error && <ErrorNotice message={error} />}
 
-                  {loading && <p>Loading your appointments...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
-                  {actionError && <div className="alert alert-danger">{actionError}</div>}
+        {!loading && !error && appointments.length === 0 && (
+          <EmptyState icon="icon-carus-clock" title="No appointments booked" text="Test drives you book, or that buyers book on your listings, appear here." />
+        )}
 
-                  {!loading && !error && appointments.length === 0 && (
-                    <p className="tfcl-empty-data">You have no appointments booked.</p>
-                  )}
-
-                  {appointments.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>Vehicle</th>
-                            {hasDealerSide && <th>Booked by</th>}
-                            <th>When</th>
-                            <th>Status</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {appointments.map((appointment) => (
-                            <tr key={appointment.id}>
-                              <td>{appointment.listing?.vehicleLabel ?? "-"}</td>
-                              {hasDealerSide && (
-                                <td>
-                                  {appointment.isDealerSide ? (
-                                    <>
-                                      {appointment.buyerName ?? "-"}
-                                      {appointment.buyerNoShows ? (
-                                        <div className="fs-13 text-danger">
-                                          {appointment.buyerNoShows} previous no-show{appointment.buyerNoShows > 1 ? "s" : ""}
-                                        </div>
-                                      ) : null}
-                                    </>
-                                  ) : (
-                                    <span className="text-color-2">You</span>
-                                  )}
-                                </td>
-                              )}
-                              <td>{new Date(appointment.scheduledAt).toLocaleString()}</td>
-                              <td className="text-capitalize">{appointment.status.replace("_", "-")}</td>
-                              <td className="flex gap-10">
-                                {appointment.listing && (
-                                  <Link href={`/listing-detail-v4/${appointment.listing.id}`} className="sc-button">
-                                    <span>View listing</span>
-                                  </Link>
-                                )}
-                                {appointment.status === "booked" &&
-                                  appointment.isDealerSide &&
-                                  new Date(appointment.scheduledAt).getTime() <= now && (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className="sc-button"
-                                        disabled={busyId === appointment.id}
-                                        onClick={() => markOutcome(appointment.id, "complete")}
-                                      >
-                                        <span>Mark completed</span>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="sc-button"
-                                        disabled={busyId === appointment.id}
-                                        onClick={() => markOutcome(appointment.id, "no-show")}
-                                      >
-                                        <span>Mark no-show</span>
-                                      </button>
-                                    </>
-                                  )}
-                                {appointment.status === "booked" && new Date(appointment.scheduledAt).getTime() > now && (
-                                  <button
-                                    type="button"
-                                    className="sc-button"
-                                    disabled={busyId === appointment.id}
-                                    onClick={() => cancel(appointment.id)}
-                                  >
-                                    <span>Cancel</span>
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        {appointments.length > 0 && (
+          <>
+            <DataToolbar controls={controls} searchPlaceholder={hasDealerSide ? "Search by vehicle or buyer" : "Search by vehicle"} noun="appointment" />
+            {controls.results.length === 0 ? (
+              <NoMatches onClear={controls.clearAll} />
+            ) : (
+              <DataTable caption="Your appointments">
+                <thead>
+                  <tr>
+                    <th scope="col">Vehicle</th>
+                    {hasDealerSide && <th scope="col">Booked by</th>}
+                    <th scope="col">When</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">
+                      <span className="ha-visually-hidden">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {controls.results.map((appointment) => {
+                    const isPast = new Date(appointment.scheduledAt).getTime() <= now;
+                    const busy = busyId === appointment.id;
+                    return (
+                      <tr key={appointment.id}>
+                        <td data-label="Vehicle" className="ha-primary-text">
+                          {appointment.listing?.vehicleLabel ?? "—"}
+                        </td>
+                        {hasDealerSide && (
+                          <td data-label="Booked by">
+                            {appointment.isDealerSide ? (
+                              <>
+                                {appointment.buyerName ?? "—"}
+                                {appointment.buyerNoShows ? (
+                                  <div className="ha-inline-error">
+                                    {appointment.buyerNoShows} previous no-show{appointment.buyerNoShows > 1 ? "s" : ""}
+                                  </div>
+                                ) : null}
+                              </>
+                            ) : (
+                              <span className="ha-muted">You</span>
+                            )}
+                          </td>
+                        )}
+                        <td data-label="When" className="ha-num">
+                          {formatDate(appointment.scheduledAt, { time: true })}
+                        </td>
+                        <td data-label="Status">
+                          <StatusBadge status={appointment.status} />
+                        </td>
+                        <td data-label="">
+                          <div className="ha-row-actions">
+                            {appointment.status === "booked" && appointment.isDealerSide && isPast && (
+                              <>
+                                <button type="button" className="ha-btn is-sm is-primary" disabled={busy} onClick={() => markOutcome(appointment.id, "complete")}>
+                                  Mark completed
+                                </button>
+                                <button type="button" className="ha-btn is-sm" disabled={busy} onClick={() => markOutcome(appointment.id, "no-show")}>
+                                  Mark no-show
+                                </button>
+                              </>
+                            )}
+                            {appointment.status === "booked" && !isPast && (
+                              <button type="button" className="ha-btn is-sm is-danger" disabled={busy} onClick={() => cancel(appointment.id)}>
+                                Cancel
+                              </button>
+                            )}
+                            {appointment.listing && (
+                              <Link href={`/listing-detail-v4/${appointment.listing.id}`} className="ha-btn is-sm is-ghost">
+                                View listing
+                              </Link>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </DataTable>
+            )}
+          </>
+        )}
+      </Card>
+    </DashboardPage>
   );
 }

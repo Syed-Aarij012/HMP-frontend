@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import {
   ADD_LISTING_BODY_TYPE_OPTIONS,
   ADD_LISTING_FUEL_TYPE_OPTIONS,
@@ -16,6 +15,8 @@ import FeaturesSpecsFields, { extrasChanges, extrasFromVehicle, type ExtrasForm 
 import { useEditListing, type EditableMedia, type EditPayload } from "@/hooks/useEditListing";
 import ListingDocumentsSection from "./ListingDocumentsSection";
 import InstantOfferSection from "./InstantOfferSection";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { LoadingRows, Notice } from "@/components/ui/kit";
 
 // Mirrors config('media.max_video_duration_seconds') — the server re-validates it.
 const MAX_VIDEO_SECONDS = 240;
@@ -38,10 +39,8 @@ const SETTABLE_STATUSES = ["live", "under_offer", "withdrawn", "sold"];
 
 function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) {
   return (
-    <div className="col-md-6 col-lg-4 mb-3">
-      <label htmlFor={htmlFor} className="mb-1">
-        {label}
-      </label>
+    <div className="ha-field">
+      <label htmlFor={htmlFor}>{label}</label>
       {children}
     </div>
   );
@@ -61,7 +60,7 @@ function Select({
   allowEmpty?: boolean;
 }) {
   return (
-    <select id={id} className="form-control" value={value} onChange={(e) => onChange(e.target.value)}>
+    <select id={id} className="ha-select" value={value} onChange={(e) => onChange(e.target.value)}>
       {(allowEmpty || value === "") && <option value="">Select</option>}
       {real(options).map((option) => (
         <option key={String(option.value)} value={String(option.value)}>
@@ -138,10 +137,10 @@ function MediaManager({
   }
 
   return (
-    <div className="tfcl-card p-3 mb-3">
-      <h4 className="mb-2">Photos &amp; video</h4>
+    <div className="ha-card ha-card-body mb-4">
+      <h2 className="hd-card-title">Photos &amp; video</h2>
 
-      {photos.length === 0 && <p className="text-color-2">No photos yet.</p>}
+      {photos.length === 0 && <p className="ha-muted">No photos yet.</p>}
       <div className="d-flex flex-wrap gap-3 mb-3">
         {photos.map((photo) => (
           <div key={photo.id} style={{ width: 150 }}>
@@ -163,44 +162,44 @@ function MediaManager({
               </button>
             </div>
             {photo.qa_status === "failed" && (
-              <div className="fs-13 text-danger mt-1">{photo.qa_message ?? "This photo failed the quality check."} Remove it and add a clearer one.</div>
+              <div className="ha-inline-error mt-1">{photo.qa_message ?? "This photo failed the quality check."} Remove it and add a clearer one.</div>
             )}
-            {photo.qa_status === "pending" && <div className="fs-13 text-color-2 mt-1">Being checked...</div>}
+            {photo.qa_status === "pending" && <div className="ha-sub mt-1">Being checked...</div>}
           </div>
         ))}
       </div>
       <input ref={photoInput} type="file" accept="image/*" multiple hidden onChange={handlePhotos} />
-      <button type="button" className="sc-button" disabled={busy} onClick={() => photoInput.current?.click()}>
+      <button type="button" className="ha-btn" disabled={busy} onClick={() => photoInput.current?.click()}>
         <span>Add photos</span>
       </button>
 
       <h5 className="mt-4 mb-2">Video</h5>
-      {videos.length === 0 && <p className="text-color-2">No video yet.</p>}
+      {videos.length === 0 && <p className="ha-muted">No video yet.</p>}
       {videos.map((video) => (
         <div key={video.id} className="mb-3" style={{ maxWidth: 420 }}>
           <video src={video.url} controls preload="metadata" playsInline style={{ width: "100%", borderRadius: 6, background: "#000" }} />
           <div className="d-flex justify-content-between align-items-center mt-1">
-            <span className="fs-13 text-color-2">
+            <span className="ha-sub">
               {video.duration_seconds ? `${video.duration_seconds}s` : "Walk-around video"}
               {video.qa_status === "pending" ? " · being checked" : ""}
             </span>
-            <button type="button" className="sc-button" disabled={busy} onClick={() => confirmRemove(video)}>
+            <button type="button" className="ha-btn" disabled={busy} onClick={() => confirmRemove(video)}>
               <span>Remove</span>
             </button>
           </div>
         </div>
       ))}
       <input ref={videoInput} type="file" accept="video/*" hidden onChange={handleVideo} />
-      <button type="button" className="sc-button" disabled={busy} onClick={() => videoInput.current?.click()}>
+      <button type="button" className="ha-btn" disabled={busy} onClick={() => videoInput.current?.click()}>
         <span>Add video</span>
       </button>
-      <p className="text-color-2 fs-13 mt-2 mb-0">Up to {MAX_VIDEO_SECONDS / 60} minutes per video.</p>
+      <p className="ha-sub mt-2 mb-0">Up to {MAX_VIDEO_SECONDS / 60} minutes per video.</p>
 
-      {status && <p className="mt-2 mb-0">{status}</p>}
+      {status && <p className="ha-sub mt-2 mb-0" role="status">{status}</p>}
       {(error || videoError) && (
-        <div className="alert alert-danger mt-2 mb-0" role="alert">
+        <Notice tone="danger">
           {error ?? videoError}
-        </div>
+        </Notice>
       )}
     </div>
   );
@@ -307,29 +306,29 @@ function EditForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      {locked && <div className="alert alert-warning">{data.vehicle_locked_reason} You can still change the price, description and photos.</div>}
+      {locked && <Notice tone="warning">{data.vehicle_locked_reason} You can still change the price, description and photos.</Notice>}
 
-      <div className="tfcl-card p-3 mb-3">
-        <h4 className="mb-3">Vehicle details</h4>
+      <div className="ha-card ha-card-body mb-4">
+        <h2 className="hd-card-title">Vehicle details</h2>
         <fieldset disabled={locked} style={{ border: 0, padding: 0, margin: 0 }}>
-          <div className="row">
+          <div className="ha-form-grid">
             <Field label="Registration" htmlFor="edit_vrm">
-              <input id="edit_vrm" className="form-control" maxLength={10} style={{ textTransform: "uppercase" }} {...input("current_vrm")} />
+              <input id="edit_vrm" className="ha-input" maxLength={10} style={{ textTransform: "uppercase" }} {...input("current_vrm")} />
             </Field>
             <Field label="Make *" htmlFor="edit_make">
-              <input id="edit_make" className="form-control" required {...input("make")} />
+              <input id="edit_make" className="ha-input" required {...input("make")} />
             </Field>
             <Field label="Model *" htmlFor="edit_model">
-              <input id="edit_model" className="form-control" required {...input("model")} />
+              <input id="edit_model" className="ha-input" required {...input("model")} />
             </Field>
             <Field label="Trim / derivative" htmlFor="edit_derivative">
-              <input id="edit_derivative" className="form-control" {...input("derivative")} />
+              <input id="edit_derivative" className="ha-input" {...input("derivative")} />
             </Field>
             <Field label="Year *" htmlFor="edit_year">
-              <input id="edit_year" type="number" min={1980} max={new Date().getFullYear() + 1} className="form-control" required {...input("year")} />
+              <input id="edit_year" type="number" min={1980} max={new Date().getFullYear() + 1} className="ha-input" required {...input("year")} />
             </Field>
             <Field label="Mileage *" htmlFor="edit_mileage">
-              <input id="edit_mileage" type="number" min={0} className="form-control" required {...input("current_mileage")} />
+              <input id="edit_mileage" type="number" min={0} className="ha-input" required {...input("current_mileage")} />
             </Field>
             <Field label="Body type" htmlFor="edit_body">
               <Select id="edit_body" value={form.body_type} onChange={set("body_type")} options={ADD_LISTING_BODY_TYPE_OPTIONS} />
@@ -341,13 +340,13 @@ function EditForm({
               <Select id="edit_transmission" value={form.transmission} onChange={set("transmission")} options={ADD_LISTING_TRANSMISSION_OPTIONS} />
             </Field>
             <Field label="Colour" htmlFor="edit_colour">
-              <input id="edit_colour" className="form-control" {...input("colour")} />
+              <input id="edit_colour" className="ha-input" {...input("colour")} />
             </Field>
             <Field label="Doors" htmlFor="edit_doors">
-              <input id="edit_doors" type="number" min={2} max={6} className="form-control" {...input("doors")} />
+              <input id="edit_doors" type="number" min={2} max={6} className="ha-input" {...input("doors")} />
             </Field>
             <Field label="Seats" htmlFor="edit_seats">
-              <input id="edit_seats" type="number" min={1} max={9} className="form-control" {...input("seats")} />
+              <input id="edit_seats" type="number" min={1} max={9} className="ha-input" {...input("seats")} />
             </Field>
             <Field label="V5C (logbook)" htmlFor="edit_v5c">
               <Select id="edit_v5c" value={form.v5c_status} onChange={set("v5c_status")} options={ADD_LISTING_V5C_STATUS_OPTIONS} />
@@ -357,7 +356,7 @@ function EditForm({
             </Field>
           </div>
         </fieldset>
-        <p className="text-color-2 fs-13 mb-0">
+        <p className="ha-sub mb-0">
           The VIN can&apos;t be changed once a vehicle is registered on the platform. Changing the mileage or registration re-runs the
           vehicle checks.
         </p>
@@ -372,20 +371,20 @@ function EditForm({
         }}
       />
 
-      <div className="tfcl-card p-3 mb-3">
-        <h4 className="mb-3">Listing</h4>
-        <div className="row">
+      <div className="ha-card ha-card-body mb-4">
+        <h2 className="hd-card-title">Listing</h2>
+        <div className="ha-form-grid">
           <Field label="Price (£) *" htmlFor="edit_price">
-            <input id="edit_price" type="number" min={0} step="0.01" className="form-control" required {...input("price")} />
+            <input id="edit_price" type="number" min={0} step="0.01" className="ha-input" required {...input("price")} />
           </Field>
           <Field label="Price type" htmlFor="edit_price_type">
             <Select id="edit_price_type" value={form.price_type} onChange={set("price_type")} options={ADD_LISTING_PRICE_TYPE_OPTIONS} />
           </Field>
           <Field label="Postcode" htmlFor="edit_postcode">
-            <input id="edit_postcode" className="form-control" maxLength={10} {...input("postcode")} />
+            <input id="edit_postcode" className="ha-input" maxLength={10} {...input("postcode")} />
           </Field>
           <Field label="Status" htmlFor="edit_status">
-            <select id="edit_status" className="form-control" value={form.status} onChange={(e) => set("status")(e.target.value)}>
+            <select id="edit_status" className="ha-select" value={form.status} onChange={(e) => set("status")(e.target.value)}>
               {statusOptions.map((status) => (
                 <option key={status} value={status} disabled={!SETTABLE_STATUSES.includes(status)}>
                   {LISTING_STATUS_LABELS[status] ?? status}
@@ -393,33 +392,31 @@ function EditForm({
               ))}
             </select>
           </Field>
-          <div className="col-12 mb-1">
-            <label htmlFor="edit_description" className="mb-1">
-              Description
-            </label>
-            <textarea id="edit_description" className="form-control" rows={5} maxLength={5000} {...input("description")} />
-          </div>
+        </div>
+        <div className="ha-field mb-0">
+          <label htmlFor="edit_description">Description</label>
+          <textarea id="edit_description" className="ha-textarea" rows={5} maxLength={5000} {...input("description")} />
         </div>
       </div>
 
       <MediaManager media={data.media} {...mediaProps} />
 
       {error && (
-        <div className="alert alert-danger" role="alert">
+        <Notice tone="danger">
           {error}
-        </div>
+        </Notice>
       )}
-      {saved && !error && <div className="alert alert-success">Saved.</div>}
+      {saved && !error && <Notice tone="success">Saved.</Notice>}
 
-      <div className="d-flex gap-3 align-items-center mb-4">
-        <button type="submit" className="sc-button" disabled={saving}>
-          <span>{saving ? "Saving..." : "Save changes"}</span>
+      <div className="ha-form-footer mb-4">
+        <button type="submit" className="ha-btn is-primary" disabled={saving} aria-busy={saving}>
+          {saving ? "Saving…" : "Save changes"}
         </button>
-        <Link href="/my-listing" className="sc-button">
-          <span>Back to my listings</span>
+        <Link href="/my-listing" className="ha-btn">
+          Back to my listings
         </Link>
-        <Link href={`/listing-detail-v1/${listingId}`} className="text-color-2">
-          View listing
+        <Link href={`/listing-detail-v1/${listingId}`} className="ha-btn is-ghost" style={{ marginLeft: "auto" }}>
+          View listing ↗
         </Link>
       </div>
     </form>
@@ -435,46 +432,36 @@ export default function EditListing({ listingId }: { listingId: string }) {
   const { data, loading, error, save, removeMedia, addPhotos, addVideo, mediaStatus, mediaError } = useEditListing(listingId);
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Edit listing</h1>
-                  {loading && <p>Loading your listing...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
-                  {data && <ListingDocumentsSection vehiclePublicId={data.vehicle.id} />}
-                  {data && (
-                    <InstantOfferSection
-                      vehiclePublicId={data.vehicle.id}
-                      vrm={data.vehicle.current_vrm}
-                      mileage={data.vehicle.current_mileage}
-                      listingStatus={data.listing.status}
-                    />
-                  )}
-                  {data && (
-                    <EditForm
-                      data={data}
-                      onSave={save}
-                      listingId={listingId}
-                      mediaProps={{
-                        onRemove: removeMedia,
-                        onAddPhotos: addPhotos,
-                        onAddVideo: addVideo,
-                        status: mediaStatus,
-                        error: mediaError,
-                      }}
-                    />
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <DashboardPage
+      eyebrow={<Link href="/my-listing">← My listings</Link>}
+      title="Edit listing"
+      description="Every vehicle detail, the price and description, and the photos and video."
+    >
+      {loading && <LoadingRows rows={5} label="Loading your listing" />}
+      {error && <Notice tone="danger">{error}</Notice>}
+      {data && (
+        <EditForm
+          data={data}
+          onSave={save}
+          listingId={listingId}
+          mediaProps={{
+            onRemove: removeMedia,
+            onAddPhotos: addPhotos,
+            onAddVideo: addVideo,
+            status: mediaStatus,
+            error: mediaError,
+          }}
+        />
+      )}
+      {data && <ListingDocumentsSection vehiclePublicId={data.vehicle.id} />}
+      {data && (
+        <InstantOfferSection
+          vehiclePublicId={data.vehicle.id}
+          vrm={data.vehicle.current_vrm}
+          mileage={data.vehicle.current_mileage}
+          listingStatus={data.listing.status}
+        />
+      )}
+    </DashboardPage>
   );
 }

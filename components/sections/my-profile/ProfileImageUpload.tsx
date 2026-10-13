@@ -135,7 +135,7 @@ function ProfileImageUpload({
             {(previewSrc ?? currentImageSrc) && (
               <button
                 type="button"
-                className="btn-action tfcl-dashboard-action-delete"
+                className="ha-btn is-sm is-danger"
                 onClick={handleRemove}
                 disabled={saving}
               >
@@ -147,7 +147,7 @@ function ProfileImageUpload({
             PNG, JPG or WEBP, max file size 4 MB
           </span>
           {error ? (
-            <span className="notify-avatar d-block mt-1" style={{ color: "#f26740" }}>
+            <span className="notify-avatar d-block mt-1" style={{ color: "var(--hmp-danger)" }}>
               {error}
             </span>
           ) : null}

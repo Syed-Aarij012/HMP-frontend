@@ -109,16 +109,16 @@ export default function PricingOversight() {
         )}
         {v && v.recent.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Pricing data</caption>
               <thead>
                 <tr>
-                  <th>When</th>
-                  <th>Vehicle</th>
-                  <th>Private sale</th>
-                  <th>Internal / guide</th>
-                  <th>Instant offer</th>
-                  <th>Achieved</th>
-                  <th>Confidence</th>
+                  <th scope="col">When</th>
+                  <th scope="col">Vehicle</th>
+                  <th scope="col">Private sale</th>
+                  <th scope="col">Internal / guide</th>
+                  <th scope="col">Instant offer</th>
+                  <th scope="col">Achieved</th>
+                  <th scope="col">Confidence</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,14 +155,14 @@ export default function PricingOversight() {
         {r && r.lots.length === 0 && <EmptyState icon="icon-carus-sliders" title="No concluded lots yet" />}
         {r && r.lots.length > 0 && (
           <div className="ha-table-wrap">
-            <table className="ha-table">
+            <table className="ha-table"><caption className="ha-visually-hidden">Pricing data</caption>
               <thead>
                 <tr>
-                  <th>Lot</th>
-                  <th>Reserve</th>
-                  <th>Final</th>
-                  <th>Outcome</th>
-                  <th>Recommended by</th>
+                  <th scope="col">Lot</th>
+                  <th scope="col">Reserve</th>
+                  <th scope="col">Final</th>
+                  <th scope="col">Outcome</th>
+                  <th scope="col">Recommended by</th>
                 </tr>
               </thead>
               <tbody>

@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { useVehicleDocuments } from "@/hooks/useVehicleDocuments";
+import { Notice, LoadingTable } from "@/components/ui/kit";
 
 const LABELS: Record<string, string> = {
   v5c: "V5C logbook",
@@ -26,30 +27,30 @@ export default function ListingDocumentsSection({ vehiclePublicId }: { vehiclePu
   }
 
   return (
-    <div className="tfcl-card p-3 mb-3">
-      <h4 className="mb-1">Documents</h4>
-      <p className="text-color-2 fs-13 mb-3">
+    <div className="ha-card ha-card-body mb-4">
+      <h2 className="hd-card-title">Documents</h2>
+      <p className="ha-sub mb-3">
         Add your V5C logbook, MOT and service history. Our reviewers check them before your listing goes live; they&apos;re
         never shown to buyers.
       </p>
 
-      {loading && <p>Loading documents...</p>}
-      {!loading && documents.length === 0 && <p className="text-color-2">No documents yet.</p>}
+      {loading && <LoadingTable label="Loading documents" />}
+      {!loading && documents.length === 0 && <p className="ha-sub">No documents yet.</p>}
       {documents.length > 0 && (
         <ul className="list-unstyled mb-3">
           {documents.map((doc) => (
-            <li key={doc.id} className="d-flex align-items-center justify-content-between gap-2 py-2" style={{ borderBottom: "1px solid #eee" }}>
+            <li key={doc.id} className="d-flex align-items-center justify-content-between gap-2 py-2" style={{ borderBottom: "1px solid var(--hmp-border)" }}>
               <div>
                 <b>{LABELS[doc.type] ?? doc.type}</b>
-                <div className="fs-13 text-color-2">
+                <div className="ha-sub">
                   {doc.original_name} · {(doc.size_bytes / 1024).toFixed(0)} KB
                 </div>
               </div>
               <div className="d-flex gap-2">
-                <button type="button" className="sc-button" onClick={() => download(doc)}>
+                <button type="button" className="ha-btn is-sm" onClick={() => download(doc)}>
                   <span>View</span>
                 </button>
-                <button type="button" className="sc-button" onClick={() => remove(doc.id)}>
+                <button type="button" className="ha-btn is-sm is-danger" onClick={() => remove(doc.id)}>
                   <span>Remove</span>
                 </button>
               </div>
@@ -59,19 +60,19 @@ export default function ListingDocumentsSection({ vehiclePublicId }: { vehiclePu
       )}
 
       <div className="d-flex flex-wrap gap-2 align-items-center">
-        <select className="form-control" style={{ maxWidth: 220 }} aria-label="Document type" value={type} onChange={(e) => setType(e.target.value)} disabled={busy}>
+        <select className="ha-select" style={{ maxWidth: 220 }} aria-label="Document type" value={type} onChange={(e) => setType(e.target.value)} disabled={busy}>
           {(types.length ? types : Object.keys(LABELS)).map((t) => (
             <option key={t} value={t}>
               {LABELS[t] ?? t}
             </option>
           ))}
         </select>
-        <button type="button" className="sc-button" disabled={busy} onClick={() => fileInput.current?.click()}>
+        <button type="button" className="ha-btn" disabled={busy} onClick={() => fileInput.current?.click()}>
           <span>{busy ? `Uploading... ${Math.round(progress)}%` : "Upload document"}</span>
         </button>
         <input ref={fileInput} type="file" accept="application/pdf,image/jpeg,image/png" hidden onChange={handleFile} />
       </div>
-      {error && <div className="alert alert-danger mt-2 mb-0">{error}</div>}
+      {error && <Notice tone="danger">{error}</Notice>}
     </div>
   );
 }

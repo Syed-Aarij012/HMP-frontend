@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useDealerStorefrontProfile } from "@/hooks/useDealerStorefrontProfile";
+import { Card } from "@/components/ui/kit";
 
 /**
  * FR-C-002 Dealer Dashboard: tells a dealership where its public profile is — the card shown in
@@ -14,24 +15,25 @@ export default function DealerPageBanner({ adCount }: { adCount: number }) {
   if (!isDealer || !storefront) return null;
 
   return (
-    <div className="tfcl-card p-3 mb-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
-      <div>
-        <h5 className="mb-1">{storefront.display_name}</h5>
-        <div className="text-color-2 fs-14">
-          Your dealer page shows buyers all {adCount} of your ads. Add, edit or remove ads below and it updates straight away.
-        </div>
-      </div>
-      <div className="d-flex gap-2 flex-wrap">
-        <Link href={`/dealer-detail/${storefront.slug}`} className="sc-button">
-          <span>View my dealer page</span>
-        </Link>
-        <Link href="/my-profile" className="sc-button">
-          <span>Edit dealer profile</span>
-        </Link>
-        <Link href="/add-listing" className="sc-button">
-          <span>Add an ad</span>
-        </Link>
-      </div>
-    </div>
+    <Card
+      className="mb-4"
+      title={storefront.display_name}
+      description={`Your dealer page shows buyers all ${adCount} of your live ads, and updates as soon as you change one.`}
+      actions={
+        <>
+          <Link href={`/dealer-detail/${storefront.slug}`} className="ha-btn is-sm">
+            View my dealer page
+          </Link>
+          <Link href="/my-profile" className="ha-btn is-sm is-ghost">
+            Edit dealer profile
+          </Link>
+          <Link href="/add-listing" className="ha-btn is-sm is-ghost">
+            Add an ad
+          </Link>
+        </>
+      }
+    >
+      {null}
+    </Card>
   );
 }

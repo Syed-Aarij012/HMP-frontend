@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { can, useAuth } from "@/contexts/AuthContext";
 import {
   useTrustSafetyCase,
@@ -10,6 +9,8 @@ import {
   type ResolveInput,
   type TrustSafetyStatus,
 } from "@/hooks/useTrustSafetyCases";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Badge, Card, DataTable, EmptyState, ErrorNotice, LoadingRows, LoadingTable, Notice, Pager, StatusBadge, Tabs, type Tone } from "@/components/ui/kit";
 
 const REASON_LABELS: Record<string, string> = {
   possible_phone_number: "Phone number shared",
@@ -26,11 +27,12 @@ const when = (iso: string | null) =>
         timeStyle: "short",
       })
     : "-";
-const SEVERITY_CLASS: Record<string, string> = {
-  high: "bg-danger",
-  medium: "bg-warning text-dark",
-  low: "bg-secondary",
+const SEVERITY_TONE: Record<string, Tone> = {
+  high: "danger",
+  medium: "warning",
+  low: "neutral",
 };
+const STATUS_TABS = ["open", "actioned", "dismissed", "all"] as const;
 
 function CaseReview({
   caseId,
@@ -52,39 +54,49 @@ function CaseReview({
   });
 
   return (
-    <div className="tfcl-card p-3 mb-4">
-      <div className="d-flex justify-content-between align-items-start mb-2">
-        <h4 className="mb-0">Case #{caseId}</h4>
-        <button type="button" className="sc-button" onClick={onClose}>
-          <span>Close</span>
+    <section className="ha-card mb-4" aria-label={`Case ${caseId}`}>
+      <div className="ha-card-head">
+        <h2>Case #{caseId}</h2>
+        <button type="button" className="ha-btn is-sm is-ghost" onClick={onClose}>
+          Close
         </button>
       </div>
+      <div className="ha-card-body">
 
-      {loading && <p>Loading case...</p>}
-      {error && <div className="alert alert-danger">{error}</div>}
+      {loading && <LoadingRows rows={4} label="Loading case" />}
+      {error && <Notice tone="danger">{error}</Notice>}
 
       {detail && (
         <>
-          <p className="mb-1">
-            <span
-              className={`badge ${SEVERITY_CLASS[detail.severity] ?? "bg-secondary"} me-2 text-capitalize`}
-            >
-              {detail.severity}
-            </span>
-            {reasonLabel(detail.reason)} · raised {when(detail.created_at)}
-          </p>
-          <p className="mb-3">
-            Sender: <b>{detail.reported_user?.name ?? "Unknown"}</b> (
-            {detail.reported_user?.email})
-            {detail.reported_user?.status === "suspended" && (
-              <span className="badge bg-danger ms-2">Suspended</span>
-            )}
-          </p>
+          <dl className="ha-dl mb-4">
+            <div>
+              <dt>Severity</dt>
+              <dd>
+                <Badge tone={SEVERITY_TONE[detail.severity] ?? "neutral"}>{detail.severity}</Badge>
+              </dd>
+            </div>
+            <div>
+              <dt>Reason</dt>
+              <dd>{reasonLabel(detail.reason)}</dd>
+            </div>
+            <div>
+              <dt>Raised</dt>
+              <dd>{when(detail.created_at)}</dd>
+            </div>
+            <div>
+              <dt>Sender</dt>
+              <dd>
+                {detail.reported_user?.name ?? "Unknown"}{" "}
+                {detail.reported_user?.status === "suspended" && <Badge tone="danger">Suspended</Badge>}
+                <div className="ha-sub">{detail.reported_user?.email}</div>
+              </dd>
+            </div>
+          </dl>
 
           {detail.conversation && (
             <>
-              <h5 className="mb-1">Conversation</h5>
-              <p className="text-color-2 mb-2">
+              <h2 className="hd-card-title">Conversation</h2>
+              <p className="ha-muted mb-2">
                 {detail.conversation.listing_id ? (
                   <Link
                     href={`/listing-detail-v1/${detail.conversation.listing_id}`}
@@ -108,24 +120,13 @@ function CaseReview({
                   return (
                     <li
                       key={message.id}
-                      className="p-2 mb-2"
-                      style={{
-                        borderRadius: 8,
-                        background: isCaseMessage
-                          ? "#FDECEC"
-                          : message.flagged
-                            ? "#FFF6E5"
-                            : "#F4F6FB",
-                        border: isCaseMessage
-                          ? "1px solid #E74C3C"
-                          : "1px solid transparent",
-                      }}
+                      className={`ha-message${isCaseMessage ? " is-case" : message.flagged ? " is-flagged" : ""}`}
                     >
-                      <div className="fs-13 text-color-2">
+                      <div className="ha-sub">
                         {message.sender?.name ?? "Unknown"} ·{" "}
                         {when(message.created_at)}
                         {isCaseMessage && (
-                          <b className="text-danger"> · this case</b>
+                          <b className="ha-inline-error"> · this case</b>
                         )}
                         {!isCaseMessage &&
                           message.flagged &&
@@ -135,7 +136,7 @@ function CaseReview({
                         {message.body}
                       </div>
                       {message.attachment_count > 0 && (
-                        <div className="fs-13 text-color-2">
+                        <div className="ha-sub">
                           {message.attachment_count} attachment(s)
                         </div>
                       )}
@@ -158,9 +159,10 @@ function CaseReview({
                   });
               }}
             >
-              <h5 className="mb-2">Resolve</h5>
-              <div className="flex gap-20 mb-2" style={{ flexWrap: "wrap" }}>
-                <label>
+              <fieldset className="ha-field">
+              <legend>Resolve</legend>
+              <div className="ha-check-list mb-3">
+                <label className="ha-check">
                   <input
                     type="radio"
                     name="resolution"
@@ -172,10 +174,10 @@ function CaseReview({
                         suspendUser: false,
                       })
                     }
-                  />{" "}
+                  />
                   Dismiss (false positive)
                 </label>
-                <label>
+                <label className="ha-check">
                   <input
                     type="radio"
                     name="resolution"
@@ -183,51 +185,51 @@ function CaseReview({
                     onChange={() =>
                       setForm({ ...form, resolution: "actioned" })
                     }
-                  />{" "}
+                  />
                   Action (confirmed violation)
                 </label>
               </div>
+              </fieldset>
               {form.resolution === "actioned" && (
-                <label className="d-block mb-2">
+                <label className="ha-check mb-3">
                   <input
                     type="checkbox"
                     checked={form.suspendUser}
                     onChange={(e) =>
                       setForm({ ...form, suspendUser: e.target.checked })
                     }
-                  />{" "}
+                  />
                   Also suspend {detail.reported_user?.name ?? "the sender"}
                 </label>
               )}
               <input
                 type="text"
-                className="form-control mb-2"
+                className="ha-input mb-3"
                 placeholder="Note (optional, max 255 characters)"
                 maxLength={255}
                 value={form.note}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
                 aria-label="Resolution note"
               />
-              <button type="submit" className="sc-button" disabled={resolving}>
-                <span>
+              <button type="submit" className={`ha-btn ${form.resolution === "actioned" ? "is-danger-solid" : "is-primary"}`} disabled={resolving} aria-busy={resolving}>
                   {resolving
-                    ? "Saving..."
+                    ? "Saving…"
                     : form.resolution === "actioned"
                       ? "Action case"
                       : "Dismiss case"}
-                </span>
-              </button>
+                </button>
             </form>
           ) : (
             <p className="mb-0">
-              <b className="text-capitalize">{detail.status}</b> on{" "}
+              <StatusBadge status={detail.status} /> on{" "}
               {when(detail.resolved_at)}
               {detail.resolution_note ? `: ${detail.resolution_note}` : ""}
             </p>
           )}
         </>
       )}
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -254,123 +256,76 @@ function Queue() {
         />
       )}
 
-      <div
-        className="flex gap-10 align-center mb-3"
-        style={{ flexWrap: "wrap" }}
-      >
-        <label htmlFor="ts-status" className="mb-0">
-          Show
-        </label>
-        <select
-          id="ts-status"
-          className="form-control"
-          style={{ maxWidth: 200 }}
+      <div className="mb-3">
+        <Tabs
+          label="Case status"
           value={status}
-          onChange={(e) => {
-            setStatus(e.target.value as TrustSafetyStatus | "all");
+          options={STATUS_TABS}
+          onChange={(value) => {
+            setStatus(value);
             setPage(1);
           }}
-        >
-          <option value="open">Open</option>
-          <option value="actioned">Actioned</option>
-          <option value="dismissed">Dismissed</option>
-          <option value="all">All</option>
-        </select>
-        <span className="text-color-2">{total} case(s)</span>
+        />
       </div>
 
-      {loading && <p>Loading cases...</p>}
-      {error && <div className="alert alert-danger">{error}</div>}
-      {!loading && !error && cases.length === 0 && (
-        <p className="tfcl-empty-data">No cases here.</p>
-      )}
+      <Card>
+        {loading && <LoadingTable label="Loading cases" columns={6} />}
+        {error && <ErrorNotice message={error} />}
+        {!loading && !error && cases.length === 0 && (
+          <EmptyState icon="icon-carus-shieldcheck" title="No cases here" text={status === "open" ? "Nothing waiting for review." : "No cases match this status."} />
+        )}
 
-      {cases.length > 0 && (
-        <div className="table-responsive">
-          <table className="table">
+        {cases.length > 0 && (
+          <DataTable caption="Trust and Safety cases">
             <thead>
               <tr>
-                <th>Severity</th>
-                <th>Reason</th>
-                <th>Sender</th>
-                <th>Message</th>
-                <th>Raised</th>
-                <th>Status</th>
-                <th />
+                <th scope="col">Severity</th>
+                <th scope="col">Reason</th>
+                <th scope="col">Sender</th>
+                <th scope="col">Message</th>
+                <th scope="col">Raised</th>
+                <th scope="col">Status</th>
+                <th scope="col">
+                  <span className="ha-visually-hidden">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {cases.map((item) => (
-                <tr
-                  key={item.id}
-                  className={
-                    item.id === selectedId ? "table-active" : undefined
-                  }
-                >
-                  <td>
-                    <span
-                      className={`badge ${SEVERITY_CLASS[item.severity] ?? "bg-secondary"} text-capitalize`}
-                    >
-                      {item.severity}
-                    </span>
+                <tr key={item.id} aria-current={item.id === selectedId ? "true" : undefined} className={item.id === selectedId ? "is-selected" : undefined}>
+                  <td data-label="Severity">
+                    <Badge tone={SEVERITY_TONE[item.severity] ?? "neutral"}>{item.severity}</Badge>
                   </td>
-                  <td>{reasonLabel(item.reason)}</td>
-                  <td>
-                    {item.reported_user?.name ?? "-"}
+                  <td data-label="Reason">{reasonLabel(item.reason)}</td>
+                  <td data-label="Sender">
+                    {item.reported_user?.name ?? "—"}
                     {item.reported_user?.status === "suspended" && (
-                      <span className="badge bg-danger ms-1">Suspended</span>
+                      <div>
+                        <Badge tone="danger">Suspended</Badge>
+                      </div>
                     )}
                   </td>
-                  <td style={{ maxWidth: 280 }}>
-                    <span
-                      className="d-inline-block text-truncate"
-                      style={{ maxWidth: 280 }}
-                      title={item.message_body ?? ""}
-                    >
-                      {item.message_body ?? "-"}
+                  <td data-label="Message" style={{ maxWidth: 280 }}>
+                    <span className="d-inline-block text-truncate" style={{ maxWidth: 280 }} title={item.message_body ?? ""}>
+                      {item.message_body ?? "—"}
                     </span>
                   </td>
-                  <td>{when(item.created_at)}</td>
-                  <td className="text-capitalize">{item.status}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="sc-button"
-                      onClick={() => setSelectedId(item.id)}
-                    >
-                      <span>{item.status === "open" ? "Review" : "View"}</span>
+                  <td data-label="Raised" className="ha-num">{when(item.created_at)}</td>
+                  <td data-label="Status">
+                    <StatusBadge status={item.status} tone={item.status === "open" ? "warning" : undefined} />
+                  </td>
+                  <td data-label="" className="ha-right">
+                    <button type="button" className={`ha-btn is-sm${item.status === "open" ? " is-primary" : ""}`} onClick={() => setSelectedId(item.id)}>
+                      {item.status === "open" ? "Review" : "View"}
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
-      )}
-
-      {lastPage > 1 && (
-        <div className="flex gap-10 align-center">
-          <button
-            type="button"
-            className="sc-button"
-            disabled={page <= 1}
-            onClick={() => setPage(page - 1)}
-          >
-            <span>Previous</span>
-          </button>
-          <span>
-            Page {page} of {lastPage}
-          </span>
-          <button
-            type="button"
-            className="sc-button"
-            disabled={page >= lastPage}
-            onClick={() => setPage(page + 1)}
-          >
-            <span>Next</span>
-          </button>
-        </div>
-      )}
+          </DataTable>
+        )}
+        <Pager page={page} lastPage={lastPage} total={total} onChange={setPage} />
+      </Card>
     </>
   );
 }
@@ -381,29 +336,14 @@ export default function Dashboard() {
     can(user, "admin-fraud-actions");
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Trust &amp; Safety</h1>
+    <DashboardPage title="Trust & Safety" description="Messages auto-flagged for personal details or off-platform payment, reviewed in the context of the whole conversation.">
+      {!isAnalyst && (
+        <Card>
+          <EmptyState icon="icon-carus-shieldcheck" title="Analysts only" text="This queue is for Trust & Safety analysts only." />
+        </Card>
+      )}
 
-                  {!isAnalyst && (
-                    <p className="tfcl-empty-data">
-                      This queue is for Trust &amp; Safety analysts only.
-                    </p>
-                  )}
-
-                  {isAnalyst && <Queue />}
-                </div>
-              </main>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      {isAnalyst && <Queue />}
+    </DashboardPage>
   );
 }

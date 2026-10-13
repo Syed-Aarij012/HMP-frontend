@@ -5,25 +5,35 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import DashboardHeader from "@/components/headers/DashboardHeader";
 import DashboardSidebar from "@/components/headers/DashboardSidebar";
-import DashboardOverlay from "@/components/dashboard/DashboardOverlay";
 import { DashboardSidebarProvider, useDashboardSidebar } from "@/components/dashboard/DashboardSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { canAccessRoute } from "@/lib/routeAccess";
 import SupportAccessRequests from "@/components/dashboard/SupportAccessRequests";
+import { EmptyState } from "@/components/ui/kit";
 
 type DashboardLayoutClientProps = {
   children: ReactNode;
 };
 
 // A plain child of DashboardSidebarProvider (not DashboardLayoutClient itself) purely so it can
-// read the collapsed state the provider owns — DashboardLayoutClient is what renders the
+// read the sidebar state the provider owns — DashboardLayoutClient is what renders the
 // provider, so it can't consume its own context.
-function DashboardWrapper({ children }: { children: ReactNode }) {
-  const { collapsed } = useDashboardSidebar();
+function DashboardShell({ children }: { children: ReactNode }) {
+  const { collapsed, isOpen, close } = useDashboardSidebar();
 
   return (
-    <div id="wrapper-dashboard" className={collapsed ? "sidebar-collapsed" : undefined}>
-      {children}
+    <div className={`hmp-ui hmp-dash${collapsed ? " is-collapsed" : ""}`}>
+      <a href="#dashboard-content" className="ha-visually-hidden hd-skip">
+        Skip to content
+      </a>
+      <DashboardSidebar />
+      <button type="button" className={`hd-overlay${isOpen ? " is-open" : ""}`} onClick={close} aria-label="Close menu" tabIndex={isOpen ? 0 : -1} hidden={!isOpen} />
+      <div className="hd-main">
+        <DashboardHeader />
+        <main id="dashboard-content" className="hd-content" tabIndex={-1}>
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
@@ -50,29 +60,26 @@ export default function DashboardLayoutClient({
 
   return (
     <DashboardSidebarProvider>
-      <DashboardOverlay />
-      <DashboardSidebar />
-      <DashboardWrapper>
-        <div id="pagee" className="clearfix">
-          <DashboardHeader />
-        </div>
+      <DashboardShell>
         <SupportAccessRequests />
         {/* SRS §2 RBAC route guard (UX only — the API refuses these regardless). */}
         {canAccessRoute(user, pathname) ? (
           children
         ) : (
-          <div id="themesflat-content">
-            <div className="container">
-              <div className="tfcl-dashboard">
-                <h1 className="admin-title mb-3">Not available</h1>
-                <p className="tfcl-empty-data">
-                  Your account doesn&apos;t have access to this page. <Link href="/dashboard">Back to your dashboard</Link>.
-                </p>
-              </div>
-            </div>
+          <div className="ha-card">
+            <EmptyState
+              icon="icon-carus-shieldcheck"
+              title="Not available"
+              text="Your account doesn't have access to this page."
+              action={
+                <Link href="/dashboard" className="ha-btn is-primary">
+                  Back to your dashboard
+                </Link>
+              }
+            />
           </div>
         )}
-      </DashboardWrapper>
+      </DashboardShell>
     </DashboardSidebarProvider>
   );
 }

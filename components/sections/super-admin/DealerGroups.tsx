@@ -90,7 +90,7 @@ export default function DealerGroups() {
             <EmptyState icon="icon-carus-car" title="No dealerships in this group yet" />
           ) : (
             <div className="ha-table-wrap">
-              <table className="ha-table">
+              <table className="ha-table"><caption className="ha-visually-hidden">Dealer groups</caption>
                 <tbody>
                   {group.dealerships.map((d) => (
                     <tr key={d.id}>

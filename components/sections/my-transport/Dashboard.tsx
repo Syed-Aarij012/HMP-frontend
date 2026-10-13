@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useMyTransportJobs } from "@/hooks/useDriverTransportJobs";
 import type { TransportJob } from "@/types/postSale";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { Notice, LoadingTable, EmptyState, DataTable, StatusBadge, formatMoney } from "@/components/ui/kit";
 
 function addressLine(address: TransportJob["pickup_address"]) {
   return [address.line1, address.postcode].filter(Boolean).join(", ") || "-";
@@ -32,91 +33,68 @@ export default function Dashboard() {
   }
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">My transport</h1>
-                  <p className="text-color-2 mb-3">
-                    Every vehicle you have booked or quoted transport for. Moving more than one at once? Select two or more
-                    below to combine them into a single trip at a discount.
-                  </p>
+    <DashboardPage title="My transport" description="Every vehicle you have booked or quoted transport for. Moving more than one at once? Select two or more below to combine them into a single trip at a discount.">
+      {loading && <LoadingTable label="Loading your transport" />}
+      {error && <Notice tone="danger">{error}</Notice>}
+      {actionError && <Notice tone="danger">{actionError}</Notice>}
 
-                  {loading && <p>Loading your transport...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
-                  {actionError && <div className="alert alert-danger">{actionError}</div>}
+      {!loading && !error && jobs.length === 0 && (
+        <EmptyState icon="icon-carus-map" title="No transport booked yet" text="Transport you book for vehicles you buy appears here." />
+      )}
 
-                  {!loading && !error && jobs.length === 0 && (
-                    <p className="tfcl-empty-data">You have no transport booked yet.</p>
-                  )}
+      {jobs.length > 0 && (
+        <DataTable caption="Your transport jobs">
+            <thead>
+              <tr>
+                <th scope="col"><span className="ha-visually-hidden">Select</span></th>
+                <th scope="col">Job</th>
+                <th scope="col">Pickup</th>
+                <th scope="col">Dropoff</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="is-num">Quote</th>
+                <th scope="col">Trip</th>
+              </tr>
+            </thead>
+            <tbody>
+              {jobs.map((job) => (
+                <tr key={job.id}>
+                  <td data-label="Select">
+                    {!job.consolidation_group_id && (job.status === "quoted" || job.status === "booked") && (
+                      <input
+                        type="checkbox"
+                        aria-label={`Select job #${job.id} for consolidation`}
+                        checked={selected.includes(job.id)}
+                        onChange={() => toggle(job.id)}
+                      />
+                    )}
+                  </td>
+                  <td data-label="Job" className="ha-num">#{job.id}</td>
+                  <td data-label="Pickup">{addressLine(job.pickup_address)}</td>
+                  <td data-label="Dropoff">{addressLine(job.dropoff_address)}</td>
+                  <td data-label="Status"><StatusBadge status={job.status} /></td>
+                  <td data-label="Quote" className="is-num">{formatMoney(Number(job.quote_amount), { pence: true })}</td>
+                  <td data-label="Trip">{job.consolidation_group_id ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </DataTable>
+      )}
 
-                  {jobs.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th />
-                            <th>#</th>
-                            <th>Pickup</th>
-                            <th>Dropoff</th>
-                            <th>Status</th>
-                            <th>Quote</th>
-                            <th>Trip</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {jobs.map((job) => (
-                            <tr key={job.id}>
-                              <td>
-                                {!job.consolidation_group_id && (job.status === "quoted" || job.status === "booked") && (
-                                  <input
-                                    type="checkbox"
-                                    aria-label={`Select job #${job.id} for consolidation`}
-                                    checked={selected.includes(job.id)}
-                                    onChange={() => toggle(job.id)}
-                                  />
-                                )}
-                              </td>
-                              <td>{job.id}</td>
-                              <td>{addressLine(job.pickup_address)}</td>
-                              <td>{addressLine(job.dropoff_address)}</td>
-                              <td className="text-capitalize">{job.status.replace("_", " ")}</td>
-                              <td>£{Number(job.quote_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td>{job.consolidation_group_id ?? "-"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  {consolidatable.length >= 2 && (
-                    <div className="tfcl-card p-3 mt-3" style={{ maxWidth: 420 }}>
-                      <p className="mb-2">
-                        {selected.length === 0
-                          ? "Select two or more jobs above to combine them into one trip."
-                          : `${selected.length} job${selected.length === 1 ? "" : "s"} selected.`}
-                      </p>
-                      <button
-                        type="button"
-                        className="sc-button"
-                        disabled={selected.length < 2 || consolidating}
-                        onClick={handleConsolidate}
-                      >
-                        <span>{consolidating ? "Combining..." : "Combine into one trip"}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
+      {consolidatable.length >= 2 && (
+        <div className="ha-card ha-card-body ha-row-actions" style={{ justifyContent: "space-between" }} role="region" aria-label="Combine jobs">
+          <p className="mb-0" aria-live="polite">
+            {selected.length === 0
+              ? "Select two or more jobs above to combine them into one trip."
+              : `${selected.length} job${selected.length === 1 ? "" : "s"} selected.`}
+          </p>
+          <button
+            type="button"
+            className="ha-btn is-primary"
+            disabled={selected.length < 2 || consolidating}
+            onClick={handleConsolidate}
+          >{consolidating ? "Combining…" : "Combine into one trip"}</button>
         </div>
-      </div>
-    </div>
+      )}
+    </DashboardPage>
   );
 }

@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { DocumentsSection, ReleaseSection, TransportSection } from "@/components/sections/post-sale/PostSaleSections";
 import { useRetailOrder } from "@/hooks/useDirectBuy";
 import { usePostSaleRecords } from "@/hooks/usePostSaleRecords";
+import DashboardPage from "@/components/dashboard/DashboardPage";
+import { LoadingRows, Notice, StatCard, Stats, StatusBadge, formatDate as formatDateTime, formatMoney } from "@/components/ui/kit";
 
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleString() : "-";
-}
+const formatDate = (value: string | null) => formatDateTime(value, { time: true });
+
+const STATUS_LABELS: Record<string, string> = {
+  deposit_held: "Cooling-off active",
+  cancelled_cooling_off: "Cancelled",
+  confirmed: "Confirmed — balance due",
+  paid: "Paid in full",
+};
 
 export default function OrderDetail({ publicId }: { publicId: string }) {
   const { order, loading, error, cancel, payBalance, acting, actionError, reload } = useRetailOrder(publicId);
@@ -16,129 +22,138 @@ export default function OrderDetail({ publicId }: { publicId: string }) {
   const records = usePostSaleRecords({ kind: "retail", publicId }, order?.releaseNoteId ?? null);
 
   return (
-    <div id="themesflat-content">
-      <DashboardToggle />
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <div className="content-area">
-              <main id="main" className="main-content">
-                <div className="tfcl-dashboard">
-                  <h1 className="admin-title mb-3">Order details</h1>
-                  <p className="mb-3">
-                    <Link href="/my-orders">← Back to my orders</Link>
-                  </p>
+    <DashboardPage
+      eyebrow={<Link href="/my-orders">← My orders</Link>}
+      title={order?.car?.title ?? "Order details"}
+      description={order ? <StatusBadge status={order.status} label={STATUS_LABELS[order.status]} /> : undefined}
+    >
 
-                  {loading && <p>Loading your order...</p>}
-                  {error && <div className="alert alert-danger">{error}</div>}
+      {loading && <LoadingRows label="Loading your order" />}
+      {error && <Notice tone="danger">{error}</Notice>}
 
-                  {order && (
-                    <>
-                      <div className="tfcl-card p-3 mb-3">
-                        <h4 className="mb-2">{order.car?.title ?? "Vehicle"}</h4>
-                        {order.car && <p className="mb-1">Asking price: £{order.car.price.toLocaleString()}</p>}
-                        <p className="mb-0">Deposit paid: £{order.depositAmount.toLocaleString()}</p>
-                      </div>
+      {order && (
+        <>
+          <Stats>
+            {order.car && <StatCard label="Asking price" value={formatMoney(order.car.price)} />}
+            <StatCard label="Deposit paid" value={formatMoney(order.depositAmount)} />
+            {order.car && order.status !== "paid" && order.status !== "cancelled_cooling_off" && (
+              <StatCard label="Balance remaining" value={formatMoney(order.car.price - order.depositAmount)} />
+            )}
+          </Stats>
 
-                      {actionError && <div className="alert alert-danger mb-3">{actionError}</div>}
+          {actionError && <Notice tone="danger">{actionError}</Notice>}
 
-                      {order.status === "deposit_held" && (
-                        <div className="tfcl-card p-3 mb-3">
-                          <h4 className="mb-2">Cooling-off period active</h4>
-                          <p className="mb-2">
-                            You can cancel for a full refund until{" "}
-                            {formatDate(order.disclosure?.cancellationDeadline ?? order.coolingOffEndsAt)}. After
-                            that, your purchase will be confirmed automatically and you&apos;ll be asked to pay the
-                            remaining balance.
-                          </p>
-                          <button type="button" className="sc-button" disabled={acting} onClick={cancel}>
-                            <span>{acting ? "Cancelling..." : "Cancel and get a refund"}</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {order.status === "cancelled_cooling_off" && (
-                        <div className="tfcl-card p-3 mb-3">
-                          <h4 className="mb-2">Cancelled</h4>
-                          <p className="mb-0">
-                            This order was cancelled on {formatDate(order.cancelledAt)} and your deposit has been
-                            refunded.
-                          </p>
-                        </div>
-                      )}
-
-                      {order.status === "confirmed" && (
-                        <div className="tfcl-card p-3 mb-3">
-                          <h4 className="mb-2">Purchase confirmed</h4>
-                          <p className="mb-2">
-                            {order.car
-                              ? `Pay the remaining balance of £${(order.car.price - order.depositAmount).toLocaleString()} to complete your purchase.`
-                              : "Pay the remaining balance to complete your purchase."}
-                          </p>
-                          <button type="button" className="sc-button" disabled={acting} onClick={payBalance}>
-                            <span>{acting ? "Paying..." : "Pay remaining balance"}</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {order.status === "paid" && (
-                        <div className="tfcl-card p-3 mb-3">
-                          <h4 className="mb-2">Paid in full</h4>
-                          <p className="mb-0">
-                            Paid on {formatDate(order.balancePaidAt)}. Book delivery below, or collect the vehicle
-                            yourself using your release code.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* FR-C-030: handover/delivery scheduling handoff to Module F, once paid. */}
-                      {order.status === "paid" && (
-                        <div className="tfcl-card p-3 mb-3">
-                          <TransportSection
-                            jobId={order.transportJobId}
-                            order={{ kind: "retail", publicId: order.publicId }}
-                            defaultPickup={order.collectionPostcode ?? ""}
-                            onChanged={reload}
-                          />
-                          <ReleaseSection releaseNoteId={order.releaseNoteId} release={records.release} />
-                        </div>
-                      )}
-
-                      {order.disclosure && (
-                        <div className="tfcl-card p-3 mb-3">
-                          <h4 className="mb-2">Distance-selling disclosure</h4>
-                          {order.disclosure.sellerName && <p className="mb-1">Seller: {order.disclosure.sellerName}</p>}
-                          <p className="mb-1">Seller type: {order.disclosure.sellerType}</p>
-                          <p className="mb-1">Goods: {order.disclosure.goodsDescription}</p>
-                          <p className="mb-1">Price: £{order.disclosure.price.toLocaleString()}</p>
-                          <p className="mb-1">Deposit: £{order.disclosure.depositAmount.toLocaleString()}</p>
-                          {order.disclosure.balanceDue !== null && (
-                            <p className="mb-1">Balance due after cooling-off: £{order.disclosure.balanceDue.toLocaleString()}</p>
-                          )}
-                          <p className="mb-1">
-                            Right to cancel: {order.disclosure.rightToCancelDays} days (until{" "}
-                            {formatDate(order.disclosure.cancellationDeadline)})
-                          </p>
-                          <p className="mb-0 text-color-2">
-                            The full information and cancellation pack, including a model cancellation form, is in
-                            your documents below.
-                          </p>
-                        </div>
-                      )}
-
-                      {records.documents && (
-                        <div className="tfcl-card p-3">
-                          <DocumentsSection documents={records.documents} />
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </main>
+          {order.status === "deposit_held" && (
+            <div className="ha-card ha-card-body mb-4">
+              <h2 className="hd-card-title">Cooling-off period active</h2>
+              <p className="mb-2">
+                You can cancel for a full refund until{" "}
+                {formatDate(order.disclosure?.cancellationDeadline ?? order.coolingOffEndsAt)}. After
+                that, your purchase will be confirmed automatically and you&apos;ll be asked to pay the
+                remaining balance.
+              </p>
+              <button type="button" className="ha-btn is-danger" disabled={acting} onClick={cancel}>{acting ? "Cancelling…" : "Cancel and get a refund"}</button>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          )}
+
+          {order.status === "cancelled_cooling_off" && (
+            <div className="ha-card ha-card-body mb-4">
+              <h2 className="hd-card-title">Cancelled</h2>
+              <p className="mb-0">
+                This order was cancelled on {formatDate(order.cancelledAt)} and your deposit has been
+                refunded.
+              </p>
+            </div>
+          )}
+
+          {order.status === "confirmed" && (
+            <div className="ha-card ha-card-body mb-4">
+              <h2 className="hd-card-title">Purchase confirmed</h2>
+              <p className="mb-2">
+                {order.car
+                  ? `Pay the remaining balance of £${(order.car.price - order.depositAmount).toLocaleString()} to complete your purchase.`
+                  : "Pay the remaining balance to complete your purchase."}
+              </p>
+              <button type="button" className="ha-btn is-primary" disabled={acting} onClick={payBalance}>{acting ? "Paying…" : "Pay remaining balance"}</button>
+            </div>
+          )}
+
+          {order.status === "paid" && (
+            <div className="ha-card ha-card-body mb-4">
+              <h2 className="hd-card-title">Paid in full</h2>
+              <p className="mb-0">
+                Paid on {formatDate(order.balancePaidAt)}. Book delivery below, or collect the vehicle
+                yourself using your release code.
+              </p>
+            </div>
+          )}
+
+          {/* FR-C-030: handover/delivery scheduling handoff to Module F, once paid. */}
+          {order.status === "paid" && (
+            <div className="ha-card ha-card-body mb-4">
+              <TransportSection
+                jobId={order.transportJobId}
+                order={{ kind: "retail", publicId: order.publicId }}
+                defaultPickup={order.collectionPostcode ?? ""}
+                onChanged={reload}
+              />
+              <ReleaseSection releaseNoteId={order.releaseNoteId} release={records.release} />
+            </div>
+          )}
+
+          {order.disclosure && (
+            <div className="ha-card ha-card-body mb-4">
+              <h2 className="hd-card-title">Distance-selling disclosure</h2>
+              <dl className="ha-dl mb-3">
+                {order.disclosure.sellerName && (
+                  <div>
+                    <dt>Seller</dt>
+                    <dd>{order.disclosure.sellerName}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt>Seller type</dt>
+                  <dd>{order.disclosure.sellerType}</dd>
+                </div>
+                <div>
+                  <dt>Goods</dt>
+                  <dd>{order.disclosure.goodsDescription}</dd>
+                </div>
+                <div>
+                  <dt>Price</dt>
+                  <dd>{formatMoney(order.disclosure.price)}</dd>
+                </div>
+                <div>
+                  <dt>Deposit</dt>
+                  <dd>{formatMoney(order.disclosure.depositAmount)}</dd>
+                </div>
+                {order.disclosure.balanceDue !== null && (
+                  <div>
+                    <dt>Balance due after cooling-off</dt>
+                    <dd>{formatMoney(order.disclosure.balanceDue)}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt>Right to cancel</dt>
+                  <dd>
+                    {order.disclosure.rightToCancelDays} days (until {formatDate(order.disclosure.cancellationDeadline)})
+                  </dd>
+                </div>
+              </dl>
+              <p className="mb-0 ha-muted">
+                The full information and cancellation pack, including a model cancellation form, is in
+                your documents below.
+              </p>
+            </div>
+          )}
+
+          {records.documents && (
+            <div className="ha-card ha-card-body">
+              <DocumentsSection documents={records.documents} />
+            </div>
+          )}
+        </>
+      )}
+    </DashboardPage>
   );
 }

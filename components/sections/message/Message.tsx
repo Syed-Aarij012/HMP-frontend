@@ -11,13 +11,13 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useMobileDealerSidebar } from "@/hooks/useMobileDealerSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/components/common/MessagesContext";
 import { useConversation } from "@/hooks/useConversation";
 import QuickReplies from "./QuickReplies";
 import { describeApiError } from "@/lib/api-client";
+import DashboardPage from "@/components/dashboard/DashboardPage";
 import {
   conversationListingTitle,
   conversationTitle,
@@ -377,17 +377,10 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
   };
 
   return (
-    <>
-      <div id="themesflat-content">
-        <DashboardToggle />
-        <div className="container">
-          <div className="row">
-            <div className="col-md-12">
-              <div className="content-area">
-                <main id="main" className="main-content">
-                  <div className="tfcl-dashboard">
-                    <div className="message-title-row mb-3">
-                      <h1 className="admin-title mb-0">Message</h1>
+    <DashboardPage
+      title="Messages"
+      description="Your conversations with buyers and sellers. Keep payments and contact details on HMP — it protects you both."
+      actions={
                       <button
                         type="button"
                         className={`btn-open-list-user${isOpen ? " d-none" : ""}`}
@@ -397,8 +390,9 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
                       >
                         <i className="icon-carus-chattext" aria-hidden="true" />
                       </button>
-                    </div>
-                    <div className="tfcl-message">
+      }
+    >
+                    <div className="tfcl-message hd-messages">
                       <div
                         className={`overlay-list-user${isOpen ? " open" : ""}`}
                         onClick={close}
@@ -426,7 +420,7 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
                             <div className="form-search">
                               <input
                                 type="search"
-                                className="form-control"
+                                className="ha-input"
                                 id="message-search"
                                 name="message_search"
                                 placeholder="Search..."
@@ -547,7 +541,7 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
                               onSubmit={handleSubmit}
                             >
                               {sendError && (
-                                <p className="text-danger fs-14 mb-2">{sendError}</p>
+                                <p className="ha-inline-error mb-2">{sendError}</p>
                               )}
                               {pendingAttachments.length > 0 && (
                                 <div className="attrach mb-2">
@@ -626,7 +620,7 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
                               <div className="form-message">
                                 <input
                                   type="text"
-                                  className="form-control"
+                                  className="ha-input"
                                   name="message"
                                   placeholder="Aa"
                                   value={draftMessage}
@@ -637,7 +631,7 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
                                   onKeyDown={handleInputKeyDown}
                                 />
                                 <button type="submit" disabled={sending}>
-                                  {sending ? "Sending..." : "Send"}
+                                  {sending ? "Sending…" : "Send"}
                                 </button>
                               </div>
                               <div className="controll">
@@ -675,14 +669,7 @@ function Message({ initialConversationId = null }: { initialConversationId?: num
                         </div>
                       ) : null}
                     </div>
-                  </div>
-                </main>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    </DashboardPage>
   );
 }
 
