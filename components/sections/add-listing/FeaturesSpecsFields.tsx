@@ -114,6 +114,18 @@ export default function FeaturesSpecsFields({
     setCustom("");
   }
 
+  // Custom (non-checklist) features are left untouched — they have their own remove "x"
+  // each, so a bulk select/deselect here only ever applies to the tick-box grid below.
+  const allCommonSelected = COMMON_FEATURES.every((feature) => has(feature));
+
+  function selectAllCommon() {
+    onChange({ ...value, features: [...customFeatures, ...COMMON_FEATURES].slice(0, MAX_FEATURES) });
+  }
+
+  function deselectAllCommon() {
+    onChange({ ...value, features: customFeatures });
+  }
+
   return (
     <div className="tfcl-card p-3 mb-3">
       <fieldset disabled={disabled} style={{ border: 0, padding: 0, margin: 0 }}>
@@ -160,7 +172,27 @@ export default function FeaturesSpecsFields({
           </div>
         </div>
 
-        <h4 className="mt-2 mb-1">Features</h4>
+        <div className="flex justify-space align-center mt-2 mb-1" style={{ flexWrap: "wrap", gap: 8 }}>
+          <h4 className="mb-0">Features</h4>
+          <div className="flex gap-10">
+            <button
+              type="button"
+              onClick={selectAllCommon}
+              disabled={disabled || allCommonSelected}
+              style={{ border: "none", background: "none", padding: 0, color: "#405FF2", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              onClick={deselectAllCommon}
+              disabled={disabled || customFeatures.length === value.features.length}
+              style={{ border: "none", background: "none", padding: 0, color: "#405FF2", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+            >
+              Deselect all
+            </button>
+          </div>
+        </div>
         <p className="text-color-2 fs-13 mb-2">
           Tick everything the car has. {value.features.length > 0 ? `${value.features.length} selected.` : ""}
         </p>
