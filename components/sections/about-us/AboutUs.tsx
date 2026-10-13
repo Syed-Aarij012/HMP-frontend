@@ -13,6 +13,7 @@ function AboutUs() {
                   data-src="/assets/images/logo/hmp-logo.png"
                   src="/assets/images/logo/hmp-logo.png"
                   alt="HMP"
+                    priority
                   width={200}
                   height={67}
                 />

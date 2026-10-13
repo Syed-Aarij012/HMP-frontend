@@ -48,7 +48,7 @@ export default function AdminLogin() {
       <div className="ha-login-card">
         <div className="ha-login-logo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/images/logo/hmp-logo.png" alt="HMP" />
+          <img src="/assets/images/logo/hmp-logo.png" alt="HMP" loading="eager" />
         </div>
         <h1>Admin Panel</h1>
         <p className="ha-login-sub">{challenge ? "Enter the code from your authenticator app." : "Sign in with your admin or moderator account."}</p>

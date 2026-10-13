@@ -38,6 +38,7 @@ export default function Header2() {
                     data-src="/assets/images/logo/hmp-logo.png"
                     src="/assets/images/logo/hmp-logo.png"
                     alt="HMP"
+                    priority
                     width={140}
                     height={47}
                   />
@@ -46,6 +47,7 @@ export default function Header2() {
                     data-src="/assets/images/logo/hmp-logo.png"
                     src="/assets/images/logo/hmp-logo.png"
                     alt="HMP"
+                    priority
                     width={140}
                     height={47}
                   />

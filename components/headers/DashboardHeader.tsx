@@ -37,6 +37,7 @@ export default function DashboardHeader() {
                       <Image
                         src="/assets/images/logo/hmp-logo.png"
                         alt="HMP"
+                    priority
                         width={140}
                         height={47}
                       />
