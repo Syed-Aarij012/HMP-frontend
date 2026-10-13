@@ -128,7 +128,7 @@ export default function AdminSidebar() {
       <aside className={`ha-sidebar${isOpen ? " is-open" : ""}`} aria-label="Admin navigation">
         <Link href="/admin" className="ha-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/images/logo/hmp-logo.png" alt="HMP" />
+          <img src="/assets/images/logo/hmp-logo.png" alt="HMP" loading="eager" />
           <span>ADMIN PANEL</span>
         </Link>
 

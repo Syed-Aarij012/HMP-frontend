@@ -46,7 +46,7 @@ export default function AuthPage({ initialMode }: { initialMode: "signin" | "sig
         <aside className="hmp-auth-aside">
           <Link href="/" className="hmp-auth-logo">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/images/logo/hmp-logo.png" alt="HMP" />
+            <img src="/assets/images/logo/hmp-logo.png" alt="HMP" loading="eager" />
           </Link>
           <h2>Buy, sell and trade cars — all in one place.</h2>
           <ul>

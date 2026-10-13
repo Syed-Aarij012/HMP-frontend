@@ -52,7 +52,10 @@ export default function DealerAnalyticsChart({ series }: { series: Series }) {
     points: series.map((point, index) => ({ x: x(index), y: y(point[key]), value: point[key] })),
   }));
 
-  const yTicks = [0, 0.5, 1].map((fraction) => Math.round(maxValue * fraction));
+  // Deduped: a small maxValue (e.g. 1, the Math.max(1, ...) floor for a period with zero
+  // activity) rounds two different fractions to the same tick — [0, 1, 1] without this —
+  // which would draw an overlapping gridline/label pair and collide as a React key.
+  const yTicks = [...new Set([0, 0.5, 1].map((fraction) => Math.round(maxValue * fraction)))];
   const firstLabel = new Date(series[0].date).toLocaleDateString(undefined, { month: "short", day: "numeric" });
   const lastLabel = new Date(series[series.length - 1].date).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 

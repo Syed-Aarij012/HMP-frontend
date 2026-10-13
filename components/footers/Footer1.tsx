@@ -171,6 +171,7 @@ export default function Footer1() {
                 data-src="/assets/images/logo/hmp-logo.png"
                 src="/assets/images/logo/hmp-logo.png"
                 alt="HMP"
+                    priority
                 width={130}
                 height={44}
               />

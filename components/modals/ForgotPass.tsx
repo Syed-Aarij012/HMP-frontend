@@ -26,6 +26,7 @@ export default function ForgotPass() {
                     data-src="/assets/images/logo/hmp-logo.png"
                     src="/assets/images/logo/hmp-logo.png"
                     alt="HMP"
+                    priority
                     width={100}
                     height={34}
                   />

@@ -179,6 +179,9 @@ export type ApiDealerAnalytics = {
   };
   appointments: { booked: number; completed: number; no_show: number; cancelled: number; no_show_rate: number | null };
   average_days_to_sell: number | null;
+  price_stats: { min: number | null; max: number | null; average: number | null; count: number };
+  mileage_stats: { min: number | null; max: number | null };
+  status_breakdown: { value: string; count: number }[];
 };
 
 export function mapApiDealerAnalytics(api: ApiDealerAnalytics): DealerAnalytics {
@@ -203,6 +206,9 @@ export function mapApiDealerAnalytics(api: ApiDealerAnalytics): DealerAnalytics 
       noShowRate: api.appointments.no_show_rate,
     },
     averageDaysToSell: api.average_days_to_sell,
+    priceStats: api.price_stats,
+    mileageStats: api.mileage_stats,
+    statusBreakdown: api.status_breakdown,
   };
 }
 

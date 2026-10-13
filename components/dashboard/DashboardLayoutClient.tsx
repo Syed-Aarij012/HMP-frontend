@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import DashboardHeader from "@/components/headers/DashboardHeader";
 import DashboardSidebar from "@/components/headers/DashboardSidebar";
 import DashboardOverlay from "@/components/dashboard/DashboardOverlay";
-import { DashboardSidebarProvider } from "@/components/dashboard/DashboardSidebarContext";
+import { DashboardSidebarProvider, useDashboardSidebar } from "@/components/dashboard/DashboardSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { canAccessRoute } from "@/lib/routeAccess";
 import SupportAccessRequests from "@/components/dashboard/SupportAccessRequests";
@@ -14,6 +14,19 @@ import SupportAccessRequests from "@/components/dashboard/SupportAccessRequests"
 type DashboardLayoutClientProps = {
   children: ReactNode;
 };
+
+// A plain child of DashboardSidebarProvider (not DashboardLayoutClient itself) purely so it can
+// read the collapsed state the provider owns — DashboardLayoutClient is what renders the
+// provider, so it can't consume its own context.
+function DashboardWrapper({ children }: { children: ReactNode }) {
+  const { collapsed } = useDashboardSidebar();
+
+  return (
+    <div id="wrapper-dashboard" className={collapsed ? "sidebar-collapsed" : undefined}>
+      {children}
+    </div>
+  );
+}
 
 export default function DashboardLayoutClient({
   children,
@@ -39,7 +52,7 @@ export default function DashboardLayoutClient({
     <DashboardSidebarProvider>
       <DashboardOverlay />
       <DashboardSidebar />
-      <div id="wrapper-dashboard">
+      <DashboardWrapper>
         <div id="pagee" className="clearfix">
           <DashboardHeader />
         </div>
@@ -59,7 +72,7 @@ export default function DashboardLayoutClient({
             </div>
           </div>
         )}
-      </div>
+      </DashboardWrapper>
     </DashboardSidebarProvider>
   );
 }

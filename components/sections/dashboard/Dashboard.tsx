@@ -1,10 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import DashboardListingsTable from "@/components/common/DashboardListingsTable";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import { useMyListings } from "@/hooks/useMyListings";
+import { useDealerAnalytics } from "@/hooks/useDealerAnalytics";
 import { useListingActions } from "@/components/common/ListingActionsContext";
 import DealerPageBanner from "@/components/sections/dashboard/DealerPageBanner";
+import DealerAnalyticsChart from "@/components/sections/dealer-analytics/DealerAnalyticsChart";
+import PriceRangeCard from "@/components/sections/dashboard/PriceRangeCard";
+import StatusBreakdownChart from "@/components/sections/dashboard/StatusBreakdownChart";
 import RoleHome from "@/components/sections/dashboard/RoleHome";
 import { canAny, useAuth } from "@/contexts/AuthContext";
 
@@ -25,6 +30,10 @@ function SellerDashboard() {
   const isDealer = typeof user?.organization_id === "number";
   const { listings, loading, error } = useMyListings();
   const { favoriteIds, canFavorite } = useListingActions();
+  // FR-C-022: the same analytics /dealer-analytics is built on — min/max price, stock
+  // breakdown, and the 30-day trend chart, surfaced here too so the first thing a dealer
+  // sees isn't just raw counts.
+  const { analytics, loading: analyticsLoading } = useDealerAnalytics(30);
 
   // Not live yet: never-published drafts and listings still in pending checks.
   const pendingCount = listings.filter((listing) => listing.dashboardStatus === "draft" || listing.dashboardStatus === "pending").length;
@@ -177,6 +186,50 @@ function SellerDashboard() {
                         </div>
                       </div>
                     </div>
+
+                    {isDealer && (
+                      <div className="tfcl-dashboard-middle mt-2">
+                        <div className="row">
+                          <div className="col-lg-6 mb-3">
+                            {analyticsLoading && !analytics ? (
+                              <div className="tfcl-card p-3">Loading stock price range...</div>
+                            ) : (
+                              analytics && (
+                                <PriceRangeCard
+                                  min={analytics.priceStats.min}
+                                  max={analytics.priceStats.max}
+                                  average={analytics.priceStats.average}
+                                  count={analytics.priceStats.count}
+                                />
+                              )
+                            )}
+                          </div>
+                          <div className="col-lg-6 mb-3">
+                            <div className="tfcl-card p-3">
+                              <div className="text-color-2 mb-2">Stock by status</div>
+                              {analyticsLoading && !analytics && <p className="mb-0">Loading...</p>}
+                              {analytics && analytics.statusBreakdown.length > 0 ? (
+                                <StatusBreakdownChart breakdown={analytics.statusBreakdown} />
+                              ) : (
+                                analytics && <p className="tfcl-empty-data mb-0">No listings yet.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {analytics && analytics.series.length > 0 && (
+                          <div className="tfcl-card p-3 mb-3">
+                            <div className="flex justify-space align-center mb-2" style={{ flexWrap: "wrap" }}>
+                              <h5 className="mb-0">Activity, last {analytics.periodDays} days</h5>
+                              <Link href="/dealer-analytics" className="fs-14 fw-6">
+                                View full analytics →
+                              </Link>
+                            </div>
+                            <DealerAnalyticsChart series={analytics.series} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="tfcl-dashboard-middle mt-2">
                       <div className="row">
                         <div className="tfcl-dashboard-middle-left col-md-12">

@@ -11,6 +11,7 @@ function WhyChooseUs() {
                 <Image
                   src="/assets/images/logo/hmp-logo.png"
                   alt="HMP"
+                    priority
                   width={100}
                   height={34}
                 />
@@ -203,6 +204,7 @@ function WhyChooseUs() {
                     <Image
                       src="/assets/images/logo/hmp-logo.png"
                       alt="HMP"
+                    priority
                       width={200}
                       height={67}
                     />

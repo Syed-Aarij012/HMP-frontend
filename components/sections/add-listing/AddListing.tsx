@@ -2,6 +2,7 @@
 
 import { useCallback, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import DashboardToggle from "@/components/dashboard/DashboardToggle";
 import NiceSelect from "@/components/common/NiceSelect";
 import AttachmentsSection from "@/components/sections/add-listing/AttachmentsSection";
@@ -18,6 +19,7 @@ import UploadVideoSpinSection, {
 import { canAny, useAuth } from "@/contexts/AuthContext";
 import { useResumableUpload } from "@/hooks/useResumableUpload";
 import { useIdentityVerification } from "@/hooks/useIdentityVerification";
+import { useOrganizationSubscription } from "@/hooks/useOrganizationSubscription";
 import { usePricingSuggestion, useVrmLookup } from "@/hooks/useListingTools";
 import { apiFetch, describeApiError } from "@/lib/api-client";
 import {
@@ -34,6 +36,13 @@ import {
 
 type ApiVehicle = { data: { id: string } };
 type ApiListing = { data: { id: string } };
+
+// COLOR_OPTIONS' fixed 6-colour list is also used as a search filter elsewhere (Filters.tsx,
+// ListingSidebarFilterForm.tsx) where an "Other" entry wouldn't correspond to anything
+// matchable — so this is a local addition just for the listing form, not a change to the
+// shared list.
+const COLOR_OTHER_VALUE = "__other__";
+const COLOR_OPTIONS_WITH_OTHER = [...COLOR_OPTIONS, { label: "Other (type your own)", value: COLOR_OTHER_VALUE }];
 
 // Roles allowed to create a listing at all — matches manage-own-listings /
 // manage-org-listings in RolesAndPermissionsSeeder. private_buyer and trade_buyer hold
@@ -121,6 +130,33 @@ function IdentityVerificationGate() {
   );
 }
 
+/**
+ * FR-C-020: SubscriptionService::assertCanCreateListing blocks a dealer org with no active
+ * subscription row (status='active') from creating a listing — shown up front here, before
+ * they fill in the whole form, rather than as a submit-time error.
+ */
+function SubscriptionRequiredNotice() {
+  const { subscription, loading, isDealer } = useOrganizationSubscription();
+
+  if (!isDealer || loading || subscription !== null) {
+    return null;
+  }
+
+  return (
+    <div className="tfcl-add-listing">
+      <div className="alert alert-warning">
+        <p className="mb-2">
+          <b>No active subscription.</b> Your dealership needs an active subscription plan
+          before you can list a vehicle — choose a plan to get started.
+        </p>
+        <Link href="/subscription" className="second-btn">
+          Choose a subscription plan
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function AddListing() {
   const router = useRouter();
   const { user } = useAuth();
@@ -148,6 +184,11 @@ function AddListing() {
   const [doors, setDoors] = useState<number | "">("");
   const [seats, setSeats] = useState<number | "">("");
   const [colour, setColour] = useState("");
+  // Sticky once chosen, so the free-text box doesn't disappear the moment it's cleared back
+  // to "" while typing — the `|| (colour && !known)` half also catches a VRM-prefilled colour
+  // that isn't one of the 6 presets, so that shows as "Other" + the real value too.
+  const [useCustomColour, setUseCustomColour] = useState(false);
+  const showCustomColourInput = useCustomColour || (colour !== "" && !COLOR_OPTIONS.some((option) => option.value === colour));
   const [price, setPrice] = useState("");
   const [priceType, setPriceType] = useState("fixed");
   const [description, setDescription] = useState("");
@@ -353,6 +394,7 @@ function AddListing() {
               <div className="content-area">
                 <main id="main" className="main-content">
                   {user?.user_type === "private_seller" && <IdentityVerificationGate />}
+                  <SubscriptionRequiredNotice />
 
                   {step === "spec" ? (
                     <form className="tfcl-dashboard add-list" onSubmit={handleContinueToPricing}>
@@ -523,12 +565,31 @@ function AddListing() {
                           <div className="form-group">
                             <label htmlFor="add_listing_color">Color</label>
                             <NiceSelect
-                              options={COLOR_OPTIONS}
-                              value={colour}
+                              options={COLOR_OPTIONS_WITH_OTHER}
+                              value={showCustomColourInput ? COLOR_OTHER_VALUE : colour}
                               defaultValue=""
                               className="form-control"
-                              onChange={(value) => setColour(String(value))}
+                              onChange={(value) => {
+                                if (value === COLOR_OTHER_VALUE) {
+                                  setUseCustomColour(true);
+                                  setColour("");
+                                } else {
+                                  setUseCustomColour(false);
+                                  setColour(String(value));
+                                }
+                              }}
                             />
+                            {showCustomColourInput && (
+                              <input
+                                type="text"
+                                className="form-control mt-2"
+                                placeholder="e.g. British Racing Green"
+                                maxLength={40}
+                                value={colour}
+                                onChange={(e) => setColour(e.target.value)}
+                                autoFocus
+                              />
+                            )}
                           </div>
                         </div>
                         <div className="form-group mb-0">
