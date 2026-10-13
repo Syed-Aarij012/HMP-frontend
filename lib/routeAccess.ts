@@ -18,7 +18,11 @@ const ROUTE_REQUIREMENTS: [prefix: string, requirement: RouteRequirement][] = [
   ["/routing-rules", { permissions: ["manage-run-list"] }],
   ["/trust-safety", { permissions: ["admin-fraud-actions"] }],
   ["/inspections", { permissions: ["create-condition-report", "countersign-condition-report", "manage-vehicle-records"] }],
-  ["/guided-capture", { permissions: ["create-condition-report", "manage-vehicle-records"] }],
+  // Inspectors/back-office staff use this for condition-report photos; a listing's own
+  // seller/dealer uses the identical page for their own vehicle (linked as "Guided photos"
+  // from /my-listing) — the backend already authorizes the latter by listing/vehicle
+  // ownership (VehicleController::authorizeOwnership), this just let them past the route gate.
+  ["/guided-capture", { permissions: ["create-condition-report", "manage-vehicle-records", "manage-own-listings", "manage-org-listings"] }],
   ["/rostrum", { permissions: ["hammer-lot", "manage-any-lane"] }],
   ["/live-lanes", { permissions: ["view-auction-catalog"] }],
   ["/auction", { permissions: ["view-auction-catalog"] }],
