@@ -92,6 +92,9 @@ export type DealerAnalytics = {
   };
   appointments: { booked: number; completed: number; noShow: number; cancelled: number; noShowRate: number | null };
   averageDaysToSell: number | null;
+  priceStats: { min: number | null; max: number | null; average: number | null; count: number };
+  mileageStats: { min: number | null; max: number | null };
+  statusBreakdown: { value: string; count: number }[];
 };
 
 export type AdProduct = {
