@@ -399,8 +399,11 @@ function menuFor(userType: string | undefined, organizationId: number | null): D
 
   // FR-C-022: self-serve performance analytics — dealer accounts only.
   if (organizationId !== null) {
-    const dealerItems = [leadsItem, dealerAnalyticsItem, dealerStockFeedItem, subscriptionItem];
-    return dealerItems.reduce((items, item) => insertBefore(items, item, "security"), dashboardMenuItems);
+    // Subscription sits right after Add listing — a dealer with no active plan needs to find
+    // it fast, not dig for it down by Profile/Logout with the rest of the dealer-only items.
+    const withSubscription = insertBefore(dashboardMenuItems, subscriptionItem, "my-listing");
+    const dealerItems = [leadsItem, dealerAnalyticsItem, dealerStockFeedItem];
+    return dealerItems.reduce((items, item) => insertBefore(items, item, "security"), withSubscription);
   }
 
   return dashboardMenuItems;
@@ -408,7 +411,7 @@ function menuFor(userType: string | undefined, organizationId: number | null): D
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
-  const { isOpen, close } = useDashboardSidebar();
+  const { isOpen, close, collapsed, toggleCollapsed } = useDashboardSidebar();
   const { user } = useAuth();
   const { unreadCount: unreadMessageCount } = useMessages();
   const organizationId = typeof user?.organization_id === "number" ? user.organization_id : null;
@@ -467,13 +470,37 @@ export default function DashboardSidebar() {
     isNavLinkActive(pathname, href) ? `${baseClass} active` : baseClass;
 
   return (
-    <aside className={`sidebar-dashboard${isOpen ? " active" : ""}`}>
+    <aside className={`sidebar-dashboard${isOpen ? " active" : ""}${collapsed ? " collapsed" : ""}`}>
+      <button
+        type="button"
+        className="db-collapse-toggle"
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        {/* Inline SVG rather than the icon font — this app's icon set has no left-pointing
+            arrow, and an icon-font glyph is too easy to get wrong/invisible at this size. */}
+        <svg
+          width={14}
+          height={14}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ transform: collapsed ? "rotate(180deg)" : undefined }}
+        >
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
       <div className="db-content db-logo pad-30">
         <Link href="/" title="HMP">
           <Image
             className="site-logo"
             src="/assets/images/logo/hmp-logo.png"
             alt="HMP"
+                    priority
             width={200}
             height={67}
           />
@@ -510,9 +537,10 @@ export default function DashboardSidebar() {
                   href={item.href}
                   className={linkClass(item.className, item.href)}
                   onClick={close}
+                  title={collapsed ? item.label : undefined}
                 >
                   <i className={item.iconClass} />
-                  {item.label}
+                  <span className="db-menu-label">{item.label}</span>
                   {item.id === "message" && unreadMessageCount > 0 && (
                     <span className="count-page">{unreadMessageCount}</span>
                   )}
