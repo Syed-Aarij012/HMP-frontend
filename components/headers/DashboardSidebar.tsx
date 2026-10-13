@@ -153,7 +153,7 @@ const tradeBuyerMenuItems: DashboardMenuItem[] = [
     href: "/auction",
     className: "menu-index-2",
     iconClass: "icon-carus-listings",
-    label: "Auction catalog",
+    label: "Auction catalogue",
   },
   {
     id: "consign-vehicle",
@@ -484,7 +484,8 @@ export default function DashboardSidebar() {
     menuItems = [{ ...adminPanelItem, label: "Staff panel", href: staffPanelHref }, ...menuItems];
   }
   if (hasRole(user, "super_admin")) {
-    const inAdminPanel = ["taxonomy", "routing-rules", "trust-safety", "grading-matrix"];
+    // Their dashboard *is* the Admin Panel overview (/dashboard redirects there).
+    const inAdminPanel = ["dashboard", "taxonomy", "routing-rules", "trust-safety", "grading-matrix"];
     menuItems = [adminPanelItem, ...menuItems.filter((item) => !inAdminPanel.includes(item.id))];
   }
 

@@ -124,6 +124,7 @@ export default function Dashboard() {
       {
         key: "action",
         label: "Needs action",
+        allLabel: "Any response state",
         get: (offer) => (isAwaiting(offer) ? "yes" : "no"),
         options: [
           { value: "yes", label: "Needs your response" },

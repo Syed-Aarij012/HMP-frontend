@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Link from "next/link";
 import { can, useAuth } from "@/contexts/AuthContext";
 import { useContactDealer } from "@/components/common/ContactDealerContext";
 import { apiFetch, ApiError } from "@/lib/api-client";
+import SignInLink from "@/components/auth/SignInLink";
 
 export default function ContactDealerForm() {
   const { user } = useAuth();
@@ -18,7 +18,7 @@ export default function ContactDealerForm() {
     return (
       <div className="form-send-mess">
         <p className="fs-14">
-          Please <Link href="/login">log in</Link> to send a message to this dealer.
+          Please <SignInLink>log in</SignInLink> to send a message to this dealer.
         </p>
       </div>
     );

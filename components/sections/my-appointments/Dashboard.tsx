@@ -33,6 +33,7 @@ export default function Dashboard() {
       {
         key: "when",
         label: "Timing",
+        allLabel: "Past and upcoming",
         get: (appointment) => (new Date(appointment.scheduledAt).getTime() > now ? "upcoming" : "past"),
         options: [
           { value: "upcoming", label: "Upcoming" },

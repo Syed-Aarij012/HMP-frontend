@@ -50,21 +50,20 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const isLoginPage = pathname === "/admin/login";
   const isAdmin = canUseAdminPanel(user);
   const isSuperAdmin = hasRole(user, "super_admin");
 
   useEffect(() => {
-    if (!isLoginPage && !loading && !user) {
-      router.replace("/admin/login");
+    // Signed out: the site's one sign-in pop-up, then straight back to this page.
+    if (!loading && !user) {
+      router.replace(`/?auth=login&next=${encodeURIComponent(pathname)}`);
     }
     // The overview is Super Admin data; other staff land on their first page in the panel.
-    if (!isLoginPage && !loading && isAdmin && !isSuperAdmin && pathname === "/admin") {
+    if (!loading && isAdmin && !isSuperAdmin && pathname === "/admin") {
       router.replace(firstAdminPageFor(user) ?? "/dashboard");
     }
-  }, [isLoginPage, loading, user, router, isAdmin, isSuperAdmin, pathname]);
+  }, [loading, user, router, isAdmin, isSuperAdmin, pathname]);
 
-  if (isLoginPage) return <>{children}</>;
   if (loading || !user) return <div className="hmp-ui hmp-admin" />;
 
   if (!isAdmin) {
@@ -79,7 +78,7 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
             <Link href="/dashboard" className="ha-btn">
               My dashboard
             </Link>
-            <button type="button" className="ha-btn is-primary" onClick={() => { logout(); router.replace("/admin/login"); }}>
+            <button type="button" className="ha-btn is-primary" onClick={() => { logout(); router.replace("/"); }}>
               Sign in as an admin
             </button>
           </div>

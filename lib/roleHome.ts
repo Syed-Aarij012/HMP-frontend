@@ -24,7 +24,7 @@ export function homeFor(user: AuthUser | null): string {
 }
 
 /**
- * After sign-in, honour a page the person was sent away from (`?next=/my-offers`) — but only an
+ * After sign-in (the header pop-up), honour a page the person was sent away from (`?next=/my-offers`) — but only an
  * internal path their role can actually open; otherwise fall back to their home.
  */
 export function destinationAfterAuth(user: AuthUser | null, next: string | null | undefined): string {

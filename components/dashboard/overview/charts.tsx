@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { DashboardFormat, DashboardSegment, DashboardSeries } from "@/types/dashboardOverview";
 import { SERIES_COLORS, formatBucket, formatCompact, formatValue, niceMax } from "./format";
 
@@ -11,16 +11,42 @@ import { SERIES_COLORS, formatBucket, formatCompact, formatValue, niceMax } from
  * for 2+ series, a hover/focus readout, and a table view so no value depends on colour or hover.
  */
 
-const W = 640;
 const H = 220;
 const PAD = { top: 12, right: 16, bottom: 26, left: 48 };
 
+/**
+ * The chart draws at its real pixel width (not a scaled viewBox), so axis text stays 11px on a
+ * phone instead of shrinking with the drawing.
+ */
+function useMeasuredWidth<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [width, setWidth] = useState(640);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const update = () => setWidth(Math.max(260, Math.round(node.getBoundingClientRect().width)));
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, width] as const;
+}
+
+/** Axis maximum: whole numbers for counts (no "0.5 bids"), "nice" steps otherwise. */
+function axisMax(values: number[], format: DashboardFormat): number {
+  const top = Math.max(0, ...values);
+  if (format === "count") return Math.max(2, Math.ceil(niceMax(top) / 2) * 2);
+  return niceMax(top);
+}
+
 type Tip = { x: number; y: number; title: string; rows: { label: string; value: string; color: string }[] } | null;
 
-function Tooltip({ tip }: { tip: Tip }) {
+function Tooltip({ tip, width }: { tip: Tip; width: number }) {
   if (!tip) return null;
+  const edge = tip.x < 90 ? " is-left" : tip.x > width - 90 ? " is-right" : "";
   return (
-    <div className="ov-tip" style={{ left: `${(tip.x / W) * 100}%`, top: `${(tip.y / H) * 100}%` }} role="presentation">
+    <div className={`ov-tip${edge}`} style={{ left: tip.x, top: tip.y }} role="presentation">
       <div className="ov-tip-title">{tip.title}</div>
       {tip.rows.map((row) => (
         <div key={row.label} className="ov-tip-row">
@@ -33,7 +59,7 @@ function Tooltip({ tip }: { tip: Tip }) {
   );
 }
 
-function YAxis({ max, format, innerH }: { max: number; format: DashboardFormat; innerH: number }) {
+function YAxis({ max, format, innerH, W }: { max: number; format: DashboardFormat; innerH: number; W: number }) {
   return (
     <>
       {[0, 0.5, 1].map((f) => {
@@ -52,6 +78,7 @@ function YAxis({ max, format, innerH }: { max: number; format: DashboardFormat; 
 }
 
 function XLabels({ points, x, bucket }: { points: string[]; x: (i: number) => number; bucket: "day" | "week" }) {
+  // H is fixed; labels sit on the bottom padding.
   if (points.length === 0) return null;
   const idx = points.length <= 2 ? points.map((_, i) => i) : [0, Math.floor((points.length - 1) / 2), points.length - 1];
   return (
@@ -69,17 +96,18 @@ function XLabels({ points, x, bucket }: { points: string[]; x: (i: number) => nu
 export function LineChart({ series, format, bucket, label }: { series: DashboardSeries[]; format: DashboardFormat; bucket: "day" | "week"; label: string }) {
   const [active, setActive] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const [boxRef, W] = useMeasuredWidth<HTMLDivElement>();
   const xs = series[0]?.points.map((p) => p.x) ?? [];
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
-  const max = niceMax(Math.max(0, ...series.flatMap((s) => s.points.map((p) => p.y))));
+  const max = axisMax(series.flatMap((s) => s.points.map((p) => p.y)), format);
   const x = (i: number) => PAD.left + (xs.length <= 1 ? innerW / 2 : (i / (xs.length - 1)) * innerW);
   const y = (v: number) => PAD.top + innerH - (v / max) * innerH;
 
   function locate(event: PointerEvent<SVGSVGElement>) {
     const box = svgRef.current?.getBoundingClientRect();
     if (!box || xs.length === 0) return;
-    const px = ((event.clientX - box.left) / box.width) * W;
+    const px = event.clientX - box.left;
     const i = Math.round(((px - PAD.left) / innerW) * (xs.length - 1));
     setActive(Math.max(0, Math.min(xs.length - 1, i)));
   }
@@ -104,9 +132,11 @@ export function LineChart({ series, format, bucket, label }: { series: Dashboard
         };
 
   return (
-    <div className="ov-chart">
+    <div className="ov-chart" ref={boxRef}>
       <svg
         ref={svgRef}
+        width={W}
+        height={H}
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label={`${label}. Use the left and right arrow keys to read each point.`}
@@ -116,7 +146,7 @@ export function LineChart({ series, format, bucket, label }: { series: Dashboard
         onKeyDown={onKey}
         onBlur={() => setActive(null)}
       >
-        <YAxis max={max} format={format} innerH={innerH} />
+        <YAxis max={max} format={format} innerH={innerH} W={W} />
         <XLabels points={xs} x={x} bucket={bucket} />
         {active !== null && <line x1={x(active)} x2={x(active)} y1={PAD.top} y2={PAD.top + innerH} className="ov-crosshair" />}
         {series.map((s, si) => {
@@ -129,7 +159,7 @@ export function LineChart({ series, format, bucket, label }: { series: Dashboard
           );
         })}
       </svg>
-      <Tooltip tip={tip} />
+      <Tooltip tip={tip} width={W} />
       {series.length > 1 && <Legend items={series.map((s, si) => ({ label: s.label, color: SERIES_COLORS[si], shape: "line" }))} />}
     </div>
   );
@@ -138,10 +168,11 @@ export function LineChart({ series, format, bucket, label }: { series: Dashboard
 /** Comparisons across time buckets (one series). Each bar is its own hover/focus target. */
 export function BarChart({ series, format, bucket, label }: { series: DashboardSeries; format: DashboardFormat; bucket: "day" | "week"; label: string }) {
   const [active, setActive] = useState<number | null>(null);
+  const [boxRef, W] = useMeasuredWidth<HTMLDivElement>();
   const points = series.points;
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
-  const max = niceMax(Math.max(0, ...points.map((p) => p.y)));
+  const max = axisMax(points.map((p) => p.y), format);
   const slot = innerW / Math.max(points.length, 1);
   const barW = Math.max(2, Math.min(28, slot - 2));
   const x = (i: number) => PAD.left + slot * i + (slot - barW) / 2;
@@ -152,9 +183,9 @@ export function BarChart({ series, format, bucket, label }: { series: DashboardS
       : { x: x(active) + barW / 2, y: PAD.top + innerH - (points[active].y / max) * innerH, title: formatBucket(points[active].x, bucket, true), rows: [{ label: series.label, value: formatValue(points[active].y, format), color: SERIES_COLORS[0] }] };
 
   return (
-    <div className="ov-chart">
-      <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={label} onPointerLeave={() => setActive(null)}>
-        <YAxis max={max} format={format} innerH={innerH} />
+    <div className="ov-chart" ref={boxRef}>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="group" aria-label={label} onPointerLeave={() => setActive(null)}>
+        <YAxis max={max} format={format} innerH={innerH} W={W} />
         <XLabels points={points.map((p) => p.x)} x={(i) => x(i) + barW / 2} bucket={bucket} />
         {points.map((p, i) => {
           const h = (p.y / max) * innerH;
@@ -179,7 +210,7 @@ export function BarChart({ series, format, bucket, label }: { series: DashboardS
           );
         })}
       </svg>
-      <Tooltip tip={tip} />
+      <Tooltip tip={tip} width={W} />
     </div>
   );
 }
@@ -191,7 +222,9 @@ export function HBarChart({ segments, format }: { segments: DashboardSegment[]; 
     <ul className="ov-hbars">
       {segments.map((segment) => (
         <li key={segment.label}>
-          <span className="ov-hbar-label">{segment.href ? <Link href={segment.href}>{segment.label}</Link> : segment.label}</span>
+          <span className="ov-hbar-label" title={segment.label}>
+            {segment.href ? <Link href={segment.href}>{segment.label}</Link> : segment.label}
+          </span>
           <span className="ov-hbar-track" aria-hidden="true">
             <span className="ov-hbar-fill ov-grow-x" style={{ width: `${Math.max(2, (segment.value / max) * 100)}%`, background: SERIES_COLORS[0] }} />
           </span>

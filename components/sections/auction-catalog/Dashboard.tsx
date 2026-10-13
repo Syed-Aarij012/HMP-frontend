@@ -96,11 +96,16 @@ function AuctionFacetFilters({
     { key: "saleId", label: "Sale date", options: auctionDateOptions },
   ];
   const active = groups.filter((group) => filters[group.key]);
+  // The five filters people reach for first; the rest open on request (and stay open when set).
+  const PRIMARY: Array<keyof AuctionLotFilters> = ["make", "model", "bodyType", "fuelType", "saleId"];
+  const [showMore, setShowMore] = useState(false);
+  const moreActive = active.filter((group) => !PRIMARY.includes(group.key)).length;
+  const visible = showMore || moreActive > 0 ? groups : groups.filter((group) => PRIMARY.includes(group.key));
 
   return (
     <>
       <div className="ha-filter-grid">
-        {groups.map((group) => (
+        {visible.map((group) => (
           <label key={group.key} className="ha-field mb-0">
             <span className="ha-label">{group.label}</span>
             <select className="ha-select" value={String(filters[group.key])} onChange={(event) => set(group.key, event.target.value)}>
@@ -113,6 +118,11 @@ function AuctionFacetFilters({
           </label>
         ))}
       </div>
+      {moreActive === 0 && (
+        <button type="button" className="ha-link-btn mt-3" aria-expanded={showMore} onClick={() => setShowMore(!showMore)}>
+          {showMore ? "Fewer filters" : `More filters (${groups.length - PRIMARY.length})`}
+        </button>
+      )}
       {active.length > 0 && (
         <div className="ha-filterbar" aria-label="Active filters">
           {active.map((group) => (

@@ -331,6 +331,7 @@ export default function DashboardListingTableRow({
               alt=""
               width={88}
               height={58}
+              style={{ width: 88, height: 58 }}
               unoptimized={listing.dashboardImage.startsWith("http")}
             />
           </Link>

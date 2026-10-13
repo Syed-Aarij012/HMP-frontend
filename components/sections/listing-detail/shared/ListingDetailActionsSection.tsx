@@ -9,6 +9,7 @@ import { useBookAppointment } from "@/hooks/useAppointments";
 import { useInitiateDirectBuy } from "@/hooks/useDirectBuy";
 import type { Car } from "@/types/cars";
 import PartExchangeStep from "./PartExchangeStep";
+import SignInLink from "@/components/auth/SignInLink";
 
 // FR-C-030/FR-E-011: the deposit is a fixed, platform-wide amount (config('direct_buy.deposit_amount')),
 // not derived from the listing price — shown here only as a heads-up before the buyer commits; the
@@ -72,7 +73,7 @@ export default function ListingDetailActionsSection({ car }: { car: Car }) {
     return (
       <div className="tfcl-card p-3 mb-4">
         <p className="mb-0">
-          <Link href="/login">Sign in</Link> to make an offer, book a test drive, or message the
+          <SignInLink>Sign in</SignInLink> to make an offer, book a test drive, or message the
           seller about this vehicle.
         </p>
       </div>

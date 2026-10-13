@@ -565,3 +565,111 @@
   padding-top: 6px;
   padding-bottom: 6px;
 }
+
+// ---------------------------------------------------------------- Review fixes
+
+.hmp-ui {
+  .ov-range .ha-tabs button {
+    text-transform: none;
+  }
+
+  // A lone chart in the last row takes the full width instead of leaving half a row empty.
+  .ov-charts > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  // Empty charts stay compact — a calm note, not a tall blank card.
+  .ov-chart-card .ha-empty {
+    padding: var(--hmp-space-8) var(--hmp-space-4);
+  }
+
+  .ov-chart svg {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+  }
+
+  .ov-tip {
+    &.is-left {
+      transform: translate(-12px, calc(-100% - 10px));
+    }
+
+    &.is-right {
+      transform: translate(calc(-100% + 12px), calc(-100% - 10px));
+    }
+  }
+
+  @media (max-width: 575px) {
+    .ov-kpis {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--hmp-space-2);
+    }
+
+    .ov-kpi {
+      min-height: 0;
+      padding: var(--hmp-space-3);
+    }
+
+    .ov-kpi-value {
+      font-size: var(--hmp-fs-lg);
+    }
+
+    .ov-kpi-foot {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .ov-spark {
+      width: 100%;
+    }
+
+    .ov-range {
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .ov-range .ha-tabs {
+      display: flex;
+      width: 100%;
+
+      button {
+        flex: 1;
+      }
+    }
+
+    .ov-quick .ha-btn {
+      flex: 1;
+    }
+
+    .ov-donut svg {
+      margin: 0 auto;
+    }
+  }
+}
+
+.hmp-dash .hd-chevron {
+  flex-shrink: 0;
+  color: var(--hmp-text-3);
+}
+
+.hmp-ui .ov-range .ha-tabs button {
+  white-space: nowrap;
+}
+
+@media (max-width: 575px) {
+  .hmp-ui {
+    .ov-range .ha-tabs button {
+      padding: 6px 8px;
+    }
+
+    // Full-width sparklines stretch horizontally, so drop the end dot (the line still ends there).
+    .ov-spark-dot {
+      display: none;
+    }
+  }
+
+  // The page title already says where you are.
+  .hmp-dash .hd-crumbs {
+    display: none;
+  }
+}

@@ -153,6 +153,7 @@ function Dashboard() {
       {
         key: "blocked",
         label: "Readiness",
+        allLabel: "Any readiness",
         get: (lot) => (lot.status === "cataloged" && (lot.publishBlockers?.length ?? 0) > 0 ? "needs" : "ok"),
         options: [
           { value: "needs", label: "Needs details" },

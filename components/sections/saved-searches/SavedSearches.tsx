@@ -41,7 +41,7 @@ function SavedSearches() {
     search: (search) => [describeQuery(search.query)],
     filters: [
       { key: "channel", label: "Channel", get: (search) => search.channel, format: (value) => (value === "auction" ? "Auction" : "Retail") },
-      { key: "state", label: "State", get: (search) => (search.is_paused ? "paused" : "active") },
+      { key: "state", label: "State", allLabel: "Active and paused", get: (search) => (search.is_paused ? "paused" : "active") },
       { key: "frequency", label: "Frequency", get: (search) => search.alert_frequency },
     ],
   });

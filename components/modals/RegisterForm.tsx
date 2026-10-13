@@ -2,19 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import SignUpForm from "@/components/auth/SignUpForm";
-import { homeFor } from "@/lib/roleHome";
-
-function closeModal(id: string) {
-  const element = document.getElementById(id);
-  if (!element) return;
-  void import("bootstrap/js/dist/modal").then(({ default: Modal }) => {
-    Modal.getOrCreateInstance(element).hide();
-  });
-}
+import { closeAuthModal, takeAuthNext } from "@/lib/authModal";
+import { destinationAfterAuth } from "@/lib/roleHome";
 
 /**
- * The header's sign-up pop-up — the same flow as /register: buyer, seller, trade buyer or
- * dealership, then straight to the new account's home.
+ * The one sign-up on HMP — the header's pop-up: buyer, seller, trade buyer or dealership, then
+ * straight to the new account's home (or back to the page that asked them to join).
  */
 export default function RegisterForm() {
   const router = useRouter();
@@ -23,8 +16,8 @@ export default function RegisterForm() {
     <div className="hmp-auth-modal">
       <SignUpForm
         onSignedUp={(user) => {
-          closeModal("popup_bid2");
-          router.push(homeFor(user));
+          closeAuthModal("register");
+          router.push(destinationAfterAuth(user, takeAuthNext()));
         }}
       />
     </div>

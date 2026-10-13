@@ -43,6 +43,15 @@ function pageName(pathname: string): string {
   return PAGE_NAMES[segment] ?? humanize(segment).replace(/^./, (c) => c.toUpperCase());
 }
 
+/** A down chevron (the icon font's caret glyph renders as a left-pointing arrow). */
+function Chevron() {
+  return (
+    <svg className="hd-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
 /**
  * A small disclosure menu: Escape and outside clicks close it, focus returns to the button.
  * The parent re-keys it on navigation, so it always starts closed on a new page.
@@ -133,7 +142,7 @@ export default function DashboardHeader() {
           buttonContent={
             <>
               Marketplace
-              <i className="icon-carus-caretdown" aria-hidden="true" />
+              <Chevron />
             </>
           }
         >
@@ -161,7 +170,7 @@ export default function DashboardHeader() {
             <>
               <Avatar src={avatarUrl} name={user?.name} size={32} />
               <span className="hd-account-name">{user?.name?.split(" ")[0] ?? "Account"}</span>
-              <i className="icon-carus-caretdown" aria-hidden="true" />
+              <Chevron />
             </>
           }
         >

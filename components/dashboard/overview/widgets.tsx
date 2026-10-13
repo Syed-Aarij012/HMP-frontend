@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId, useMemo, useState, type FormEvent } from "react";
-import { Card, EmptyState, StatusBadge, humanize } from "@/components/ui/kit";
+import { Card, EmptyState, StatusBadge, sentenceCase } from "@/components/ui/kit";
 import type { DashboardActionItem, DashboardActivityItem, DashboardChart, DashboardKpi, DashboardRange, DashboardRangeKey } from "@/types/dashboardOverview";
 import type { RangeSelection } from "@/hooks/useDashboardOverview";
 import { BarChart, ChartTable, DonutChart, Funnel, Gauge, HBarChart, LineChart, Sparkline } from "./charts";
@@ -348,7 +348,7 @@ export function ActivityTable({ items, viewAll, loading }: { items: DashboardAct
                     ) : (
                       <span className="ha-primary-text">{item.title}</span>
                     )}
-                    {item.detail && <div className="ha-sub">{humanize(item.detail)}</div>}
+                    {item.detail && <div className="ha-sub">{sentenceCase(item.detail)}</div>}
                   </td>
                   <td data-label="Status">{item.status ? <StatusBadge status={item.status} /> : <span className="ha-muted">—</span>}</td>
                   <td data-label="Amount" className="is-num">

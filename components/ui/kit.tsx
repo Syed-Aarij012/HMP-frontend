@@ -26,6 +26,24 @@ export function humanize(value: string | null | undefined): string {
   return (value ?? "").replace(/[_-]+/g, " ").trim();
 }
 
+/** "pending_checks" → "Pending checks". */
+export function sentenceCase(value: string | null | undefined): string {
+  const text = humanize(value);
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+const IRREGULAR_PLURALS: Record<string, string> = { person: "people", "proxy bid": "proxy bids", status: "statuses", "lot status": "lot statuses", "proxy status": "proxy statuses", "saved search": "saved searches" };
+
+/** "lead" → "leads", "person" → "people", "status" → "statuses". */
+export function plural(noun: string, count = 2): string {
+  if (count === 1) return noun;
+  const lower = noun.toLowerCase();
+  if (IRREGULAR_PLURALS[lower]) return IRREGULAR_PLURALS[lower];
+  if (/(s|x|ch|sh)$/.test(lower)) return `${noun}es`;
+  if (/[^aeiou]y$/.test(lower)) return `${noun.slice(0, -1)}ies`;
+  return `${noun}s`;
+}
+
 /** £ amounts, consistently: whole pounds unless pence matter. */
 export function formatMoney(value: number | string | null | undefined, options: { pence?: boolean } = {}): string {
   if (value === null || value === undefined || value === "") return "—";
@@ -182,7 +200,7 @@ export function statusTone(status: string | null | undefined): Tone {
 /** A status as text + tone (the dot and the words carry it — colour is never the only cue). */
 export function StatusBadge({ status, label, tone }: { status: string | null | undefined; label?: ReactNode; tone?: Tone }) {
   if (!status && !label) return <span className="ha-sub">—</span>;
-  return <Badge tone={tone ?? statusTone(status)}>{label ?? humanize(status)}</Badge>;
+  return <Badge tone={tone ?? statusTone(status)}>{label ?? sentenceCase(status)}</Badge>;
 }
 
 // ---------------------------------------------------------------- Feedback states
@@ -351,7 +369,7 @@ export function Tabs<T extends string>({ value, options, onChange, label, labels
           onClick={() => onChange(option)}
           onKeyDown={(event) => onKeyDown(event, index)}
         >
-          {labels?.[option] ?? option}
+          {labels?.[option] ?? sentenceCase(option)}
         </button>
       ))}
     </div>
@@ -480,8 +498,10 @@ export type ListFilter<T> = {
   get: (item: T) => string | string[] | null | undefined;
   /** Fixed options; when omitted they're built from the data. */
   options?: FilterOption[];
-  /** How a value derived from the data is shown (default: humanized). */
+  /** How a value derived from the data is shown (default: sentence case). */
   format?: (value: string) => string;
+  /** The "everything" option, when "All <label>s" doesn't read well. */
+  allLabel?: string;
 };
 
 export type ListSort<T> = { value: string; label: string; compare: (a: T, b: T) => number };
@@ -511,7 +531,7 @@ export function useListControls<T>({ items, search, filters = [], sorts = [] }: 
             if (v) seen.add(v);
           });
         });
-        const format = filter.format ?? humanize;
+        const format = filter.format ?? sentenceCase;
         return {
           ...filter,
           options: Array.from(seen)
@@ -588,7 +608,7 @@ export function DataToolbar<T>({ controls, searchPlaceholder = "Search", searchL
 }) {
   const { query, setQuery, filters, values, setFilter, sorts, sort, setSort, active, clearAll, isFiltered, results, total, searchable } = controls;
   const baseId = useId();
-  const plural = (count: number) => `${count.toLocaleString("en-GB")} ${noun}${count === 1 ? "" : "s"}`;
+  const countLabel = (count: number) => `${count.toLocaleString("en-GB")} ${plural(noun, count)}`;
 
   return (
     <>
@@ -600,7 +620,7 @@ export function DataToolbar<T>({ controls, searchPlaceholder = "Search", searchL
             <label key={filter.key} className="ha-control-label" htmlFor={`${baseId}-${filter.key}`}>
               <span className="ha-visually-hidden">{filter.label}</span>
               <select id={`${baseId}-${filter.key}`} className="ha-select ha-inline-select" value={values[filter.key] ?? ""} onChange={(event) => setFilter(filter.key, event.target.value)}>
-                <option value="">All {filter.label.toLowerCase()}</option>
+                <option value="">{filter.allLabel ?? `All ${plural(filter.label.toLowerCase())}`}</option>
                 {filter.options.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -624,7 +644,7 @@ export function DataToolbar<T>({ controls, searchPlaceholder = "Search", searchL
             </label>
           )}
           <span className="ha-result-count" aria-live="polite">
-            {isFiltered ? `${results.length.toLocaleString("en-GB")} of ${plural(total)}` : plural(total)}
+            {isFiltered ? `${results.length.toLocaleString("en-GB")} of ${countLabel(total)}` : countLabel(total)}
           </span>
         </div>
       </div>

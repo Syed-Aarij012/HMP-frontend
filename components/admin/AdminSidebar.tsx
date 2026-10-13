@@ -157,7 +157,7 @@ export default function AdminSidebar() {
             <i className="icon-carus-arrowsleftright" aria-hidden="true" />
             View main site
           </Link>
-          <Link href="/admin/login" className="ha-nav-link" onClick={() => logout()}>
+          <Link href="/" className="ha-nav-link" onClick={() => logout()}>
             <i className="icon-carus-signout" aria-hidden="true" />
             Sign out
           </Link>

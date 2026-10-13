@@ -7,6 +7,7 @@ import PricingCheckIcon from "./PricingCheckIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import type { MappedPricingPlan } from "@/lib/mapApiSubscriptionPlan";
+import SignInLink from "@/components/auth/SignInLink";
 
 type PricingCardProps = {
   plan: MappedPricingPlan;
@@ -80,9 +81,9 @@ export default function PricingCard({ plan, price }: PricingCardProps) {
 
       <div className="button-pricing">
         {!user ? (
-          <Link className="sc-button w-100" href="/login">
+          <SignInLink className="sc-button w-100">
             <span>Log in to subscribe</span>
-          </Link>
+          </SignInLink>
         ) : organizationId ? (
           <button
             type="button"

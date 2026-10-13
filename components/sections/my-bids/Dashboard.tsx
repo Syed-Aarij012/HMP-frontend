@@ -25,7 +25,7 @@ function Dashboard() {
     search: (bid) => [bid.vehicleLabel, bid.saleName],
     filters: [
       { key: "status", label: "Lot status", get: (bid) => bid.lotStatus },
-      { key: "leading", label: "Position", get: (bid) => (bid.isLeading ? "leading" : "not_leading"), options: [{ value: "leading", label: "Leading" }, { value: "not_leading", label: "Not leading" }] },
+      { key: "leading", label: "Position", allLabel: "Any position", get: (bid) => (bid.isLeading ? "leading" : "not_leading"), options: [{ value: "leading", label: "Leading" }, { value: "not_leading", label: "Not leading" }] },
     ],
     sorts: [
       { value: "recent", label: "Most recent", compare: (a, b) => b.createdAt.localeCompare(a.createdAt) },

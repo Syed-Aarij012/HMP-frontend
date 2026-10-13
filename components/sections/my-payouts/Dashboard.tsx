@@ -193,7 +193,7 @@ export default function Dashboard() {
     items: payouts,
     filters: [
       { key: "status", label: "Status", get: (payout) => payout.status },
-      { key: "review", label: "Fraud review", get: (payout) => payout.fraudReviewStatus },
+      { key: "review", label: "Fraud review", allLabel: "Any fraud review", get: (payout) => payout.fraudReviewStatus },
     ],
     sorts: [
       { value: "recent", label: "Most recent", compare: (a, b) => (b.sentAt ?? "9999").localeCompare(a.sentAt ?? "9999") || b.id - a.id },
