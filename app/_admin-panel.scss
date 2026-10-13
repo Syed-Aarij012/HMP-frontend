@@ -93,6 +93,14 @@
     flex: 1;
     overflow-y: auto;
     padding: 12px 12px 20px;
+    // Still scrollable (wheel/trackpad/drag/keyboard) — just without the browser's default
+    // scrollbar track, which read as a stray UI element next to the nav.
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .ha-nav-group + .ha-nav-group {
