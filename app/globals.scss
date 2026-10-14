@@ -4,6 +4,9 @@
 @use "./admin-panel";
 @use "./dashboard";
 @use "./dashboard-overview";
+@use "./grading-matrix";
+@use "./routing-rules";
+@use "./admin-controls";
 @use "./auth";
 @import "../public/assets/css/font-awesome.css";
 

@@ -22,4 +22,30 @@ export type VehicleRoutingRule = {
   isActive: boolean;
   conditions: RoutingRuleCondition[];
   action: RoutingRuleAction;
+  /** How many vehicles this rule has routed so far. */
+  applicationsCount: number;
 };
+
+/** One rule checked against one vehicle (GET /vehicles/{id}/auto-route/preview). */
+export type RulePreviewCondition = { field: string; operator: string; value: string | number; actual: string | number | null; passed: boolean };
+
+export type RulePreview = {
+  id: number;
+  name: string;
+  priority: number;
+  isActive: boolean;
+  action: RoutingRuleAction;
+  matched: boolean;
+  wins: boolean;
+  conditions: RulePreviewCondition[];
+};
+
+export type RoutingPreview = {
+  vehicle: { id: string; title: string; vrm: string | null; currentChannel: string };
+  facts: Record<string, string | number | null>;
+  rules: RulePreview[];
+  winningRuleId: number | null;
+  blockers: string[];
+};
+
+export type RoutingActivityItem = { id: number; rule: string | null; channel: string; vehicle: string; vrm: string | null; at: string | null };

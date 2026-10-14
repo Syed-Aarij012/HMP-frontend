@@ -1,166 +1,148 @@
 "use client";
 
-import { Fragment, useState, type FormEvent } from "react";
-import { useApplyRoutingRule, useRoutingRules } from "@/hooks/useRoutingRules";
-import { ROUTING_RULE_CHANNELS, ROUTING_RULE_FIELDS, ROUTING_RULE_OPERATORS, type RoutingRuleCondition } from "@/types/routingRules";
+import { useEffect, useState } from "react";
 import DashboardPage from "@/components/dashboard/DashboardPage";
-import { Badge, Card, DataTable, EmptyState, ErrorNotice, LoadingRows, Notice, humanize } from "@/components/ui/kit";
+import { Card, ErrorNotice, LoadingRows, Modal, Notice, Tabs } from "@/components/ui/kit";
+import { useRoutingRules, type RuleDraft } from "@/hooks/useRoutingRules";
+import type { VehicleRoutingRule } from "@/types/routingRules";
+import RecentActivity from "./RecentActivity";
+import RuleForm from "./RuleForm";
+import RuleList from "./RuleList";
+import TestVehicle from "./TestVehicle";
 
-type ConditionRow = { field: RoutingRuleCondition["field"]; operator: RoutingRuleCondition["operator"]; value: string };
+type View = "rules" | "test" | "activity";
+const VIEWS: readonly View[] = ["rules", "test", "activity"];
+const HELP_KEY = "hmp_rr_help_closed";
 
+const STEPS = [
+  { n: 1, title: "A rule says when…", text: "Pick conditions on a vehicle — its age, condition grade, mileage or where it came from. It must match all of them. Want “this or that”? Make two rules." },
+  { n: 2, title: "…and where it goes", text: "Send it to the next scheduled auction, or list it at a fixed price for the trade, with a reserve or asking price set below its valuation." },
+  { n: 3, title: "The first match wins", text: "Rules are tried from the top. Put your most specific rules first, and switch a rule off to pause it without losing it." },
+];
+
+/**
+ * FR-A-032: auto-routing rules — decide where a vehicle goes next. Rules run by themselves every
+ * day over part-exchange cars that have a published condition report, and can be run by hand.
+ */
 export default function RoutingRulesAdmin() {
-  const { rules, loading, error, create, creating, createError } = useRoutingRules();
-  const { apply, applying, applyError, result } = useApplyRoutingRule();
+  const workspace = useRoutingRules();
+  const { rules, loading, error, busyId } = workspace;
+  const [view, setView] = useState<View>("rules");
+  const [editing, setEditing] = useState<VehicleRoutingRule | "new" | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [helpOpen, setHelpOpen] = useState(true);
 
-  const [name, setName] = useState("");
-  const [priority, setPriority] = useState("100");
-  const [conditions, setConditions] = useState<ConditionRow[]>([{ field: "vehicle_age_years", operator: ">", value: "8" }]);
-  const [channel, setChannel] = useState<(typeof ROUTING_RULE_CHANNELS)[number]>("auction_lot");
-  const [reserveDiscountPct, setReserveDiscountPct] = useState("0.05");
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(HELP_KEY) === "1") queueMicrotask(() => setHelpOpen(false));
+    } catch {
+      // Storage unavailable — stay open.
+    }
+  }, []);
 
-  const [triggerVehicleId, setTriggerVehicleId] = useState("");
-
-  function updateCondition(i: number, field: keyof ConditionRow, value: string) {
-    setConditions((prev) => prev.map((c, idx) => (idx === i ? { ...c, [field]: value } : c)));
-  }
-
-  async function handleCreate(event: FormEvent) {
-    event.preventDefault();
-    const ok = await create(name, Number(priority), conditions, {
-      channel,
-      reserveDiscountPct: reserveDiscountPct === "" ? null : Number(reserveDiscountPct),
-    });
-    if (ok) {
-      setName("");
-      setConditions([{ field: "vehicle_age_years", operator: ">", value: "8" }]);
+  function toggleHelp() {
+    const next = !helpOpen;
+    setHelpOpen(next);
+    try {
+      window.localStorage.setItem(HELP_KEY, next ? "0" : "1");
+    } catch {
+      // A per-viewer convenience only.
     }
   }
 
-  async function handleTrigger(event: FormEvent) {
-    event.preventDefault();
-    if (!triggerVehicleId.trim()) return;
-    await apply(triggerVehicleId.trim());
+  async function save(draft: RuleDraft) {
+    const outcome = editing !== null && editing !== "new" ? await workspace.update(editing.id, draft) : await workspace.create(draft);
+    if (outcome.ok) {
+      setSaved(editing === "new" ? `“${draft.name.trim()}” created. It's at the bottom of the list — move it up if it should be tried earlier.` : `“${draft.name.trim()}” saved.`);
+      setEditing(null);
+    }
+    return outcome;
+  }
+
+  async function move(rule: VehicleRoutingRule, direction: -1 | 1) {
+    const ids = rules.map((r) => r.id);
+    const from = ids.indexOf(rule.id);
+    const to = from + direction;
+    if (to < 0 || to >= ids.length) return { ok: true as const };
+    [ids[from], ids[to]] = [ids[to], ids[from]];
+    return workspace.reorder(ids);
   }
 
   return (
-    <DashboardPage title="Auto-routing rules" description="Rules are evaluated in priority order (lowest first); the first fully-matching active rule wins.">
-      <Card className="mb-4" title="Rules">
-        {loading && <LoadingRows rows={3} label="Loading rules" />}
-        {error && <ErrorNotice message={error} />}
-        {!loading && rules.length === 0 && <EmptyState icon="icon-carus-arrowsleftright" title="No rules defined yet" text="Create the first rule below." />}
-        {rules.length > 0 && (
-          <DataTable caption="Auto-routing rules, in evaluation order">
-              <thead>
-                <tr>
-                  <th scope="col" className="is-num">Priority</th>
-                  <th scope="col">Name</th>
-                  <th scope="col">Conditions</th>
-                  <th scope="col">Action</th>
-                  <th scope="col">Active</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rules.map((r) => (
-                  <tr key={r.id}>
-                    <td data-label="Priority" className="is-num">{r.priority}</td>
-                    <td data-label="Name" className="ha-primary-text">{r.name}</td>
-                    <td data-label="Conditions">
-                      <div className="ha-chips">
-                        {r.conditions.map((c, i) => (
-                          <code key={i}>
-                            {c.field} {c.operator} {c.value}
-                          </code>
-                        ))}
-                      </div>
-                    </td>
-                    <td data-label="Action">
-                      <Badge plain>{humanize(r.action.channel)}</Badge>
-                      {r.action.reserveDiscountPct !== null && <div className="ha-sub">Reserve −{(r.action.reserveDiscountPct * 100).toFixed(0)}%</div>}
-                    </td>
-                    <td data-label="Active">
-                      <Badge tone={r.isActive ? "success" : "neutral"}>{r.isActive ? "Active" : "Inactive"}</Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </DataTable>
-        )}
-      </Card>
-
-      <div className="ha-grid is-2" style={{ alignItems: "start" }}>
-      <Card title="New rule">
-      <form onSubmit={handleCreate} className="ha-card-body">
-        {createError && <Notice tone="danger">{createError}</Notice>}
-        <div className="ha-form-grid">
-          <div className="ha-field">
-            <label htmlFor="routin-name">Name</label>
-            <input id="routin-name" type="text" className="ha-input" value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-          <div className="ha-field">
-            <label htmlFor="routin-priority-lower-runs-first">Priority (lower runs first)</label>
-            <input id="routin-priority-lower-runs-first" type="number" className="ha-input" value={priority} onChange={(e) => setPriority(e.target.value)} required />
-          </div>
-        </div>
-
-        <fieldset className="ha-field">
-        <legend>Conditions (all must match)</legend>
-        <div className="ha-row-editor" style={{ gridTemplateColumns: "minmax(0, 1.4fr) 90px minmax(0, 1fr)" }}>
-        {conditions.map((c, i) => (
-          <Fragment key={i}>
-              <select className="ha-select" aria-label={`Field, condition ${i + 1}`} value={c.field} onChange={(e) => updateCondition(i, "field", e.target.value)}>
-                {ROUTING_RULE_FIELDS.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
-              <select className="ha-select" aria-label={`Operator, condition ${i + 1}`} value={c.operator} onChange={(e) => updateCondition(i, "operator", e.target.value)}>
-                {ROUTING_RULE_OPERATORS.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-              <input type="text" className="ha-input" aria-label={`Value, condition ${i + 1}`} value={c.value} onChange={(e) => updateCondition(i, "value", e.target.value)} required />
-          </Fragment>
-        ))}
-        </div>
-        <button
-          type="button"
-          className="ha-btn is-sm mt-2"
-          onClick={() => setConditions((prev) => [...prev, { field: "vehicle_age_years", operator: ">", value: "" }])}
-        >
-          <i className="icon-carus-plus" aria-hidden="true" /> Add condition
+    <DashboardPage
+      title="Auto-routing rules"
+      description="Decide where a vehicle goes next. Matching cars are sent to auction or to a fixed price automatically — every day for part-exchange cars, or on demand."
+      actions={
+        <button type="button" className="ha-btn is-primary" onClick={() => { setSaved(null); setEditing("new"); }}>
+          + New rule
         </button>
-        </fieldset>
-
-        <fieldset className="ha-field">
-        <legend>Action</legend>
-        <div className="ha-form-grid">
-          <div className="ha-field">
-            <label htmlFor="routin-route-to">Route to</label>
-            <select id="routin-route-to" className="ha-select" value={channel} onChange={(e) => setChannel(e.target.value as typeof channel)}>
-              {ROUTING_RULE_CHANNELS.map((ch) => <option key={ch} value={ch}>{ch}</option>)}
-            </select>
-          </div>
-          <div className="ha-field">
-            <label htmlFor="routin-reserve-discount-off-valuati">Reserve discount off valuation (0-0.95, blank = none)</label>
-            <input id="routin-reserve-discount-off-valuati" type="number" step="0.01" min="0" max="0.95" className="ha-input" value={reserveDiscountPct} onChange={(e) => setReserveDiscountPct(e.target.value)} />
-          </div>
+      }
+    >
+      <section className="ha-card gm-help" aria-label="How auto-routing works">
+        <div className="gm-help-head">
+          <h2>How auto-routing works</h2>
+          <button type="button" className="ha-btn is-sm is-ghost" aria-expanded={helpOpen} onClick={toggleHelp}>
+            {helpOpen ? "Hide" : "Show"}
+          </button>
         </div>
-        </fieldset>
-
-        <button type="submit" className="ha-btn is-primary" disabled={creating} aria-busy={creating}>{creating ? "Creating…" : "Create rule"}</button>
-      </form>
-      </Card>
-
-      <Card title="Auto-route a vehicle now" description="Runs the rules against one vehicle immediately.">
-      <form onSubmit={handleTrigger} className="ha-card-body">
-        {applyError && <Notice tone="danger">{applyError}</Notice>}
-        {result && (
-          <Notice tone="success">
-            Routed to {result.routedToChannel} #{result.routedToId}
-          </Notice>
+        {helpOpen && (
+          <div className="gm-help-body">
+            <ol className="gm-steps">
+              {STEPS.map((step) => (
+                <li key={step.n}>
+                  <span className="gm-step-n" aria-hidden="true">{step.n}</span>
+                  <div>
+                    <b>{step.title}</b>
+                    <p>{step.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
         )}
-        <div className="ha-actions is-start" style={{ flexWrap: "nowrap" }}>
-          <input type="text" className="ha-input" placeholder="Vehicle ID" aria-label="Vehicle ID" value={triggerVehicleId} onChange={(e) => setTriggerVehicleId(e.target.value)} required />
-          <button type="submit" className="ha-btn is-primary" disabled={applying} aria-busy={applying}>{applying ? "Routing…" : "Auto-route"}</button>
-        </div>
-      </form>
-      </Card>
+      </section>
+
+      {saved && <Notice tone="success" onDismiss={() => setSaved(null)}>{saved}</Notice>}
+
+      <div className="gm-tabs">
+        <Tabs
+          label="Auto-routing"
+          value={view}
+          options={VIEWS}
+          onChange={setView}
+          labels={{ rules: `Rules${rules.length ? ` (${rules.length})` : ""}`, test: "Test a vehicle", activity: "Recent activity" }}
+        />
       </div>
+
+      {view === "rules" && (
+        <>
+          {loading && <Card><LoadingRows rows={4} label="Loading rules" /></Card>}
+          {error && !loading && <ErrorNotice message={error} />}
+          {!loading && !error && (
+            <RuleList
+              rules={rules}
+              busyId={busyId}
+              onEdit={(rule) => { setSaved(null); setEditing(rule); }}
+              onNew={() => { setSaved(null); setEditing("new"); }}
+              onToggle={(rule) => workspace.setActive(rule.id, !rule.isActive)}
+              onMove={move}
+              onDelete={(rule) => workspace.remove(rule.id)}
+            />
+          )}
+        </>
+      )}
+      {view === "test" && <TestVehicle />}
+      {view === "activity" && <RecentActivity />}
+
+      <Modal
+        open={editing !== null}
+        wide
+        onClose={() => busyId === null && setEditing(null)}
+        title={editing === "new" ? "New routing rule" : "Edit routing rule"}
+        description="Say when a vehicle matches and where it should go. The rule reads back as a sentence at the bottom."
+      >
+        {editing !== null && <RuleForm rule={editing === "new" ? null : editing} busy={busyId !== null} onSave={save} onCancel={() => setEditing(null)} />}
+      </Modal>
     </DashboardPage>
   );
 }

@@ -50,6 +50,12 @@ export type GradingMatrixVersion = {
   secondApprovedByUserId: number | null;
   publishedAt: string | null;
   entries: GradingMatrixEntry[];
+  /** Names, when the API includes them (the grading matrix workspace). */
+  draftedBy?: string | null;
+  approvedBy?: string | null;
+  entriesCount?: number;
+  /** True for the one version currently applied to new inspections. */
+  isActive?: boolean;
 };
 
 export type DraftDamageItem = {

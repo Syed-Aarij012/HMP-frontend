@@ -102,6 +102,10 @@ export type ApiGradingMatrixVersion = {
   second_approved_by_user_id: number | null;
   published_at: string | null;
   entries: ApiGradingMatrixEntry[];
+  drafted_by?: string | null;
+  approved_by?: string | null;
+  entries_count?: number;
+  is_active?: boolean;
 };
 
 export function mapApiGradingMatrixVersion(api: ApiGradingMatrixVersion): GradingMatrixVersion {
@@ -114,5 +118,9 @@ export function mapApiGradingMatrixVersion(api: ApiGradingMatrixVersion): Gradin
     secondApprovedByUserId: api.second_approved_by_user_id,
     publishedAt: api.published_at,
     entries: (api.entries ?? []).map(mapApiGradingMatrixEntry),
+    draftedBy: api.drafted_by,
+    approvedBy: api.approved_by,
+    entriesCount: api.entries_count ?? api.entries?.length,
+    isActive: api.is_active,
   };
 }
