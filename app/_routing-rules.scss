@@ -1,0 +1,290 @@
+// Auto-routing rules page (components/sections/routing-rules). Tokens only; scoped under `.hmp-ui`.
+// The "how it works" strip reuses the gm-help styles from _grading-matrix.scss.
+
+.hmp-ui {
+  // ---------------------------------------------------------------- Rule list
+
+  .rr-order-note {
+    margin: 0 0 var(--hmp-space-3);
+    max-width: 80ch;
+  }
+
+  .rr-rules {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--hmp-space-3);
+  }
+
+  .rr-rule {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--hmp-space-4);
+    align-items: center;
+    padding: var(--hmp-space-4);
+    margin: 0;
+
+    &.is-off {
+      background: var(--hmp-surface-2);
+
+      .rr-rule-sentence {
+        color: var(--hmp-text-2);
+      }
+    }
+
+    @media (max-width: 767px) {
+      grid-template-columns: auto minmax(0, 1fr);
+
+      .rr-rule-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+      }
+    }
+  }
+
+  .rr-rule-order {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+
+    .ha-btn.is-icon {
+      width: 28px;
+      height: 24px;
+      font-size: 10px;
+    }
+  }
+
+  .rr-rule-n {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--hmp-primary-soft);
+    color: var(--hmp-primary-on-soft);
+    font-size: var(--hmp-fs-sm);
+    font-weight: var(--hmp-fw-bold);
+  }
+
+  .rr-rule-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--hmp-space-2);
+    margin-bottom: 2px;
+
+    b {
+      font-size: var(--hmp-fs-md);
+    }
+  }
+
+  .rr-rule-sentence {
+    margin: 0 0 var(--hmp-space-1);
+    color: var(--hmp-text);
+    max-width: 75ch;
+  }
+
+  .rr-rule-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--hmp-space-2);
+  }
+
+  // ---------------------------------------------------------------- Rule form
+
+  .rr-examples {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--hmp-space-2) var(--hmp-space-3);
+    padding: var(--hmp-space-3);
+    margin-bottom: var(--hmp-space-4);
+    background: var(--hmp-primary-soft);
+    border-radius: var(--hmp-radius);
+  }
+
+  .rr-step {
+    padding: var(--hmp-space-3) var(--hmp-space-4) var(--hmp-space-4);
+    border: 1px solid var(--hmp-border) !important;
+    border-radius: var(--hmp-radius);
+    background: var(--hmp-surface-2);
+
+    legend {
+      padding: 0 var(--hmp-space-2);
+      margin-left: calc(-1 * var(--hmp-space-2));
+    }
+  }
+
+  .rr-condition {
+    margin-bottom: var(--hmp-space-3);
+  }
+
+  .rr-and {
+    display: block;
+    margin: 0 0 var(--hmp-space-2);
+    font-size: var(--hmp-fs-xs);
+    font-weight: var(--hmp-fw-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--hmp-text-3);
+  }
+
+  .rr-condition-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.1fr) auto;
+    gap: var(--hmp-space-2);
+    align-items: start;
+
+    @media (max-width: 575px) {
+      grid-template-columns: minmax(0, 1fr) auto;
+
+      .rr-value {
+        grid-column: 1 / -1;
+        order: 3;
+      }
+    }
+  }
+
+  .rr-hint {
+    margin-top: 4px;
+  }
+
+  .rr-unit {
+    display: flex;
+    align-items: center;
+    gap: var(--hmp-space-2);
+    font-size: var(--hmp-fs-sm);
+    color: var(--hmp-text-2);
+
+    .ha-input {
+      width: 110px;
+    }
+  }
+
+  .rr-channels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--hmp-space-3);
+    margin-bottom: var(--hmp-space-4);
+
+    @media (max-width: 575px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .rr-channel {
+    display: flex;
+    gap: var(--hmp-space-3);
+    align-items: flex-start;
+    padding: var(--hmp-space-3);
+    background: var(--hmp-surface);
+    border: 1px solid var(--hmp-border-strong);
+    border-radius: var(--hmp-radius);
+    cursor: pointer;
+    margin: 0;
+
+    input {
+      margin-top: 4px;
+      accent-color: var(--hmp-primary);
+    }
+
+    > span {
+      display: flex;
+      flex-direction: column;
+    }
+
+    // Selected: tint + a heavier border — and the filled radio, so it's not colour alone.
+    &.is-selected {
+      border-color: var(--hmp-primary);
+      box-shadow: inset 0 0 0 1px var(--hmp-primary);
+      background: var(--hmp-primary-soft);
+    }
+
+    &:focus-within {
+      outline: 2px solid var(--hmp-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  .rr-discount {
+    display: grid;
+    gap: var(--hmp-space-2);
+  }
+
+  .rr-reads {
+    padding: var(--hmp-space-3) var(--hmp-space-4);
+    background: var(--hmp-surface-2);
+    border: 1px dashed var(--hmp-border-strong);
+    border-radius: var(--hmp-radius);
+    margin-bottom: var(--hmp-space-3);
+
+    p {
+      margin: 2px 0 var(--hmp-space-1);
+      font-weight: var(--hmp-fw-semibold);
+    }
+  }
+
+  // ---------------------------------------------------------------- Test a vehicle
+
+  .rr-checks {
+    list-style: none;
+    margin: 0;
+    padding: var(--hmp-space-3) var(--hmp-space-4);
+    display: grid;
+    gap: var(--hmp-space-3);
+  }
+
+  .rr-check {
+    padding: var(--hmp-space-3) var(--hmp-space-4);
+    border: 1px solid var(--hmp-border);
+    border-radius: var(--hmp-radius);
+
+    &.is-winner {
+      border-color: var(--hmp-success);
+      box-shadow: inset 3px 0 0 var(--hmp-success);
+      background: var(--hmp-success-soft);
+    }
+
+    &.is-off {
+      opacity: 0.7;
+    }
+  }
+
+  .rr-check-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--hmp-space-2) var(--hmp-space-3);
+    margin-bottom: var(--hmp-space-2);
+  }
+
+  .rr-conds {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: flex;
+      gap: var(--hmp-space-2);
+      padding: 2px 0;
+      font-size: var(--hmp-fs-sm);
+    }
+  }
+
+  .rr-tick {
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
+    font-weight: var(--hmp-fw-bold);
+
+    &.is-yes {
+      color: var(--hmp-success);
+    }
+
+    &.is-no {
+      color: var(--hmp-danger);
+    }
+  }
+}
