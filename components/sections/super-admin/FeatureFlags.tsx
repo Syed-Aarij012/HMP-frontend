@@ -5,7 +5,7 @@ import SuperAdminShell from "./SuperAdminShell";
 import { Badge, Card, EmptyState, ErrorNotice, LoadingRows, Modal, useToast } from "@/components/admin/ui";
 import { useAdminResource } from "@/hooks/useSuperAdmin";
 import { apiFetch, describeApiError } from "@/lib/api-client";
-import { formatWhen, TICKET_PATTERN, type FeatureFlag } from "@/lib/superAdmin";
+import { formatWhen, TICKET_PATTERN, type FeatureFlag, type FeatureFlagCatalogEntry } from "@/lib/superAdmin";
 
 function JustificationFields({ reason, ticket, onReason, onTicket }: { reason: string; ticket: string; onReason: (v: string) => void; onTicket: (v: string) => void }) {
   return (
@@ -25,13 +25,21 @@ function JustificationFields({ reason, ticket, onReason, onTicket }: { reason: s
 
 type Dialog = { kind: "toggle"; flag: FeatureFlag } | { kind: "create" } | null;
 
-/** §2.2 P7 "feature-flag control" (NFR-O-004). Every change is ticketed and audited. */
+/**
+ * §2.2 P7 "feature-flag control" (NFR-O-004). Every change is ticketed and audited.
+ *
+ * "+ New flag" only ever offers flags a developer has already registered in
+ * config/feature_flags.php (GET .../catalog) — a plain-English name and description, never a
+ * raw dotted key to type. A flag that no code actually checks can't be invented from here.
+ */
 export default function FeatureFlags() {
   const { notify } = useToast();
   const { data, loading, error, reload } = useAdminResource<{ data: FeatureFlag[] }>("/admin/feature-flags");
   const [dialog, setDialog] = useState<Dialog>(null);
-  const [key, setKey] = useState("");
-  const [description, setDescription] = useState("");
+  const { data: catalogData, loading: catalogLoading } = useAdminResource<{ data: FeatureFlagCatalogEntry[] }>(
+    dialog?.kind === "create" ? "/admin/feature-flags/catalog" : null
+  );
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [reason, setReason] = useState("");
   const [ticket, setTicket] = useState("");
@@ -43,14 +51,14 @@ export default function FeatureFlags() {
     setTicket("");
     setFormError(null);
     if (next?.kind === "create") {
-      setKey("");
-      setDescription("");
+      setSelectedKey(null);
       setEnabled(false);
     }
     setDialog(next);
   }
 
   const justified = reason.trim().length >= 10 && TICKET_PATTERN.test(ticket);
+  const creatable = (catalogData?.data ?? []).filter((entry) => !entry.exists);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -65,11 +73,13 @@ export default function FeatureFlags() {
         });
         notify(`${dialog.flag.key} switched ${dialog.flag.enabled ? "off" : "on"}.`);
       } else {
+        if (!selectedKey) return;
+        const picked = creatable.find((entry) => entry.key === selectedKey);
         await apiFetch("/admin/feature-flags", {
           method: "POST",
-          body: { key: key.trim(), description: description.trim() || null, enabled, reason: reason.trim(), ticket_reference: ticket.trim() },
+          body: { key: selectedKey, enabled, reason: reason.trim(), ticket_reference: ticket.trim() },
         });
-        notify(`Flag ${key.trim()} created.`);
+        notify(`“${picked?.label ?? selectedKey}” created.`);
       }
       setDialog(null);
       reload();
@@ -142,15 +152,39 @@ export default function FeatureFlags() {
         <form onSubmit={submit}>
           {dialog?.kind === "create" && (
             <>
-              <div className="ha-field">
-                <label htmlFor="ff-key">Key</label>
-                <input id="ff-key" className="ha-input" placeholder="e.g. auction.video_simulcast" value={key} onChange={(e) => setKey(e.target.value.toLowerCase())} maxLength={100} />
-                <div className="ha-hint">Lower-case letters and numbers, separated by dots, dashes or underscores.</div>
-              </div>
-              <div className="ha-field">
-                <label htmlFor="ff-desc">What it controls</label>
-                <input id="ff-desc" className="ha-input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={255} />
-              </div>
+              {catalogLoading && !catalogData && <p>Loading available flags...</p>}
+              {catalogData && creatable.length === 0 && (
+                <p className="ha-sub" style={{ marginBottom: 14 }}>
+                  Every known flag already exists — switch it on or off from the list instead.
+                </p>
+              )}
+              {creatable.length > 0 && (
+                <div className="ha-field" role="radiogroup" aria-label="Pick a flag to create">
+                  {creatable.map((entry) => {
+                    const inputId = `flag-${entry.key}`;
+                    return (
+                      <div key={entry.key} style={{ marginBottom: 10 }}>
+                        <input
+                          type="radio"
+                          id={inputId}
+                          name="catalog-flag"
+                          checked={selectedKey === entry.key}
+                          onChange={() => setSelectedKey(entry.key)}
+                        />
+                        {/* The site's global radio CSS only draws its circle on a <label>
+                            that immediately follows its <input> as a sibling (via
+                            :checked + label:before/:after) — wrapping the input inside the
+                            label, as everywhere else in this file does for checkboxes, left
+                            the native radio hidden with nothing drawn in its place. */}
+                        <label htmlFor={inputId}>
+                          <span style={{ display: "block", fontWeight: 600 }}>{entry.label}</span>
+                          <span className="ha-sub">{entry.description}</span>
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <label className="ha-check" style={{ marginBottom: 14 }}>
                 <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} /> Switch it on straight away
               </label>
@@ -160,7 +194,7 @@ export default function FeatureFlags() {
           {formError && <div className="ha-alert is-danger" role="alert">{formError}</div>}
           <div className="ha-modal-foot" style={{ padding: "4px 0 0" }}>
             <button type="button" className="ha-btn" onClick={() => setDialog(null)} disabled={busy}>Cancel</button>
-            <button type="submit" className="ha-btn is-primary" disabled={busy || !justified || (dialog?.kind === "create" && !key.trim())}>
+            <button type="submit" className="ha-btn is-primary" disabled={busy || !justified || (dialog?.kind === "create" && !selectedKey)}>
               {busy ? "Saving..." : dialog?.kind === "create" ? "Create flag" : "Confirm"}
             </button>
           </div>

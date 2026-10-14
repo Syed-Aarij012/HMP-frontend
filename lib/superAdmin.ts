@@ -93,6 +93,16 @@ export type FeatureFlag = {
   updated_at: string | null;
 };
 
+// GET /admin/feature-flags/catalog — the registered flags a non-technical admin can create
+// from, with a plain-English label instead of the raw dotted key.
+export type FeatureFlagCatalogEntry = {
+  key: string;
+  label: string;
+  description: string;
+  exists: boolean;
+  enabled: boolean;
+};
+
 export type PrivilegeElevation = {
   id: number;
   scope: string;
